@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(cors)
       .wrap(middleware::Logger::default())
 			.service(
-        web::scope("/accounts")
+        web::scope("/events")
           .wrap(authn_middleware)
           .configure(event_config)
       )
