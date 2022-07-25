@@ -1,11 +1,18 @@
+use std::sync::Arc;
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
 use ticketland_core::error::Error;
-use super::minio::Minio;
+use common_data::{
+  helpers::{send_write},
+  repositories::event::upsert_event,
+  models::event::Event,
+};
+use crate::utils::store::Store;
 
-pub async fn upload_image_to_s3(
-  minio: &Minio,
-  event_id: &str,
+pub async fn store_new_tmp_image(
+  store: Arc<Store>,
+  event_id: String,
+  uid: String,
   mut payload: Multipart,
 ) -> Result<(), Error> {
   let mut content = vec![];
@@ -23,12 +30,26 @@ pub async fn upload_image_to_s3(
   }
 
 	let content =  content.concat();
-  minio.upload(
+  
+  store.minio.upload(
     &format!("{}-event_image", event_id),
     content.as_ref()
   )
   .await
   .map_err(|_| Error::S3Error)?;
+
+  // Update the db
+  let (query, db_query_params) = upsert_event(
+    event_id,
+    uid,
+    Event::default(),
+  );
+
+  send_write(
+    Arc::clone(&store.neo4j),
+    query,
+    db_query_params,
+  ).await?;
 
   Ok(())
 }
