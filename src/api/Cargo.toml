@@ -14,8 +14,8 @@ actix-multipart = "0.4.0"
 env_logger = "0.9.0"
 dotenv = "0.15"
 futures-util = "0.3.15"
-common = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.0" }
-api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.4" }
+ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.2" }
+api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.5" }
 serde = "1.0"
 serde_json = "1.0"
 rust-s3 = "0.32.1"

@@ -1,0 +1,14 @@
+[package]
+name = "data"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix = "0.13.0"
+common = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.0" }
+data = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.0" }
+bolt-client = "0.10.1"
+bolt-proto = "0.11.0"
+serde = "1.0"

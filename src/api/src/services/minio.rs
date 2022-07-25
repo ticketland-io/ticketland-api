@@ -46,8 +46,8 @@ impl Minio {
     }
   }
 
-  pub async fn upload(&self, content: &[u8]) -> Result<(), S3Error> {
-    self.bucket.put_object("/test.png", content).await?;
+  pub async fn upload(&self, path: &str, content: &[u8]) -> Result<(), S3Error> {
+    self.bucket.put_object(path, content).await?;
     
     Ok(())
   }

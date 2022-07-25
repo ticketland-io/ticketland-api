@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use actix::prelude::*;
-use common::actor::{neo4j::Neo4jActor};
+use ticketland_core::actor::{neo4j::Neo4jActor};
 use super::config::Config;
 use crate::services::minio::Minio;
 
@@ -37,6 +37,7 @@ impl Store {
     Self {
       config,
       neo4j,
+      minio,
     }
   }
 }
