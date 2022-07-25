@@ -9,6 +9,10 @@ pub struct Config {
   pub neo4j_database: Option<String>,
   pub firebase_auth_key: String,
   pub cors_origin: String,
+  pub minio_uri: String,
+  pub minio_bucket: String,
+  pub minio_access_key: String,
+  pub minio_secret_key: String,
 }
 
 impl Config {
@@ -23,6 +27,10 @@ impl Config {
         neo4j_database: env::var("NEO4J_DATABASE").ok(),
         firebase_auth_key: env::var("FIREBASE_API_KEY").unwrap(),
         cors_origin: env::var("CORS_ORIGIN").unwrap(),
+        minio_uri: env::var("MINIO_URI").unwrap(),
+        minio_bucket: env::var("MINIO_BUCKET").unwrap(),
+        minio_access_key: env::var("MINIO_ACCESS_KEY").unwrap(),
+        minio_secret_key: env::var("MINIO_SECRET_KEY").unwrap(),
       }
     )
   }

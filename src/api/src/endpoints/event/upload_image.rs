@@ -4,7 +4,6 @@ use api_helpers::middleware::auth::AuthData;
 use futures_util::stream::StreamExt;
 use crate::{
   utils::store::Store,
-  services::minio::Minio,
 };
 
 pub async fn exec(
@@ -12,12 +11,6 @@ pub async fn exec(
   mut payload: Multipart,
   _auth: AuthData,
 ) -> Result<HttpResponse, Error> {
-  let minio = Minio::new(
-    "http://localhost:9000".to_owned(),
-    "test-bucket".to_owned(),
-    "OSJ90KMK8FNEILHQOKMS".to_owned(),
-    "lM02Cnff9RlfQ9cK+tRg5oP3R27glCnPESJ7siW+".to_owned(),
-  ).await;
 
 	let mut content = vec![];
 
@@ -31,7 +24,7 @@ pub async fn exec(
   }
 
 	let content =  content.concat();
-  minio.upload(content.as_ref()).await.unwrap();
+  store.minio.upload(content.as_ref()).await.unwrap();
 
   Ok(HttpResponse::Ok().finish())
 }

@@ -12,10 +12,10 @@ pub struct Minio {
 
 impl Minio {
   pub async fn new(
-    endpoint: String,
-    bucket_name: String,
-    access_key: String,
-    secret_key: String,
+    endpoint: &str,
+    bucket_name: &str,
+    access_key: &str,
+    secret_key: &str,
   ) -> Self {
     let region = Region::Custom {
       region: "".into(),

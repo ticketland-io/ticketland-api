@@ -1,12 +1,13 @@
 use std::sync::Arc;
 use actix::prelude::*;
 use common::actor::{neo4j::Neo4jActor};
-
 use super::config::Config;
+use crate::services::minio::Minio;
 
 pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
+  pub minio: Minio,
 }
 
 impl Store {
@@ -25,6 +26,14 @@ impl Store {
       .start(),
     );
 
+    let minio = Minio::new(
+      &config.minio_uri,
+      &config.minio_bucket,
+      &config.minio_access_key,
+      &config.minio_secret_key,
+    ).await;
+
+    
     Self {
       config,
       neo4j,
