@@ -18,12 +18,12 @@ pub async fn store_new_tmp_image(
 
   while let Some(item) = payload.next().await {
     let mut field = item
-    .map_err(|_| Error::S3Error)?;
+    .map_err(Into::<Error>::into)?;
 
 
     // Field in turn is stream of *Bytes* object
     while let Some(chunk) = field.next().await {
-      let chunk = chunk.map_err(|_| Error::S3Error)?;
+      let chunk = chunk.map_err(Into::<Error>::into)?;
       content.push(chunk);
     }
   }
@@ -35,7 +35,7 @@ pub async fn store_new_tmp_image(
     content.as_ref()
   )
   .await
-  .map_err(|_| Error::S3Error)?;
+  .map_err(Into::<Error>::into)?;
 
   // Update the db
   let (query, db_query_params) = upsert_event(
