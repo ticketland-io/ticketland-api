@@ -7,13 +7,13 @@ use super::{
 
 pub fn config(cfg: &mut web::ServiceConfig) {
   cfg.service(
-    web::resource("/images")
+    web::resource("{event_id}/images")
     .route(web::post().to(upload_image::exec))
     .route(web::get().to(read_image::exec))
   );
 
   cfg.service(
-    web::resource("/events")
+    web::resource("{event_id}")
     .route(web::post().to(create_event::exec))
   );
 }

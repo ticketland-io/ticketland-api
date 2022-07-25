@@ -13,9 +13,9 @@ use super::common::EventParams;
 
 pub async fn exec(
   store: web::Data<Store>,
+  params: web::Path<EventParams>,
   payload: Multipart,
   auth: AuthData,
-  params: web::Path<EventParams>,
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
 	
