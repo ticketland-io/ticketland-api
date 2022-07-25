@@ -5,7 +5,6 @@ use ticketland_core::error::Error;
 use common_data::{
   helpers::{send_write},
   repositories::event::upsert_event,
-  models::event::Event,
 };
 use crate::utils::store::Store;
 
@@ -42,7 +41,6 @@ pub async fn store_new_tmp_image(
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
-    Event::default(),
   );
 
   send_write(
