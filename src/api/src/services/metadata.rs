@@ -15,16 +15,20 @@ pub async fn store_new_tmp_image(
   mut payload: Multipart,
 ) -> Result<(), Error> {
   let mut content = vec![];
-
+  // let mut content_type = "";
   while let Some(item) = payload.next().await {
     let mut field = item
     .map_err(Into::<Error>::into)?;
 
+    // content_type = 
+
+    println!("{:?}", field.content_type());
 
     // Field in turn is stream of *Bytes* object
     while let Some(chunk) = field.next().await {
       let chunk = chunk.map_err(Into::<Error>::into)?;
       content.push(chunk);
+      println!("{:?}", content);
     }
   }
 

@@ -1,19 +1,13 @@
 use actix_web::{web};
 use super::{
-  upload_image,
   create_event,
-  read_image,
+  read_event,
 };
 
 pub fn config(cfg: &mut web::ServiceConfig) {
   cfg.service(
-    web::resource("{event_id}/images")
-    .route(web::post().to(upload_image::exec))
-    .route(web::get().to(read_image::exec))
-  );
-
-  cfg.service(
     web::resource("{event_id}")
     .route(web::post().to(create_event::exec))
+    .route(web::get().to(read_event::exec))
   );
 }

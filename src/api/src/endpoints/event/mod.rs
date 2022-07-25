@@ -1,5 +1,4 @@
 pub mod config;
 pub mod create_event;
-pub mod upload_image;
+pub mod read_event;
 pub mod common;
-pub mod read_image;

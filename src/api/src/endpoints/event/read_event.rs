@@ -20,7 +20,11 @@ pub async fn exec(
   store.minio.get_object_stream(
     &format!("{}-event_image", event_id),
     &mut asyncwriter,
-  ).await?;
+  ).await
+  .map_err(|error| {
+    println!("{:?}", error);
+    error
+  })?;
 
   Ok(HttpResponse::Ok().streaming(tokio_util::io::ReaderStream::new(asyncwriter)))
 }

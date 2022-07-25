@@ -1,20 +1,30 @@
+use std::sync::Arc;
 use actix_web::{web, HttpResponse};
-use serde::{Deserialize};
-use api_helpers::middleware::auth::AuthData;
+use actix_multipart::Multipart;
+use ticketland_core::error::Error;
+use api_helpers::{
+  middleware::auth::AuthData,
+};
 use crate::{
   utils::store::Store,
+  services::metadata::store_new_tmp_image,
 };
-
-#[derive(Deserialize)]
-pub struct Body {
-  _name: String,
-  _title: String,
-}
+use super::common::EventParams;
 
 pub async fn exec(
-  _store: web::Data<Store>,
-  _body: web::Json<Body>,
-  _auth: AuthData,
-) -> HttpResponse {
-  HttpResponse::Ok().finish()
+  store: web::Data<Store>,
+  params: web::Path<EventParams>,
+  payload: Multipart,
+  auth: AuthData,
+) -> Result<HttpResponse, Error> {
+  let event_id = params.event_id.clone();
+
+  store_new_tmp_image(
+    Arc::clone(&store),
+    event_id,
+    auth.user.local_id,
+    payload,
+  ).await?;
+
+  Ok(HttpResponse::Ok().finish())
 }
