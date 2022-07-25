@@ -1,8 +1,10 @@
 use std::sync::Arc;
 use actix::prelude::*;
-use ticketland_core::actor::{neo4j::Neo4jActor};
+use ticketland_core::{
+  actor::neo4j::Neo4jActor,
+  services::minio::Minio,
+};
 use super::config::Config;
-use crate::services::minio::Minio;
 
 pub struct Store {
   pub config: Config,
