@@ -7,7 +7,7 @@ use api_helpers::{
 };
 use crate::{
   utils::store::Store,
-  services::metadata::store_new_tmp_image,
+  services::metadata::store_event,
 };
 use super::common::EventParams;
 
@@ -19,7 +19,7 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
 
-  store_new_tmp_image(
+  store_event(
     Arc::clone(&store),
     event_id,
     auth.user.local_id,

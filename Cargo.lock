@@ -294,7 +294,7 @@ dependencies = [
 [[package]]
 name = "api-helpers"
 version = "0.1.5"
-source = "git+https://github.com/ticketland-io/common-rust#0f96cdcb519f824a7646be68943ecb9dcf13be42"
+source = "git+https://github.com/ticketland-io/common-rust#9b5393cb99300d97c2f65a5fce12e3df2bdcfbd0"
 dependencies = [
  "actix",
  "actix-web",
@@ -543,7 +543,7 @@ dependencies = [
 [[package]]
 name = "common-data"
 version = "0.1.3"
-source = "git+https://github.com/ticketland-io/common-rust#0f96cdcb519f824a7646be68943ecb9dcf13be42"
+source = "git+https://github.com/ticketland-io/common-rust#9b5393cb99300d97c2f65a5fce12e3df2bdcfbd0"
 dependencies = [
  "actix",
  "bolt-client",
@@ -1913,6 +1913,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "futures-util",
+ "mime",
  "serde",
  "serde_json",
  "ticketland-core",
@@ -1923,7 +1924,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.1.2"
-source = "git+https://github.com/ticketland-io/common-rust#0f96cdcb519f824a7646be68943ecb9dcf13be42"
+source = "git+https://github.com/ticketland-io/common-rust#9b5393cb99300d97c2f65a5fce12e3df2bdcfbd0"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -1931,6 +1932,7 @@ dependencies = [
  "bolt-client",
  "bolt-proto",
  "rust-s3",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-retry",
