@@ -15,16 +15,17 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   // TODO: make sure this event id belongs to the current user
   let event_id = params.event_id.clone();
-	let (mut asyncwriter, _) = tokio::io::duplex(256 * 1024);
-
+	let (mut async_writer, async_reader) = tokio::io::duplex(10 * 1024 * 1024);
+  let stream_reader = tokio_util::io::ReaderStream::new(async_reader);
+  
   store.minio.get_object_stream(
-    &format!("{}-event_image", event_id),
-    &mut asyncwriter,
+    &format!("{}-event_image.png", event_id),
+    &mut async_writer,
   ).await
   .map_err(|error| {
     println!("{:?}", error);
     error
   })?;
 
-  Ok(HttpResponse::Ok().streaming(tokio_util::io::ReaderStream::new(asyncwriter)))
+  Ok(HttpResponse::Ok().streaming(stream_reader))
 }
