@@ -12,13 +12,13 @@ use common_data::{
 };
 use crate::utils::store::Store;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Attribute {
   trait_type: String,
   value: String,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct Metadata {
   name: String,
   description: String,
@@ -28,9 +28,13 @@ struct Metadata {
 
 fn is_supported_media_type(mime_type: mime::Name) -> bool {
   match mime_type {
-    mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
+    mime::IMAGE | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
     _ => false,
   }
+}
+
+fn create_ipfs_uri(ipfs_gateway: &str, cid: &str) -> String {
+  format!("{}{}", ipfs_gateway, cid)
 }
 
 pub async fn store_event(
@@ -39,13 +43,13 @@ pub async fn store_event(
   uid: String,
   mut payload: Multipart,
 ) -> Result<(), Error> {
-  let mut content = vec![];
   let mut metadata = Metadata::default();
 
   while let Some(item) = payload.next().await {
     let mut field = item
     .map_err(Into::<Error>::into)?;
 
+    let mut content = vec![];
     // Field in turn is stream of *Bytes* object
     while let Some(chunk) = field.next().await {
       let chunk = chunk.map_err(Into::<Error>::into)?;
@@ -65,10 +69,8 @@ pub async fn store_event(
       .map_err(Into::<Error>::into)?;
 
       // Find the Image CID with a dry run on IPFS
-      // let ipfs = Ipfs::new(store.config.local_ipfs_server.clone());
-      let response = store.ipfs.calc_cid(content).await?;
-      println!("{:?}", response.name);
-      println!("{:?}", response.hash);
+      let response = store.ipfs.dry_run(content).await?;
+      metadata.image = create_ipfs_uri(&store.config.ipfs_gateway, &response.hash);
     } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
       let value = from_utf8(content.as_ref()).unwrap().to_owned();
 
@@ -81,7 +83,7 @@ pub async fn store_event(
         },
         "trait_type" => {
           metadata.attributes.push(
-            serde_json::from_str(&value)
+            serde_json::from_str::<Attribute>(&value)
             .map_err(Into::<Error>::into)?
           );
         },
@@ -91,6 +93,7 @@ pub async fn store_event(
   }
 
   // 2. TODO: store the metadata as JSON on S3
+  println!("{:?}", metadata);
 
   // Update the db
   let (query, db_query_params) = upsert_event(
