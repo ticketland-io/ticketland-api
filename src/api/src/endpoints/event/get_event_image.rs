@@ -1,4 +1,8 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{
+  web,
+  HttpResponse,
+  http::header::{ContentDisposition, DispositionType, DispositionParam},
+};
 use ticketland_core::error::Error;
 use api_helpers::{
   middleware::auth::AuthData,
@@ -27,5 +31,14 @@ pub async fn exec(
     error
   })?;
 
-  Ok(HttpResponse::Ok().streaming(stream_reader))
+  Ok(
+    HttpResponse::Ok()
+    .insert_header(ContentDisposition {
+      disposition: DispositionType::Attachment,
+      parameters: vec![
+        DispositionParam::Filename(format!("{}-event_image.png", event_id)),
+      ],
+    })
+    .streaming(stream_reader)
+  )
 }
