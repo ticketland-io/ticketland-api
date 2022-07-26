@@ -63,6 +63,12 @@ pub async fn store_event(
       )
       .await
       .map_err(Into::<Error>::into)?;
+
+      // Find the Image CID with a dry run on IPFS
+      // let ipfs = Ipfs::new(store.config.local_ipfs_server.clone());
+      let response = store.ipfs.calc_cid(content).await?;
+      println!("{:?}", response.name);
+      println!("{:?}", response.hash);
     } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
       let value = from_utf8(content.as_ref()).unwrap().to_owned();
 
@@ -84,7 +90,6 @@ pub async fn store_event(
     }
   }
 
-  // 1. Find the Image CID with a dry run on IPFS
   // 2. TODO: store the metadata as JSON on S3
 
   // Update the db

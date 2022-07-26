@@ -2,7 +2,10 @@ use std::sync::Arc;
 use actix::prelude::*;
 use ticketland_core::{
   actor::neo4j::Neo4jActor,
-  services::minio::Minio,
+  services::{
+    minio::Minio,
+    ipfs::Ipfs,
+  },
 };
 use super::config::Config;
 
@@ -10,6 +13,7 @@ pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Minio,
+  pub ipfs: Ipfs,
 }
 
 impl Store {
@@ -35,11 +39,13 @@ impl Store {
       &config.minio_secret_key,
     ).await;
 
-    
+    let ipfs = Ipfs::new(config.local_ipfs_server.clone());
+
     Self {
       config,
       neo4j,
       minio,
+      ipfs,
     }
   }
 }
