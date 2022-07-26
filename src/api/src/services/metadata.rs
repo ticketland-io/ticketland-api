@@ -118,7 +118,7 @@ pub async fn store_event(
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
-    media_content_type.unwrap().to_string(),
+    media_content_type.unwrap(),
   );
 
   send_write(
