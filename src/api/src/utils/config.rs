@@ -15,9 +15,8 @@ pub struct Config {
   pub minio_secret_key: String,
   pub ipfs_gateway: String,
   pub local_ipfs_server: String,
-  pub pinate_api_uri: String,
-  pub pinate_api_key: String,
-  pub pinate_api_secret: String,
+  pub pinata_api_uri: String,
+  pub pinata_api_token: String,
 }
 
 impl Config {
@@ -38,9 +37,8 @@ impl Config {
         minio_secret_key: env::var("MINIO_SECRET_KEY").unwrap(),
         ipfs_gateway: env::var("IPFS_GATEWAY").unwrap(),
         local_ipfs_server: env::var("LOCAL_IPFS").unwrap(),
-        pinate_api_uri: env::var("PINATA_API_URI").unwrap(),
-        pinate_api_key: env::var("PINATA_API_KEY").unwrap(),
-        pinate_api_secret: env::var("PINATA_API_SECRET").unwrap(),
+        pinata_api_uri: env::var("PINATA_API_URI").unwrap(),
+        pinata_api_token: env::var("PINATA_BEARER").unwrap(),
       }
     )
   }
