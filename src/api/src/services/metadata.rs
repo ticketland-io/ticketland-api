@@ -18,7 +18,7 @@ struct Attribute {
   value: String,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Serialize)]
 struct Metadata {
   name: String,
   description: String,
@@ -62,11 +62,14 @@ pub async fn store_event(
 
     if is_supported_media_type(mime_type) {    
       store.minio.upload(
-        &format!("{}-event_image", event_id),
+        &format!("{}-event_image.{}", event_id, field.content_type().subtype()),
         content.as_ref()
       )
       .await
       .map_err(Into::<Error>::into)?;
+
+
+      
 
       // Find the Image CID with a dry run on IPFS
       let response = store.ipfs.dry_run(content).await?;
@@ -92,8 +95,13 @@ pub async fn store_event(
     }
   }
 
-  // 2. TODO: store the metadata as JSON on S3
-  println!("{:?}", metadata);
+  // Store the metadata as JSON on S3
+  store.minio.upload(
+    &format!("{}-event_metadata.json", event_id),
+    serde_json::to_string(&metadata).unwrap().as_ref(),
+  )
+  .await
+  .map_err(Into::<Error>::into)?;
 
   // Update the db
   let (query, db_query_params) = upsert_event(
