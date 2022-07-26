@@ -26,6 +26,12 @@ struct Metadata {
   attributes: Vec<Attribute>,
 }
 
+impl Metadata {
+  fn is_default(&self) -> bool {
+    return self.name == ""
+  }
+}
+
 fn is_supported_media_type(mime_type: mime::Name) -> bool {
   match mime_type {
     mime::IMAGE | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
@@ -44,6 +50,7 @@ pub async fn store_event(
   mut payload: Multipart,
 ) -> Result<(), Error> {
   let mut metadata = Metadata::default();
+  let mut media_content_type = None;
 
   while let Some(item) = payload.next().await {
     let mut field = item
@@ -59,17 +66,17 @@ pub async fn store_event(
     let field_name = field.name();
     let mime_type = field.content_type().type_();
     let content =  content.concat();
+    
+    if is_supported_media_type(mime_type) {
+      let content_type = field.content_type().subtype();
+      media_content_type = Some(content_type.to_string().clone());
 
-    if is_supported_media_type(mime_type) {    
       store.minio.upload(
-        &format!("{}-event_image.{}", event_id, field.content_type().subtype()),
+        &format!("{}-event_image.{}", event_id, content_type),
         content.as_ref()
       )
       .await
       .map_err(Into::<Error>::into)?;
-
-
-      
 
       // Find the Image CID with a dry run on IPFS
       let response = store.ipfs.dry_run(content).await?;
@@ -93,6 +100,10 @@ pub async fn store_event(
         _ => todo!(), // Simply ignore
       }
     }
+  };
+
+  if metadata.is_default() && media_content_type.is_none() {
+    return Err(Error::GenericError("Bad request".to_owned()))
   }
 
   // Store the metadata as JSON on S3
@@ -107,6 +118,7 @@ pub async fn store_event(
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
+    media_content_type.unwrap().to_string(),
   );
 
   send_write(
