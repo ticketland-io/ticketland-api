@@ -1,11 +1,14 @@
+use std::sync::Arc;
 use actix_web::{
   web,
   HttpResponse,
   http::header::{ContentDisposition, DispositionType, DispositionParam},
 };
-use tokio::io::duplex;
-use tokio_util::io::ReaderStream;
-use ticketland_core::error::Error;
+
+use ticketland_core::{
+  error::Error,
+  streams::ipfs_read_stream::IpfsReadStream,
+};
 use api_helpers::{
   middleware::auth::AuthData,
 };
@@ -21,14 +24,12 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   // TODO: make sure this event id belongs to the current user. Or even better use a custom authz middleware
   let event_id = params.event_id.clone();
-	let (mut async_writer, async_reader) = duplex(10 * 1024 * 1024);
-  let stream_reader = ReaderStream::new(async_reader);
-  
-  store.minio.get_object_stream(
-    &format!("{}-event_image.png", event_id),
-    &mut async_writer,
-  ).await
-  .map_err(Into::<Error>::into)?;
+
+  let ipfs_read_stream = IpfsReadStream::new(
+    format!("{}-event_image.png", event_id),
+    1024,
+    Arc::clone(&store.minio),
+  );
 
   Ok(
     HttpResponse::Ok()
@@ -38,6 +39,6 @@ pub async fn exec(
         DispositionParam::Filename(format!("{}-event_image.png", event_id)),
       ],
     })
-    .streaming(stream_reader)
+    .streaming(ipfs_read_stream)
   )
 }

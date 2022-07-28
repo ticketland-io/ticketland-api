@@ -12,7 +12,7 @@ use super::config::Config;
 pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
-  pub minio: Minio,
+  pub minio: Arc<Minio>,
   pub ipfs: Ipfs,
 }
 
@@ -32,14 +32,14 @@ impl Store {
       .start(),
     );
 
-    let minio = Minio::new(
+    let minio = Arc::new(Minio::new(
       &config.minio_uri,
       &config.minio_bucket,
       &config.minio_access_key,
       &config.minio_secret_key,
-    ).await;
+    ).await);
 
-    let ipfs = Ipfs::new(config.local_ipfs_server.clone());
+    let ipfs = Ipfs::new(config.ipfs_server.clone());
 
     Self {
       config,
