@@ -7,7 +7,7 @@ use actix_web::{
 
 use ticketland_core::{
   error::Error,
-  streams::ipfs_read_stream::IpfsReadStream,
+  streams::s3_stream::S3Stream,
 };
 use api_helpers::{
   middleware::auth::AuthData,
@@ -25,7 +25,7 @@ pub async fn exec(
   // TODO: make sure this event id belongs to the current user. Or even better use a custom authz middleware
   let event_id = params.event_id.clone();
 
-  let ipfs_read_stream = IpfsReadStream::new(
+  let ipfs_read_stream = S3Stream::new(
     format!("{}-event_image.png", event_id),
     1024,
     Arc::clone(&store.minio),
