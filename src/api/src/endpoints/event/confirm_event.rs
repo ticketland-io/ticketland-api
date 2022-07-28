@@ -7,6 +7,7 @@ use ticketland_core::{
   error::Error,
   streams::s3_stream::S3Stream,
 };
+use futures::future;
 use futures_util::StreamExt;
 use api_helpers::{
   middleware::auth::AuthData,
@@ -37,21 +38,13 @@ pub async fn exec(
   .for_each(|val| {
     let mut slice = val.unwrap().into_iter().collect::<Vec<u8>>();
     data.append(&mut slice);
-    futures::future::ready(())
+    future::ready(())
   })
   .await;
 
-
-  println!("{:?}", data);
-
-  let result = store.ipfs.upload(data)
+  let _ = store.ipfs.upload(data)
   .await
-  .map_err(|error| {
-    println!("{:?}", error);
-    error
-  })?;
-
-  println!("{:?}", result);
+  .map_err(Into::<Error>::into)?;
 
   Ok(HttpResponse::Ok().finish())
 }
