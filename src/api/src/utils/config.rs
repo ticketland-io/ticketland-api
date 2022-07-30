@@ -15,6 +15,12 @@ pub struct Config {
   pub minio_secret_key: String,
   pub ipfs_gateway: String,
   pub ipfs_server: String,
+  // Rabbitmq envs
+  pub rabbitmq_uri: String,
+  pub exchange_name: String,
+  pub queue_name: String,
+  pub routing_key: String,
+  pub retry_ttl: u16,
 }
 
 impl Config {
@@ -35,6 +41,11 @@ impl Config {
         minio_secret_key: env::var("MINIO_SECRET_KEY").unwrap(),
         ipfs_gateway: env::var("IPFS_GATEWAY").unwrap(),
         ipfs_server: env::var("IPFS_SERVER").unwrap(),
+        rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
+        exchange_name: env::var("EXCHANGE_NAME").unwrap(),
+        queue_name: env::var("QUEUE_NAME").unwrap(),
+        routing_key: env::var("ROUTING_KEY").unwrap(),
+        retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
 
       }
     )

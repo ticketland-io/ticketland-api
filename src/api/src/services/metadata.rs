@@ -12,6 +12,8 @@ use common_data::{
 };
 use crate::utils::store::Store;
 
+pub type MetadataCID = String;
+
 #[derive(Serialize, Deserialize, Debug)]
 struct Attribute {
   trait_type: String,
@@ -19,7 +21,8 @@ struct Attribute {
 }
 
 #[derive(Default, Debug, Serialize)]
-struct Metadata {
+pub struct Metadata {
+  cid: String,
   name: String,
   description: String,
   image: String,
@@ -48,7 +51,7 @@ pub async fn store_event(
   event_id: String,
   uid: String,
   mut payload: Multipart,
-) -> Result<(), Error> {
+) -> Result<Metadata, Error> {
   let mut metadata = Metadata::default();
   let mut media_content_type = None;
 
@@ -106,6 +109,10 @@ pub async fn store_event(
     return Err(Error::GenericError("Bad request".to_owned()))
   }
 
+  // Find the deterministic metadata CID
+  let response = store.ipfs.dry_run(bincode::serialize(&metadata).unwrap()).await?;
+  metadata.cid = response.hash;
+
   // Store the metadata as JSON on S3
   store.minio.upload(
     &format!("{}-event_metadata.json", event_id),
@@ -119,6 +126,7 @@ pub async fn store_event(
     event_id,
     uid,
     media_content_type.unwrap(),
+    metadata.cid.clone(),
   );
 
   send_write(
@@ -127,5 +135,5 @@ pub async fn store_event(
     db_query_params,
   ).await?;
 
-  Ok(())
+  Ok(metadata)
 }
