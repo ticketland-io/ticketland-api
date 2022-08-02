@@ -8,12 +8,16 @@ use ticketland_core::{
   },
 };
 use super::config::Config;
+use crate::{
+  services::new_event_queue::NewEventQueue,
+};
 
 pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
   pub ipfs: Ipfs,
+  pub new_event_queue: NewEventQueue,
 }
 
 impl Store {
@@ -41,11 +45,17 @@ impl Store {
 
     let ipfs = Ipfs::new(config.ipfs_server.clone());
 
+    let new_event_queue = NewEventQueue::new(
+      config.rabbitmq_uri.clone(),
+      config.retry_ttl,
+    ).await;
+
     Self {
       config,
       neo4j,
       minio,
       ipfs,
+      new_event_queue,
     }
   }
 }
