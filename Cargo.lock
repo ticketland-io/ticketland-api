@@ -2745,11 +2745,14 @@ dependencies = [
 [[package]]
 name = "ticketland-event-handler"
 version = "0.1.0"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#165d1e626e4e6b6b32276b9cb594ac35c7a6a155"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#5be5b6c2027dd4c059e5e586e272dd1d0e21124b"
 dependencies = [
  "actix",
+ "actix-rt",
  "amqp-helpers",
+ "async-trait",
  "borsh",
+ "common-data",
  "dotenv",
  "futures",
  "futures-util",

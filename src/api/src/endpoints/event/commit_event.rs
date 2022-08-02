@@ -20,6 +20,7 @@ use common_data::{
 };
 use crate::{
   utils::store::Store,
+  services::utils::get_event_file_path,
 };
 use super::common::EventParams;
 
@@ -47,7 +48,7 @@ pub async fn exec(
   // TODO: This code will be moved to an external services. This endpoint will simply push 
   // a message to RabbitMQ indicating that the given event_id was created on the blockchain.
   let ipfs_read_stream = S3Stream::new(
-    format!("{}-event_file.{}", event.event_id, event.file_type),
+    get_event_file_path(&event.event_id, &event.file_type),
     1024,
     Arc::clone(&store.minio),
   );

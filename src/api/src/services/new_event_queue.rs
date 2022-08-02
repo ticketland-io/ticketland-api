@@ -1,46 +1,65 @@
-// use borsh::{BorshSerialize};
-// use amqp_helpers::producer::retry_producer::RetryProducer;
-// // use ticketland_signdrop::model::NewUser;
+use borsh::{BorshSerialize};
+use amqp_helpers::producer::retry_producer::RetryProducer;
+use ticketland_event_handler::models::event::UploadFile;
+use crate::{
+  services::utils::get_event_file_path,
+};
 
-// pub struct NewEventQueue {
-//   producer: RetryProducer,
-//   exchange_name: String,
-//   routing_key: String,
-// }
+use super::utils::get_event_metadata_path;
 
-// impl NewEventQueue {
-//   pub async fn new(
-//     rabbitmq_uri: String,
-//     exchange_name: String,
-//     queue_name: String,
-//     routing_key: String,
-//     retry_ttl: u16,
-//   ) -> Self {
-//     let producer = RetryProducer::new(
-//       &rabbitmq_uri,
-//       &exchange_name,
-//       &queue_name,
-//       &routing_key,
-//       retry_ttl,
-//     ).await;
+pub struct NewEventQueue {
+  metadata_upload_producer: RetryProducer,
+  image_upload_producer: RetryProducer,
+}
 
-//     Self {
-//       producer,
-//       exchange_name,
-//       routing_key,
-//     }
-//   }
+impl NewEventQueue {
+  pub async fn new(
+    rabbitmq_uri: String,
+    retry_ttl: u16,
+  ) -> Self {
+    let metadata_upload_producer = RetryProducer::new(
+      &rabbitmq_uri,
+      &"event_metadata_file",
+      &"event_metadata_file",
+      &"event_metadata_file.new",
+      retry_ttl,
+    ).await;
 
-//   pub async fn on_new_event(&self, sol_address: String) {
-//     let msg = NewUser { 
-//       sol_address 
-//     };
+    let image_upload_producer = RetryProducer::new(
+      &rabbitmq_uri,
+      &"event_image_file",
+      &"event_image_file",
+      &"event_image_file.new",
+      retry_ttl,
+    ).await;
 
-//     self.producer.publish(
-//       &self.exchange_name,
-//       &self.routing_key,
-//       &msg.try_to_vec().unwrap()
-//     ).await;
-    
-//   }
-// }
+    Self {
+      metadata_upload_producer,
+      image_upload_producer,
+    }
+  }
+
+  pub async fn on_new_event(&self, event_id: String, content_type: String) {
+    let metadata_msg = UploadFile { 
+      event_id: event_id.clone(),
+      path: get_event_file_path(&event_id, &content_type),
+    };
+
+    self.metadata_upload_producer.publish(
+      &"event_metadata_file",
+      &"event_metadata_file.new",
+      &metadata_msg.try_to_vec().unwrap()
+    ).await;
+
+    let img_msg = UploadFile { 
+      event_id: event_id.clone(),
+      path: get_event_metadata_path(&event_id),
+    };
+
+    self.image_upload_producer.publish(
+      &"event_image_file",
+      &"event_image_file.new",
+      &img_msg.try_to_vec().unwrap()
+    ).await;
+  }
+}
