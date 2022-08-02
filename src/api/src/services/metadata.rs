@@ -28,7 +28,6 @@ struct Attribute {
 
 #[derive(Default, Debug, Serialize)]
 pub struct Metadata {
-  cid: String,
   name: String,
   description: String,
   image: String,
@@ -57,7 +56,7 @@ pub async fn store_event(
   event_id: String,
   uid: String,
   mut payload: Multipart,
-) -> Result<Metadata, Error> {
+) -> Result<(Metadata, MetadataCID), Error> {
   let mut metadata = Metadata::default();
   let mut media_content_type = None;
 
@@ -117,7 +116,6 @@ pub async fn store_event(
 
   // Find the deterministic metadata CID
   let response = store.ipfs.dry_run(bincode::serialize(&metadata).unwrap()).await?;
-  metadata.cid = response.hash;
 
   // Store the metadata as JSON on S3
   store.minio.upload(
@@ -127,12 +125,14 @@ pub async fn store_event(
   .await
   .map_err(Into::<Error>::into)?;
 
+  let cid = response.hash;
+
   // Update the db
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
     media_content_type.unwrap(),
-    metadata.cid.clone(),
+    cid.clone(),
   );
 
   send_write(
@@ -141,5 +141,5 @@ pub async fn store_event(
     db_query_params,
   ).await?;
 
-  Ok(metadata)
+  Ok((metadata, cid))
 }
