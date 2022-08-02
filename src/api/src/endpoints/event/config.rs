@@ -2,7 +2,7 @@ use actix_web::{web};
 use super::{
   create_event,
   get_event_image,
-  confirm_event,
+  commit_event,
 };
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -12,8 +12,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
   );
 
   cfg.service(
-    web::resource("{event_id}/confirm")
-    .route(web::post().to(confirm_event::exec))
+    web::resource("{event_id}/commits")
+    .route(web::post().to(commit_event::exec))
   );
   
   cfg.service(

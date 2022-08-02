@@ -75,7 +75,7 @@ pub async fn store_event(
       media_content_type = Some(content_type.to_string().clone());
 
       store.minio.upload(
-        &format!("{}-event_image.{}", event_id, content_type),
+        &format!("{}-event_file.{}", event_id, content_type),
         content.as_ref()
       )
       .await

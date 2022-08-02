@@ -18,8 +18,6 @@ pub struct Config {
   // Rabbitmq envs
   pub rabbitmq_uri: String,
   pub exchange_name: String,
-  pub queue_name: String,
-  pub routing_key: String,
   pub retry_ttl: u16,
 }
 
@@ -43,8 +41,6 @@ impl Config {
         ipfs_server: env::var("IPFS_SERVER").unwrap(),
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
-        queue_name: env::var("QUEUE_NAME").unwrap(),
-        routing_key: env::var("ROUTING_KEY").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
 
       }

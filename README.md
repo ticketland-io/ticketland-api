@@ -3,7 +3,6 @@
 Start Minio
 ===
 
-
 ```
 docker run -d  \
   -p 9000:9000 \

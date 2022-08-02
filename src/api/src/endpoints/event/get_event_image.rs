@@ -26,7 +26,7 @@ pub async fn exec(
   let event_id = params.event_id.clone();
 
   let ipfs_read_stream = S3Stream::new(
-    format!("{}-event_image.png", event_id),
+    format!("{}-event_file.png", event_id),
     1024,
     Arc::clone(&store.minio),
   );
@@ -36,7 +36,7 @@ pub async fn exec(
     .insert_header(ContentDisposition {
       disposition: DispositionType::Attachment,
       parameters: vec![
-        DispositionParam::Filename(format!("{}-event_image.png", event_id)),
+        DispositionParam::Filename(format!("{}-event_file.png", event_id)),
       ],
     })
     .streaming(ipfs_read_stream)
