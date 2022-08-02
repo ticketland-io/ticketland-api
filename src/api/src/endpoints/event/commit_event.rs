@@ -5,10 +5,7 @@ use actix_web::{
 };
 use ticketland_core::{
   error::Error,
-  streams::s3_stream::S3Stream,
 };
-use futures::future;
-use futures_util::StreamExt;
 use api_helpers::{
   services::http::internal_server_error,
   middleware::auth::AuthData,
@@ -20,7 +17,6 @@ use common_data::{
 };
 use crate::{
   utils::store::Store,
-  services::utils::get_event_file_path,
 };
 use super::common::EventParams;
 
@@ -45,27 +41,7 @@ pub async fn exec(
   
   let event = event.unwrap();
 
-  // TODO: This code will be moved to an external services. This endpoint will simply push 
-  // a message to RabbitMQ indicating that the given event_id was created on the blockchain.
-  let ipfs_read_stream = S3Stream::new(
-    get_event_file_path(&event.event_id, &event.file_type),
-    1024,
-    Arc::clone(&store.minio),
-  );
-
-  // Get all the data from the stream
-  let mut data = vec![];
-  ipfs_read_stream
-  .for_each(|val| {
-    let mut slice = val.unwrap().into_iter().collect::<Vec<u8>>();
-    data.append(&mut slice);
-    future::ready(())
-  })
-  .await;
-
-  let _ = store.ipfs.upload(data)
-  .await
-  .map_err(Into::<Error>::into)?;
+  store.new_event_queue.on_new_event(event.event_id, event.file_type).await;
 
   Ok(HttpResponse::Ok().finish())
 }
