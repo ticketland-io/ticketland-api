@@ -115,7 +115,7 @@ pub async fn store_event(
   }
 
   // Find the deterministic metadata CID
-  let response = store.ipfs.dry_run(bincode::serialize(&metadata).unwrap()).await?;
+  let response = store.ipfs.dry_run(serde_json::to_string(&metadata).unwrap().into()).await?;
 
   // Store the metadata as JSON on S3
   store.minio.upload(
