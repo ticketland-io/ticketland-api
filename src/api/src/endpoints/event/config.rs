@@ -1,11 +1,17 @@
 use actix_web::{web};
 use super::{
+  get_all_events,
   create_event,
   get_event_image,
   commit_event,
 };
 
 pub fn config(cfg: &mut web::ServiceConfig) {
+  cfg.service(
+    web::resource("/")
+    .route(web::get().to(get_all_events::exec))
+  );
+
   cfg.service(
     web::resource("{event_id}")
     .route(web::post().to(create_event::exec))

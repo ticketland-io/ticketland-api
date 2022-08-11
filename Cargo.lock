@@ -351,9 +351,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "android_system_properties"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7ed72e1635e121ca3e79420540282af22da58be50de153d36f81ddc6b83aa9e"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "api-helpers"
 version = "0.1.5"
-source = "git+https://github.com/ticketland-io/common-rust#a76e88ad9e585e1b50b333dd3b0c9853d444366d"
+source = "git+https://github.com/ticketland-io/common-rust#a789c4bb962b490f618e7d07b15a371a32cf5bbc"
 dependencies = [
  "actix",
  "actix-web",
@@ -785,15 +794,17 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.19"
+version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+checksum = "3f725f340c3854e3cb3ab736dc21f0cca183303acea3b3ffec30f141503ac8eb"
 dependencies = [
- "libc",
+ "iana-time-zone",
+ "js-sys",
  "num-integer",
  "num-traits",
  "serde",
  "time 0.1.44",
+ "wasm-bindgen",
  "winapi",
 ]
 
@@ -832,7 +843,7 @@ dependencies = [
 [[package]]
 name = "common-data"
 version = "0.1.3"
-source = "git+https://github.com/ticketland-io/common-rust#a76e88ad9e585e1b50b333dd3b0c9853d444366d"
+source = "git+https://github.com/ticketland-io/common-rust#a789c4bb962b490f618e7d07b15a371a32cf5bbc"
 dependencies = [
  "actix",
  "bolt-client",
@@ -1440,6 +1451,19 @@ dependencies = [
  "native-tls",
  "tokio",
  "tokio-native-tls",
+]
+
+[[package]]
+name = "iana-time-zone"
+version = "0.1.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9512e544c25736b82aebbd2bf739a47c8a1c935dfcc3a6adcde10e35cd3cd468"
+dependencies = [
+ "android_system_properties",
+ "core-foundation",
+ "js-sys",
+ "wasm-bindgen",
+ "winapi",
 ]
 
 [[package]]
@@ -2705,6 +2729,7 @@ dependencies = [
  "bincode",
  "borsh",
  "bytes",
+ "chrono",
  "common-data",
  "dotenv",
  "env_logger",
@@ -2722,7 +2747,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.1.2"
-source = "git+https://github.com/ticketland-io/common-rust#a76e88ad9e585e1b50b333dd3b0c9853d444366d"
+source = "git+https://github.com/ticketland-io/common-rust#a789c4bb962b490f618e7d07b15a371a32cf5bbc"
 dependencies = [
  "actix",
  "actix-multipart",

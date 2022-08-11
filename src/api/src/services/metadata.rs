@@ -5,6 +5,7 @@ use std::{
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
 use serde::{Serialize, Deserialize};
+use chrono::{Utc};
 use ticketland_core::error::Error;
 use common_data::{
   helpers::{send_write},
@@ -133,6 +134,7 @@ pub async fn store_event(
     uid,
     media_content_type.unwrap(),
     cid.clone(),
+    Utc::now().timestamp(),
   );
 
   send_write(
