@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use actix_cors::Cors;
 use actix_web::{middleware, web, http, App, HttpResponse, HttpServer};
 use env_logger::Env;
@@ -32,7 +33,7 @@ async fn main() -> std::io::Result<()> {
   env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
 	HttpServer::new(move || {
-    let authn_middleware = AuthnMiddlewareFactory::new(firebase_auth_key.clone());
+    let authn_middleware = Rc::new(AuthnMiddlewareFactory::new(firebase_auth_key.clone()));
 
     let cors = Cors::default()
       .allowed_origin(&cors_origin)
@@ -45,11 +46,7 @@ async fn main() -> std::io::Result<()> {
       .app_data(store.clone())
       .wrap(cors)
       .wrap(middleware::Logger::default())
-			.service(
-        web::scope("/events")
-          .wrap(authn_middleware)
-          .configure(event_config)
-      )
+			.service(web::scope("/events").configure(event_config(authn_middleware)))
       .route("/", web::get().to(|| HttpResponse::Ok()))
   })
   .bind(format!("0.0.0.0:{}", port))?
