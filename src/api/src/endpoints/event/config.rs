@@ -15,7 +15,7 @@ use super::{
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
   move |cfg: &mut web::ServiceConfig| {
     cfg.service(
-      web::resource("/")
+      web::resource("")
       .route(web::get().to(get_all_events::exec))
     );
 
