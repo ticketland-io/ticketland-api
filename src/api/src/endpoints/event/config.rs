@@ -10,6 +10,7 @@ use super::{
   create_event,
   get_event_image,
   commit_event,
+  save_user_ticket,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -23,6 +24,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/current-user")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_all_events::exec))
+    );
+
+    cfg.service(
+      web::resource("/{event_id}/tickets")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(save_user_ticket::exec))
     );
 
     cfg.service(

@@ -4,3 +4,4 @@ pub mod create_event;
 pub mod get_all_events;
 pub mod get_event_image;
 pub mod commit_event;
+pub mod save_user_ticket;
