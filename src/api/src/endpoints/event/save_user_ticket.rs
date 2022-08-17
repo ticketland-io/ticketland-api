@@ -22,10 +22,9 @@ use super::common::EventParams;
 #[derive(Deserialize)]
 pub struct Body {
   ticket_nft: String,
-  event_index: u32,
-  event_name: String,
+  seat_index: u32,
+  seat_name: String,
 }
-
 
 pub async fn exec(
   store: Data<Store>,
@@ -40,8 +39,8 @@ pub async fn exec(
         auth.user.local_id.clone(),
         params.event_id.clone(),
         body.ticket_nft.clone(),
-        body.event_index,
-        body.event_name.clone(),
+        body.seat_index,
+        body.seat_name.clone(),
         Utc::now().timestamp(),
       )
     })
