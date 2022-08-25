@@ -9,6 +9,7 @@ use super::{
   create_sell_listing,
   get_sell_listings,
   create_buy_listing,
+  get_buy_listings,
   fill_sell_listing,
   fill_buy_listing,
   cancel_sell_listing,
@@ -28,11 +29,15 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .route(web::get().to(get_sell_listings::exec))
     );
 
-
     cfg.service(
       web::resource("/{listing_account}/buys")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(create_buy_listing::exec))
+    );
+
+    cfg.service(
+      web::resource("/{listing_account}/buys")
+      .route(web::post().to(get_buy_listings::exec))
     );
 
     cfg.service(
