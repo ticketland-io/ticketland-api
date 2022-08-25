@@ -16,11 +16,6 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(save_user_ticket::exec))
-    );
-
-    cfg.service(
-      web::resource("")
-      .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_user_tickets::exec))
     );
   }
