@@ -5,7 +5,7 @@ use actix_web::{
   HttpResponse,
 };
 use api_helpers::{
-  impl_query_string,
+  QueryString,
   services::data::{QueryStringTrait, exec_basic_db_read_endpoint},
   middleware::auth::AuthData,
 };
@@ -16,14 +16,11 @@ use crate::{
   utils::store::Store,
 };
 
-#[derive(Deserialize, Default, Clone)]
-pub struct QueryString {
-  pub skip: Option<u32>,
-  pub limit: Option<u32>,
-  pub event_id: Option<String>,
+QueryString! {
+  pub struct QueryString {
+    pub event_id: Option<String>,
+  }
 }
-
-impl_query_string!(QueryString);
 
 pub async fn exec(
   store: Data<Store>,
