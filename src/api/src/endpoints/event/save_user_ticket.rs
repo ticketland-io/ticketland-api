@@ -22,6 +22,7 @@ use super::common::EventParams;
 #[derive(Deserialize)]
 pub struct Body {
   ticket_nft: String,
+  ticket_metadata: String,
   seat_index: u32,
   seat_name: String,
 }
