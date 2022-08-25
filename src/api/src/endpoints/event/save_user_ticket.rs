@@ -39,6 +39,7 @@ pub async fn exec(
         auth.user.local_id.clone(),
         params.event_id.clone(),
         body.ticket_nft.clone(),
+        body.ticket_metadata.clone(),
         body.seat_index,
         body.seat_name.clone(),
         Utc::now().timestamp(),
