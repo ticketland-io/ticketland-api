@@ -7,6 +7,7 @@ use api_helpers::{
 };
 use super::{
   create_sell_listing,
+  get_sell_listings,
   create_buy_listing,
   fill_sell_listing,
   fill_buy_listing,
@@ -21,6 +22,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(create_sell_listing::exec))
     );
+
+    cfg.service(
+      web::resource("/{listing_account}/sells")
+      .route(web::get().to(get_sell_listings::exec))
+    );
+
 
     cfg.service(
       web::resource("/{listing_account}/buys")
