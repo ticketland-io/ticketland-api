@@ -25,7 +25,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("/{listing_account}/sells")
+      web::resource("/sells")
       .route(web::get().to(get_sell_listings::exec))
     );
 
@@ -36,7 +36,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("/{listing_account}/buys")
+      web::resource("/buys")
       .route(web::post().to(get_buy_listings::exec))
     );
 
