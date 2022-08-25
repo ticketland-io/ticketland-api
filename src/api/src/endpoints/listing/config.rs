@@ -11,6 +11,7 @@ use super::{
   fill_sell_listing,
   fill_buy_listing,
   cancel_sell_listing,
+  cancel_buy_listing,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -43,6 +44,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/{listing_account}/sell-cancellations")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(cancel_sell_listing::exec))
+    );
+
+    cfg.service(
+      web::resource("/{listing_account}/buy-cancellations")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::post().to(cancel_buy_listing::exec))
     );
   }
 }
