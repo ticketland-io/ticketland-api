@@ -10,6 +10,8 @@ use ticketland_api::{
 	utils::store::Store,
   endpoints::{
     event::config::config as event_config,
+    ticket::config::config as ticket_config,
+    listing::config::config as listing_config,
   },
 };
 
@@ -46,7 +48,9 @@ async fn main() -> std::io::Result<()> {
       .app_data(store.clone())
       .wrap(cors)
       .wrap(middleware::Logger::default())
-			.service(web::scope("/events").configure(event_config(authn_middleware)))
+			.service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
+      .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
+      .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))
       .route("/", web::get().to(|| HttpResponse::Ok()))
   })
   .bind(format!("0.0.0.0:{}", port))?

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
-  web::{Data, Path, Json},
+  web::{Data, Json},
   HttpResponse,
 };
 use chrono::{Utc};
@@ -12,15 +12,15 @@ use api_helpers::{
   middleware::auth::AuthData,
 };
 use common_data::{
-  repositories::event::{create_user_ticket},
+  repositories::ticket::{create_user_ticket},
 };
 use crate::{
   utils::store::Store,
 };
-use super::common::EventParams;
 
 #[derive(Deserialize)]
 pub struct Body {
+  event_id: String,
   ticket_nft: String,
   ticket_metadata: String,
   seat_index: u32,
@@ -31,14 +31,13 @@ pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
   body: Json<Body>,
-  params: Path<EventParams>,
 ) -> HttpResponse {
   exec_basic_db_write_endpoint(
     Arc::clone(&store.neo4j),
     Box::new(move || {
       create_user_ticket(
         auth.user.local_id.clone(),
-        params.event_id.clone(),
+        body.event_id.clone(),
         body.ticket_nft.clone(),
         body.ticket_metadata.clone(),
         body.seat_index,
