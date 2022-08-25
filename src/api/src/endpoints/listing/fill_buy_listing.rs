@@ -12,7 +12,7 @@ use api_helpers::{
   middleware::auth::AuthData,
 };
 use common_data::{
-  repositories::listing::{create_buy_listing},
+  repositories::listing::{fill_buy_listing},
 };
 use crate::{
   utils::store::Store,
@@ -21,8 +21,7 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  bid_price: i64,
-  event_id: String,
+  ticket_metadata: String,
 }
 
 pub async fn exec(
@@ -34,11 +33,10 @@ pub async fn exec(
   exec_basic_db_write_endpoint(
     Arc::clone(&store.neo4j),
     Box::new(move || {
-      create_buy_listing(
+      fill_buy_listing(
         auth.user.local_id.clone(),
-        body.event_id.clone(),
         params.listing_account.clone(),
-        body.bid_price.clone(),
+        body.ticket_metadata.clone(),
         Utc::now().timestamp(),
       )
     })
