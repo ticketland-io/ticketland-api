@@ -20,7 +20,7 @@ use crate::{
 pub struct QueryString {
   pub skip: Option<u32>,
   pub limit: Option<u32>,
-  pub event_id: String,
+  pub event_id: Option<String>,
 }
 
 impl_query_string!(QueryString);
@@ -32,6 +32,8 @@ pub async fn exec(
 ) -> HttpResponse {
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
+  // TODO: we want to return user events for all events if this is none
+  let event_id = qs.event_id.clone().unwrap_or("".to_owned());
   
   exec_basic_db_read_endpoint(
     Arc::clone(&store.neo4j),
@@ -39,7 +41,7 @@ pub async fn exec(
     Box::new(move || {
       read_user_tickets_for_event(
         auth.user.local_id.clone(),
-        qs.event_id.clone(),
+        event_id,
         skip,
         limit
       )
