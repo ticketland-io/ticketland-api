@@ -7,7 +7,7 @@ use api_helpers::{
   middleware::auth::AuthnMiddlewareFactory,
 };
 use ticketland_api::{
-	utils::store::Store,
+  utils::store::Store,
   endpoints::{
     event::config::config as event_config,
     ticket::config::config as ticket_config,
@@ -17,24 +17,24 @@ use ticketland_api::{
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-	let orig_hook = panic::take_hook();
-	panic::set_hook(Box::new(move |panic_info| {
-		orig_hook(panic_info);
-		process::exit(1);
-	}));
+  let orig_hook = panic::take_hook();
+  panic::set_hook(Box::new(move |panic_info| {
+    orig_hook(panic_info);
+    process::exit(1);
+  }));
 
-	if env::var("ENV").unwrap() == "development" {
-			dotenv::from_filename(".env").expect("cannot load env from a file");
-	}
+  if env::var("ENV").unwrap() == "development" {
+      dotenv::from_filename(".env").expect("cannot load env from a file");
+  }
 
-	let store = web::Data::new(Store::new().await);
+  let store = web::Data::new(Store::new().await);
   let port = store.config.port;
   let cors_origin = store.config.cors_origin.clone();
   let firebase_auth_key = store.config.firebase_auth_key.clone();
 
   env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
-	HttpServer::new(move || {
+  HttpServer::new(move || {
     let authn_middleware = Rc::new(AuthnMiddlewareFactory::new(firebase_auth_key.clone()));
 
     let cors = Cors::default()
@@ -48,7 +48,7 @@ async fn main() -> std::io::Result<()> {
       .app_data(store.clone())
       .wrap(cors)
       .wrap(middleware::Logger::default())
-			.service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
+      .service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))
       .route("/", web::get().to(|| HttpResponse::Ok()))
