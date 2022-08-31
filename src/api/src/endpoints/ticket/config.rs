@@ -8,6 +8,7 @@ use api_helpers::{
 use super::{
   save_user_ticket,
   get_user_tickets,
+  verify_ticket,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -17,6 +18,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(save_user_ticket::exec))
       .route(web::get().to(get_user_tickets::exec))
+    );
+
+    cfg.service(
+      web::resource("{ticket_nft}/verifications")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::post().to(verify_ticket::exec))
     );
   }
 }
