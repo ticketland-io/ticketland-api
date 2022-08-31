@@ -1,9 +1,10 @@
 use std::str::FromStr;
-use serde::{Deserialize};
+use serde::{Serialize, Deserialize};
 use borsh::{
   BorshSerialize,
   BorshDeserialize,
 };
+use api_helpers::services::http::bad_request_error;
 use solana_sdk::{
   pubkey::Pubkey,
   signer::keypair::Keypair,
@@ -13,9 +14,8 @@ use solana_sdk::{
   keccak::hashv,
 };
 use actix_web::{
-  web::{Data, Json, Query, Path},
+  web::{Data, Json, Path},
   HttpResponse,
-  http::header,
 };
 use crate::{
   utils::store::Store,
@@ -26,7 +26,6 @@ pub struct Body {
   pub event_id: String,
   pub code_challenge: String,
   pub ticket_owner_pubkey: String,
-  pub return_url: String,
   pub sig: String,
 }
 
@@ -79,6 +78,15 @@ fn sign_msg<'a>(msg: VerifyTicketResult<'a>) -> String {
   hex::encode(signer.sign_message(message_hash))
 }
 
+
+#[derive(Serialize)]
+pub struct Response {
+  pub event_id: String,
+  pub code_challenge: String,
+  pub ticket_owner_pubkey: String,
+  pub sig: String,
+}
+
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
@@ -98,7 +106,7 @@ pub async fn exec(
   let sig = Signature::from_str(&body.sig).unwrap();
   let ticket_owner_pubkey = Pubkey::from_str(&body.ticket_owner_pubkey).unwrap();
 
-  let return_url = if sig.verify(&ticket_owner_pubkey.to_bytes(), message_hash) {
+  let response = if sig.verify(&ticket_owner_pubkey.to_bytes(), message_hash) {
     // 2. check that signer is the owner of the given ticket_metadata 
     let ticket_metadata = load_ticket_metadata_account::<TicketMetadata>(
       &store, 
@@ -112,23 +120,19 @@ pub async fn exec(
         ticket_metadata: &qs.ticket_metadata,
       });
 
-      format!(
-        "{}?event_id={}&code_challenge={}&ticket_metadata={}&ticket_owner_pubkey={}&sig={}",
-        body.return_url.clone(),
-        body.event_id,
-        body.code_challenge,
-        qs.ticket_metadata.clone(),
-        body.ticket_owner_pubkey,
+      HttpResponse::Ok()
+      .json(Response {
+        event_id: body.event_id.clone(),
+        code_challenge: body.code_challenge.clone(),
+        ticket_owner_pubkey: body.ticket_owner_pubkey.clone(),
         sig,
-      )
+      })
     } else {
-      format!("{}/error", body.return_url.clone())
+      bad_request_error()
     }
   } else {
-    format!("{}/error", body.return_url.clone())
+    bad_request_error()
   };
 
-  HttpResponse::MovedPermanently()
-  .append_header((header::LOCATION, return_url))
-  .finish()
+  response
 }
