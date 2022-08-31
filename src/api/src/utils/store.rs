@@ -7,6 +7,7 @@ use ticketland_core::{
     ipfs::Ipfs,
   },
 };
+use solana_client::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
@@ -16,6 +17,7 @@ pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
+  pub rpc_client: Arc<RpcClient>,
   pub ipfs: Ipfs,
   pub new_event_queue: NewEventQueue,
 }
@@ -50,10 +52,13 @@ impl Store {
       config.retry_ttl,
     ).await;
 
+    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone()));
+
     Self {
       config,
       neo4j,
       minio,
+      rpc_client,
       ipfs,
       new_event_queue,
     }

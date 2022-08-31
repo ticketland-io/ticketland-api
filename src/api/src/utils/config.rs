@@ -19,6 +19,8 @@ pub struct Config {
   pub rabbitmq_uri: String,
   pub exchange_name: String,
   pub retry_ttl: u16,
+  pub rpc_endpoint: String,
+  
 }
 
 impl Config {
@@ -42,7 +44,7 @@ impl Config {
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
-
+        rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
       }
     )
   }
