@@ -78,7 +78,7 @@ pub async fn exec(
   let sig = Signature::from_str(&body.sig).unwrap();
   let ticket_owner_pubkey = Pubkey::from_str(&body.ticket_owner_pubkey).unwrap();
 
-  if sig.verify(&ticket_owner_pubkey.to_bytes(), &message) {
+  let return_url = if sig.verify(&ticket_owner_pubkey.to_bytes(), &message) {
     // 2. check that signer is the owner of the given ticket_nft 
     let ticket_metadata = load_ticket_metadata_account::<TicketMetadata>(
       &store, 
@@ -86,17 +86,16 @@ pub async fn exec(
     ).await;
 
     if ticket_metadata.owner == ticket_owner_pubkey {
-      HttpResponse::MovedPermanently()
-        .header(header::LOCATION, qs.return_url.clone())
-        .finish()
-        .into_body();
+      // TODO: sign a message and include sig in the return_url
+      format!("{}/success", qs.return_url.clone())
     } else {
-
+      format!("{}/error", qs.return_url.clone())
     }
   } else {
-    // redirect with error
-  }
+    format!("{}/error", qs.return_url.clone())
+  };
 
-
-  todo!()
+  HttpResponse::MovedPermanently()
+  .append_header((header::LOCATION, return_url))
+  .finish()
 }
