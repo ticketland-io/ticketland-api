@@ -66,37 +66,39 @@ struct TicketMetadata {
 struct VerifyTicketResult<'a> {
   pub event_id: &'a str,
   pub code_challenge: &'a str,
+  pub ticket_owner_pubkey: &'a str,
   pub ticket_metadata: &'a str,
 }
 
 fn sign_msg<'a>(msg: VerifyTicketResult<'a>) -> String {
+  // TODO: this will be read from config.rs
   let signer = Keypair::from_base58_string(&"2jCJYqD2DYBK9wiQ55SLzV6umpcKzEpczQ3o6QyCXLLYahmoFD3GeuN2R36QR85BuqELSZTqHKAwMwC6ev9Nr75u");
   let mut message: Vec<u8> = Vec::new();
   msg.serialize(&mut message).unwrap();
   let message_hash = &hashv(&[&message]).0;
 
-  hex::encode(signer.sign_message(message_hash))
+  bs58::encode(signer.sign_message(message_hash)).into_string()
 }
-
 
 #[derive(Serialize)]
 pub struct Response {
   pub event_id: String,
   pub code_challenge: String,
   pub ticket_owner_pubkey: String,
+  pub ticket_metadata: String,
   pub sig: String,
 }
 
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
-  qs: Path<Params>,
+  params: Path<Params>,
 ) -> HttpResponse {
   // 1. recover the signer
   let raw_message = VerifyTicketMsg {
     event_id: &body.event_id,
     code_challenge: &body.code_challenge,
-    ticket_metadata: &qs.ticket_metadata,
+    ticket_metadata: &params.ticket_metadata,
   };
 
   let mut message: Vec<u8> = Vec::new();
@@ -110,14 +112,15 @@ pub async fn exec(
     // 2. check that signer is the owner of the given ticket_metadata 
     let ticket_metadata = load_ticket_metadata_account::<TicketMetadata>(
       &store, 
-      &Pubkey::from_str(&qs.ticket_metadata).unwrap()
+      &Pubkey::from_str(&params.ticket_metadata).unwrap()
     ).await;
 
     if ticket_metadata.owner == ticket_owner_pubkey {
       let sig = sign_msg(VerifyTicketResult {
         event_id: &body.event_id,
         code_challenge: &body.code_challenge,
-        ticket_metadata: &qs.ticket_metadata,
+        ticket_owner_pubkey: &body.ticket_owner_pubkey,
+        ticket_metadata: &params.ticket_metadata,
       });
 
       HttpResponse::Ok()
@@ -125,6 +128,7 @@ pub async fn exec(
         event_id: body.event_id.clone(),
         code_challenge: body.code_challenge.clone(),
         ticket_owner_pubkey: body.ticket_owner_pubkey.clone(),
+        ticket_metadata: params.ticket_metadata.clone(),
         sig,
       })
     } else {
