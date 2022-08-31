@@ -6,8 +6,11 @@ use borsh::{
 };
 use solana_sdk::{
   pubkey::Pubkey,
+  signer::keypair::Keypair,
+  signature::Signer,
   signature::Signature,
   borsh::try_from_slice_unchecked,
+  keccak::hashv,
 };
 use actix_web::{
   web::{Data, Json, Query},
@@ -60,6 +63,22 @@ struct TicketMetadata {
   pub metadata: Pubkey,
 }
 
+#[derive(BorshSerialize)]
+struct VerifyTicketResult<'a> {
+  pub event_id: &'a str,
+  pub code_challenge: &'a str,
+  pub ticket_nft: &'a str,
+}
+
+fn sign_msg<'a>(msg: VerifyTicketResult<'a>) -> String {
+  let signer = Keypair::from_base58_string(&"2jCJYqD2DYBK9wiQ55SLzV6umpcKzEpczQ3o6QyCXLLYahmoFD3GeuN2R36QR85BuqELSZTqHKAwMwC6ev9Nr75u");
+  let mut message: Vec<u8> = Vec::new();
+  msg.serialize(&mut message).unwrap();
+  let message_hash = &hashv(&[&message]).0;
+
+  hex::encode(signer.sign_message(message_hash))
+}
+
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
@@ -74,11 +93,12 @@ pub async fn exec(
 
   let mut message: Vec<u8> = Vec::new();
   raw_message.serialize(&mut message).unwrap();
+  let message_hash = &hashv(&[&message]).0;
 
   let sig = Signature::from_str(&body.sig).unwrap();
   let ticket_owner_pubkey = Pubkey::from_str(&body.ticket_owner_pubkey).unwrap();
 
-  let return_url = if sig.verify(&ticket_owner_pubkey.to_bytes(), &message) {
+  let return_url = if sig.verify(&ticket_owner_pubkey.to_bytes(), message_hash) {
     // 2. check that signer is the owner of the given ticket_nft 
     let ticket_metadata = load_ticket_metadata_account::<TicketMetadata>(
       &store, 
@@ -86,8 +106,21 @@ pub async fn exec(
     ).await;
 
     if ticket_metadata.owner == ticket_owner_pubkey {
-      // TODO: sign a message and include sig in the return_url
-      format!("{}/success", qs.return_url.clone())
+      let sig = sign_msg(VerifyTicketResult {
+        event_id: &body.event_id,
+        code_challenge: &body.code_challenge,
+        ticket_nft: &qs.ticket_nft,
+      });
+
+      format!(
+        "{}?event_id={}&code_challenge={}&ticket_nft={}&ticket_owner_pubkey={}&sig={}",
+        qs.return_url.clone(),
+        body.event_id,
+        body.code_challenge,
+        qs.ticket_nft.clone(),
+        body.ticket_owner_pubkey,
+        sig,
+      )
     } else {
       format!("{}/error", qs.return_url.clone())
     }
