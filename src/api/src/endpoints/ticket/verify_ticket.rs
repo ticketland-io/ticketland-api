@@ -13,7 +13,7 @@ use solana_sdk::{
   keccak::hashv,
 };
 use actix_web::{
-  web::{Data, Json, Query},
+  web::{Data, Json, Query, Path},
   HttpResponse,
   http::header,
 };
@@ -26,27 +26,27 @@ pub struct Body {
   pub event_id: String,
   pub code_challenge: String,
   pub ticket_owner_pubkey: String,
+  pub return_url: String,
   pub sig: String,
 }
 
 #[derive(Deserialize)]
-pub struct QueryString {
-  pub ticket_nft: String,
-  pub return_url: String,
+pub struct Params {
+  pub ticket_metadata: String,
 }
 
 #[derive(BorshSerialize)]
 struct VerifyTicketMsg<'a> {
   pub event_id: &'a str,
   pub code_challenge: &'a str,
-  pub ticket_nft: &'a str,
+  pub ticket_metadata: &'a str,
 }
 
 async fn load_ticket_metadata_account<T>(store: &Data<Store>, account_key: &Pubkey) -> T
   where 
     T: borsh::de::BorshDeserialize
 {
-  let mut account_data = store.rpc_client.get_account_data(account_key).unwrap();
+  let mut account_data = store.rpc_client.get_account_data(account_key).await.unwrap();
   // remove the Anchor account discriminator
   account_data.drain(0..8);
   try_from_slice_unchecked::<T>(&account_data).unwrap()
@@ -67,7 +67,7 @@ struct TicketMetadata {
 struct VerifyTicketResult<'a> {
   pub event_id: &'a str,
   pub code_challenge: &'a str,
-  pub ticket_nft: &'a str,
+  pub ticket_metadata: &'a str,
 }
 
 fn sign_msg<'a>(msg: VerifyTicketResult<'a>) -> String {
@@ -82,13 +82,13 @@ fn sign_msg<'a>(msg: VerifyTicketResult<'a>) -> String {
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
-  qs: Query<QueryString>,
+  qs: Path<Params>,
 ) -> HttpResponse {
   // 1. recover the signer
   let raw_message = VerifyTicketMsg {
     event_id: &body.event_id,
     code_challenge: &body.code_challenge,
-    ticket_nft: &qs.ticket_nft,
+    ticket_metadata: &qs.ticket_metadata,
   };
 
   let mut message: Vec<u8> = Vec::new();
@@ -99,33 +99,33 @@ pub async fn exec(
   let ticket_owner_pubkey = Pubkey::from_str(&body.ticket_owner_pubkey).unwrap();
 
   let return_url = if sig.verify(&ticket_owner_pubkey.to_bytes(), message_hash) {
-    // 2. check that signer is the owner of the given ticket_nft 
+    // 2. check that signer is the owner of the given ticket_metadata 
     let ticket_metadata = load_ticket_metadata_account::<TicketMetadata>(
       &store, 
-      &Pubkey::from_str(&qs.ticket_nft).unwrap()
+      &Pubkey::from_str(&qs.ticket_metadata).unwrap()
     ).await;
 
     if ticket_metadata.owner == ticket_owner_pubkey {
       let sig = sign_msg(VerifyTicketResult {
         event_id: &body.event_id,
         code_challenge: &body.code_challenge,
-        ticket_nft: &qs.ticket_nft,
+        ticket_metadata: &qs.ticket_metadata,
       });
 
       format!(
-        "{}?event_id={}&code_challenge={}&ticket_nft={}&ticket_owner_pubkey={}&sig={}",
-        qs.return_url.clone(),
+        "{}?event_id={}&code_challenge={}&ticket_metadata={}&ticket_owner_pubkey={}&sig={}",
+        body.return_url.clone(),
         body.event_id,
         body.code_challenge,
-        qs.ticket_nft.clone(),
+        qs.ticket_metadata.clone(),
         body.ticket_owner_pubkey,
         sig,
       )
     } else {
-      format!("{}/error", qs.return_url.clone())
+      format!("{}/error", body.return_url.clone())
     }
   } else {
-    format!("{}/error", qs.return_url.clone())
+    format!("{}/error", body.return_url.clone())
   };
 
   HttpResponse::MovedPermanently()

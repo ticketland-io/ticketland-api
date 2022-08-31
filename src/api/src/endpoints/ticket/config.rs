@@ -21,8 +21,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("{ticket_nft}/verifications")
-      .wrap(Rc::clone(&authn_middleware))
+      web::resource("{ticket_metadata}/verifications")
       .route(web::post().to(verify_ticket::exec))
     );
   }

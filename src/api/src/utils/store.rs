@@ -7,7 +7,7 @@ use ticketland_core::{
     ipfs::Ipfs,
   },
 };
-use solana_client::rpc_client::RpcClient;
+use solana_client::nonblocking::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
