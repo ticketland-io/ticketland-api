@@ -423,10 +423,11 @@ checksum = "a26fa4d7e3f2eebadf743988fc8aec9fa9a9e82611acafd77c1462ed6262440a"
 [[package]]
 name = "api-helpers"
 version = "0.1.5"
-source = "git+https://github.com/ticketland-io/common-rust#224de9fe22bb6bfb20cfe82019306ed9eb758088"
+source = "git+https://github.com/ticketland-io/common-rust#1a2e27f157bb8a2ac82d57e75e258f85e94e9a23"
 dependencies = [
  "actix",
  "actix-web",
+ "async-trait",
  "bolt-client",
  "common-data",
  "fireauth",
@@ -615,9 +616,9 @@ checksum = "7a40729d2133846d9ed0ea60a8b9541bccddab49cd30f0715a1da672fe9a2524"
 
 [[package]]
 name = "async-trait"
-version = "0.1.56"
+version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96cf8829f67d2eab0b2dfa42c5d0ef737e0724e4a82b01b3e292456202b19716"
+checksum = "76464446b8bc32758d7e88ee1a804d9914cd9b1cb264c029899680b0be29826f"
 dependencies = [
  "proc-macro2 1.0.42",
  "quote 1.0.20",
@@ -1093,7 +1094,7 @@ dependencies = [
 [[package]]
 name = "common-data"
 version = "0.1.3"
-source = "git+https://github.com/ticketland-io/common-rust#224de9fe22bb6bfb20cfe82019306ed9eb758088"
+source = "git+https://github.com/ticketland-io/common-rust#1a2e27f157bb8a2ac82d57e75e258f85e94e9a23"
 dependencies = [
  "actix",
  "bolt-client",
@@ -4710,7 +4711,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.1.2"
-source = "git+https://github.com/ticketland-io/common-rust#224de9fe22bb6bfb20cfe82019306ed9eb758088"
+source = "git+https://github.com/ticketland-io/common-rust#1a2e27f157bb8a2ac82d57e75e258f85e94e9a23"
 dependencies = [
  "actix",
  "actix-multipart",
