@@ -12,6 +12,7 @@ use ticketland_api::{
     event::config::config as event_config,
     ticket::config::config as ticket_config,
     listing::config::config as listing_config,
+    canva::config::config as canva_config,
   },
 };
 
@@ -53,6 +54,7 @@ async fn main() -> std::io::Result<()> {
       .service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))
+      .service(web::scope("/canva").configure(canva_config(Rc::clone(&authn_middleware))))
       .route("/", web::get().to(|| HttpResponse::Ok()))
   })
   .bind(format!("0.0.0.0:{}", port))?
