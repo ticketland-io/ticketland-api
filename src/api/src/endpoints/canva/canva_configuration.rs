@@ -36,6 +36,7 @@ pub struct SuccessResponse {
   pub labels: Vec<String>,
 }
 
+// Check the details here https://docs.developer.canva.com/apps/extensions/publish-extensions/authentication#step-4-redirect-the-user-back-to-canva
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
