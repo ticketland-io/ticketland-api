@@ -17,7 +17,7 @@ use crate::{
 #[serde(rename_all = "camelCase")]
 pub struct Body {
   user: String,
-  brand: Option<String>,
+  // brand: Option<String>,
 }
 
 #[derive(Serialize)]

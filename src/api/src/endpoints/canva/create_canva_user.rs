@@ -14,7 +14,7 @@ use api_helpers::{
   middleware::auth::AuthData,
 };
 use common_data::{
-  helpers::{send_read},
+  helpers::{send_write},
   models::{canva_account::CanvaAccount},
   repositories::account::{create_canva_user},
 };
@@ -34,7 +34,7 @@ pub async fn exec(
 ) -> HttpResponse {
   let (query, db_query_params) = create_canva_user(auth.user.local_id.clone(), body.canva_uid.clone());
   
-  send_read(
+  send_write(
     Arc::clone(&store.neo4j),
     query,
     db_query_params,
