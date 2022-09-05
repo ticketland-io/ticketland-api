@@ -40,9 +40,7 @@ pub async fn exec(
     db_query_params,
   ).await
   .map(|result| {
-    let canva_account = TryInto::<CanvaAccount>::try_into(result);
-
-    if let Err(error) = canva_account {
+    if let Err(error) = TryInto::<CanvaAccount>::try_into(result) {
       return internal_server_error(Some(error))
     }
 
