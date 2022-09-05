@@ -9,6 +9,7 @@ pub struct Config {
   pub neo4j_database: Option<String>,
   pub firebase_auth_key: String,
   pub cors_origin: Vec<String>,
+  pub canva_key: String,
   pub minio_uri: String,
   pub minio_bucket: String,
   pub minio_access_key: String,
@@ -45,6 +46,7 @@ impl Config {
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
         rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
+        canva_key: env::var("CANVA_CLIENT_SECRET").unwrap(),
       }
     )
   }
