@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
     let cors_origin = store.config.cors_origin.clone();
     let cors = Cors::default()
       .allowed_origin_fn(move |origin, _| {
-        cors_origin.iter().any(|v| v == origin)
+        cors_origin.iter().any(|v| v == origin || v == "*")
       })
       .allowed_methods(vec!["GET", "POST"])
       .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])

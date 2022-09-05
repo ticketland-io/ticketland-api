@@ -28,11 +28,6 @@ pub struct Body {
   user: String,
   assets: Vec<Asset>,
   design_id: String,
-
-  // message: Option<String>,
-  // parent: Option<String>,
-  // brand: Option<String>,
-  // label: Option<String>,
 }
 
 #[derive(Serialize)]
