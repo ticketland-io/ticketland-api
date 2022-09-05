@@ -7,10 +7,17 @@ use api_helpers::{
 };
 use super::{
   publish,
+  create_canva_user,
 };
 
-pub fn config(_authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
+pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
   move |cfg: &mut web::ServiceConfig| {
+    cfg.service(
+      web::resource("users")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::post().to(create_canva_user::exec))
+    );
+
     cfg.service(
       // This is the endpoint Canva will upload the files tos
       web::resource("publish/resources/upload")
