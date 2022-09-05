@@ -8,6 +8,7 @@ use api_helpers::{
 use super::{
   publish,
   create_canva_user,
+  canva_configuration,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -18,8 +19,14 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .route(web::post().to(create_canva_user::exec))
     );
 
+    // This is the endpoint Canva will use to check if a user is authenticated
     cfg.service(
-      // This is the endpoint Canva will upload the files tos
+      web::resource("configuration")
+      .route(web::post().to(canva_configuration::exec))
+    );
+
+    // This is the endpoint Canva will upload the files tos
+    cfg.service(
       web::resource("publish/resources/upload")
       .route(web::post().to(publish::exec))
     );
