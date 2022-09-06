@@ -21,7 +21,7 @@ pub struct Config {
   pub exchange_name: String,
   pub retry_ttl: u16,
   pub rpc_endpoint: String,
-  
+  pub ticketland_dapp: String,
 }
 
 impl Config {
@@ -47,6 +47,7 @@ impl Config {
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
         rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
         canva_key: env::var("CANVA_CLIENT_SECRET").unwrap(),
+        ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
       }
     )
   }

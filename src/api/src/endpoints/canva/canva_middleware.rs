@@ -5,6 +5,7 @@ use std::{
 };
 use actix_web::{
   HttpMessage,
+  http::Method,
   web::{self},
   dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
   Error,
@@ -17,14 +18,16 @@ use futures_util::{
   stream::StreamExt,
   future::{LocalBoxFuture},
 };
+use qstring::QString;
 
 const LENIENCY_IN_SECS: i64 = 300;
 const VERSION: &str = "v1";
 
-const PATHS: [&str; 2] = [
-    "/canva/configuration",
-    "/canva/publish/resources/upload",
-  ];
+const PATHS: [&str; 3] = [
+  "/canva/configuration",
+  "/canva/publish/resources/upload",
+  "/canva/auth",
+];
 
 pub struct CanvaMiddlewareFactory {
   canva_key: String,
@@ -68,9 +71,90 @@ where
   fn calculate_sig(canva_key: String, message: String) -> String {
     let key = base64::decode(canva_key).unwrap();
     let mut mac = Hmac::<Sha256>::new_from_slice(key.as_ref()).unwrap();
-    
-    mac.update(message.as_bytes());
+
+    println!(">>>> {}", format!("{}", message));
+
+    mac.update(format!("{}", message).as_bytes());
     hex::encode(&mac.finalize().into_bytes()[..])
+  }
+
+  async fn create_get_message(req: &mut ServiceRequest) -> Result<(Vec<String>, String), Error> {
+    let qs = QString::from(req.query_string());
+    let is_valid = qs.get("extensions")
+      .and_then(|_| qs.get("user"))
+      .and_then(|_| qs.get("time"))
+      .and_then(|_| qs.get("brand"))
+      .and_then(|_| qs.get("state"))
+      .and_then(|_| qs.get("signatures"));
+
+    if is_valid.is_none() {
+      return Err(ErrorUnauthorized("Unauthorized"))
+    }
+
+    let message = format!("
+      {}:{}:{}:{}:{}:{}",
+      VERSION,
+      qs.get("time").unwrap(),
+      qs.get("user").unwrap(),
+      qs.get("brand").unwrap(),
+      qs.get("extensions").unwrap(),
+      qs.get("state").unwrap(),
+    );
+
+    let signatures: Vec<String> = qs.get("signatures").unwrap().split(",").map(|s| s.to_owned()).collect();
+    
+    Ok((signatures, message))
+  }
+
+  async fn create_post_message(req: &mut ServiceRequest, path: &str) -> Result<(Vec<String>, String), Error> {
+    let headers = req.headers();
+    let x_canva_timestamp = headers.get("X-Canva-Timestamp")
+      .map(|val| val.to_str());
+
+    if x_canva_timestamp.is_none() {
+      return Err(ErrorUnauthorized("Unauthorized"))
+    }
+
+    let x_canva_timestamp  = x_canva_timestamp.unwrap();
+    if x_canva_timestamp.is_err() {
+      return Err(ErrorUnauthorized("Unauthorized"))
+    }
+
+    let ts = x_canva_timestamp.unwrap().to_string();
+
+    if Utc::now().timestamp() - ts.parse::<i64>().unwrap() > LENIENCY_IN_SECS {
+      return Err(ErrorUnauthorized("Unauthorized"))
+    }
+
+    let mut body;
+    let mut raw_body;
+
+    {
+      body = req.take_payload();
+      raw_body = web::BytesMut::new();
+
+      while let Some(item) = body.next().await {
+        raw_body.extend_from_slice(&item?);
+      }
+    }
+
+    let headers = req.headers();
+    let signatures = headers.get("X-Canva-Signatures")
+      .map(|val| val.to_str());
+    
+    if signatures.is_none() {
+      return Err(ErrorUnauthorized("Unauthorized"))
+    }
+
+    let signatures  = signatures.unwrap();
+    if signatures.is_err() {
+      return Err(ErrorUnauthorized("Unauthorized"))
+    }
+
+    let signatures: Vec<String> = signatures.unwrap().split(",").map(|s| s.to_owned()).collect();
+    let message = format!("{}:{}:{}:{}", VERSION, ts, path.replace("/canva", ""), std::str::from_utf8(&raw_body).unwrap());
+
+    Ok((signatures, message))
   }
 }
 
@@ -90,78 +174,28 @@ where
     
     Box::pin(
       async move {
-        let ts;
-
-        {
-          let headers = req.headers();
-          let x_canva_timestamp = headers.get("X-Canva-Timestamp")
-            .map(|val| val.to_str());
-
-          if x_canva_timestamp.is_none() {
-            return Err(ErrorUnauthorized("Unauthorized"))
-          }
-  
-          let x_canva_timestamp  = x_canva_timestamp.unwrap();
-          if x_canva_timestamp.is_err() {
-            return Err(ErrorUnauthorized("Unauthorized"))
-          }
-
-          ts = x_canva_timestamp.unwrap().to_string();
-
-          if Utc::now().timestamp() - ts.parse::<i64>().unwrap() > LENIENCY_IN_SECS {
-            println!("ts");
-            return Err(ErrorUnauthorized("Unauthorized"))
-          }
-        }
-
         let path = PATHS.into_iter().find(|p| *p == req.path());
         if path.is_none() {
-          println!("path");
           return Err(ErrorUnauthorized("Unauthorized"))
         }
 
-        let mut body;
-        let mut raw_body;
-
-        {
-          body = req.take_payload();
-          raw_body = web::BytesMut::new();
-
-          while let Some(item) = body.next().await {
-            raw_body.extend_from_slice(&item?);
-          }
+        let (signatures, message);
+        
+        if req.method() == Method::POST {
+          (signatures, message) = Self::create_post_message(&mut req, path.unwrap()).await?;
+        } else if req.method() == Method::GET {
+          (signatures, message) = Self::create_get_message(&mut req).await?;
+        } else {
+          // The middleware support only GET and POST requests
+          return Err(ErrorUnauthorized("Unauthorized"))
         }
 
-        {
-          let headers = req.headers();
-          let signatures = headers.get("X-Canva-Signatures")
-            .map(|val| val.to_str());
-          
-          if signatures.is_none() {
-            println!("signatures none");
-            return Err(ErrorUnauthorized("Unauthorized"))
-          }
-
-          let signatures  = signatures.unwrap();
-          if signatures.is_err() {
-            println!("signatures str");
-            return Err(ErrorUnauthorized("Unauthorized"))
-          }
-
-          let signatures: Vec<&str> = signatures.unwrap().split(",").collect();
-          println!("path {:?}", path.unwrap().replace("/canva", ""));
-          let message = format!("{}:{}:{}:{:?}", VERSION, ts, path.unwrap().replace("/canva", ""), raw_body);
-          let sig = Self::calculate_sig(canva_key, message);
-          
-          println!("Sig >>>>>>>> {:?}", sig);
-          println!("Signatures >>>>>>>> {:?}", signatures);
-
-          if !signatures.iter().any(|v| *v == sig) {
-            println!("signatures not found");
-            return Err(ErrorUnauthorized("Unauthorized"))
-          }
+        let sig = Self::calculate_sig(canva_key, message);
+      
+        if !signatures.iter().any(|v| *v == sig) {
+          return Err(ErrorUnauthorized("Unauthorized"))
         }
-
+          
         return Ok(srv.call(req).await?)
       }
     )

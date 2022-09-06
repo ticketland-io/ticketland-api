@@ -9,7 +9,8 @@ use super::{
   publish,
   create_canva_user,
   canva_configuration,
-
+  auth,
+  
   canva_middleware::CanvaMiddlewareFactory,
 };
 
@@ -35,6 +36,13 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>, canva_key: String) -
       web::resource("publish/resources/upload")
       .wrap(Rc::clone(&canva_middleware_factory))
       .route(web::post().to(publish::exec))
+    );
+
+    // This is the endpoint Canva will use to check if a user is authenticated
+    cfg.service(
+      web::resource("auth")
+      .wrap(Rc::clone(&canva_middleware_factory))
+      .route(web::get().to(auth::exec))
     );
   }
 }
