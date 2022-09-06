@@ -40,7 +40,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>, canva_key: String) -
     
     cfg.service(
       web::resource("auth")
-      // .wrap(Rc::clone(&canva_middleware_factory))
+      .wrap(Rc::clone(&canva_middleware_factory))
       .route(web::get().to(auth::exec))
     );
   }

@@ -3,6 +3,7 @@ use std::{
   rc::Rc,
   str,
 };
+use actix_http::h1::Payload;
 use actix_web::{
   HttpMessage,
   http::Method,
@@ -147,8 +148,15 @@ where
     while let Some(item) = body.next().await {
       raw_body.extend_from_slice(&item?);
     }
+
+    let raw_body_copy = std::str::from_utf8(&raw_body).unwrap();
+    let message = format!("{}:{}:{}:{}", VERSION, ts, path.replace("/canva", ""), raw_body_copy);
     
-    let message = format!("{}:{}:{}:{}", VERSION, ts, path.replace("/canva", ""), std::str::from_utf8(&raw_body).unwrap());
+    // We need to put back the body we just consumer so it is later available in the handler
+    let (_, mut payload) = Payload::create(true);
+    payload.unread_data(raw_body.into());
+    req.set_payload(payload.into());
+    
 
     Ok((signatures, message))
     
