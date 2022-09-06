@@ -118,53 +118,40 @@ where
 
   async fn create_post_message(req: &mut ServiceRequest, path: &str) -> Result<(Vec<String>, String), Error> {
     let headers = req.headers();
-    let x_canva_timestamp = headers.get("X-Canva-Timestamp")
-      .map(|val| val.to_str());
+    let result = headers.get("X-Canva-Timestamp")
+      .and_then(|ts| {
+        ts.to_str().ok().map(|ts| ts)
+      })
+      .and_then(|ts| {
+        headers.get("X-Canva-Signatures").map(|signatures| (ts, signatures))
+      })
+      .and_then(|(ts, signatures)| {
+        signatures.to_str().ok().map(|signatures| (ts, signatures))
+      });
 
-    if x_canva_timestamp.is_none() {
+    if result.is_none() {
       return Err(ErrorUnauthorized("Unauthorized"))
     }
 
-    let x_canva_timestamp  = x_canva_timestamp.unwrap();
-    if x_canva_timestamp.is_err() {
-      return Err(ErrorUnauthorized("Unauthorized"))
-    }
-
-    let ts = x_canva_timestamp.unwrap().to_string();
+    let (ts, signatures) = result.unwrap();
+    let ts = ts.to_owned();
+    let signatures: Vec<String> = signatures.split(",").map(|s| s.to_owned()).collect();
 
     if Utc::now().timestamp() - ts.parse::<i64>().unwrap() > LENIENCY_IN_SECS {
       return Err(ErrorUnauthorized("Unauthorized"))
     }
 
-    let mut body;
-    let mut raw_body;
+    let mut body = req.take_payload();
+    let mut raw_body = web::BytesMut::new();
 
-    {
-      body = req.take_payload();
-      raw_body = web::BytesMut::new();
-
-      while let Some(item) = body.next().await {
-        raw_body.extend_from_slice(&item?);
-      }
+    while let Some(item) = body.next().await {
+      raw_body.extend_from_slice(&item?);
     }
-
-    let headers = req.headers();
-    let signatures = headers.get("X-Canva-Signatures")
-      .map(|val| val.to_str());
     
-    if signatures.is_none() {
-      return Err(ErrorUnauthorized("Unauthorized"))
-    }
-
-    let signatures  = signatures.unwrap();
-    if signatures.is_err() {
-      return Err(ErrorUnauthorized("Unauthorized"))
-    }
-
-    let signatures: Vec<String> = signatures.unwrap().split(",").map(|s| s.to_owned()).collect();
     let message = format!("{}:{}:{}:{}", VERSION, ts, path.replace("/canva", ""), std::str::from_utf8(&raw_body).unwrap());
 
     Ok((signatures, message))
+    
   }
 }
 
