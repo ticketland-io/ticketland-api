@@ -80,28 +80,38 @@ where
 
   async fn create_get_message(req: &mut ServiceRequest) -> Result<(Vec<String>, String), Error> {
     let qs = QString::from(req.query_string());
-    let is_valid = qs.get("extensions")
-      .and_then(|_| qs.get("user"))
-      .and_then(|_| qs.get("time"))
-      .and_then(|_| qs.get("brand"))
-      .and_then(|_| qs.get("state"))
-      .and_then(|_| qs.get("signatures"));
+    let result = qs.get("extensions")
+      .and_then(|extensions| {
+        qs.get("user").map(|user| (extensions, user))
+      })
+      .and_then(|(extensions, user)| {
+        qs.get("time").map(|time| (extensions, user, time))
+      })
+      .and_then(|(extensions, user, time)| {
+        qs.get("brand").map(|brand| (extensions, user, time, brand))
+      })
+      .and_then(|(extensions, user, time, brand)| {
+        qs.get("state").map(|state| (extensions, user, time, brand, state))
+      })
+      .and_then(|(extensions, user, time, brand, state)| {
+        qs.get("signatures").map(|signatures| (extensions, user, time, brand, state, signatures))
+      });
 
-    if is_valid.is_none() {
+    if result.is_none() {
       return Err(ErrorUnauthorized("Unauthorized"))
     }
 
-    let message = format!("
-      {}:{}:{}:{}:{}:{}",
-      VERSION,
-      qs.get("time").unwrap(),
-      qs.get("user").unwrap(),
-      qs.get("brand").unwrap(),
-      qs.get("extensions").unwrap(),
-      qs.get("state").unwrap(),
-    );
+    let (
+      time,
+      user,
+      brand,
+      extensions,
+      state,
+      signatures
+    ) = result.unwrap();
 
-    let signatures: Vec<String> = qs.get("signatures").unwrap().split(",").map(|s| s.to_owned()).collect();
+    let signatures: Vec<String> = signatures.split(",").map(|s| s.to_owned()).collect();
+    let message = format!("{}:{}:{}:{}:{}:{}", VERSION, time, user, brand, extensions, state);
     
     Ok((signatures, message))
   }
