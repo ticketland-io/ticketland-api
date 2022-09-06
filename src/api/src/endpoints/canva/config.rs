@@ -3,15 +3,16 @@ use std::{
 };
 use actix_web::{web};
 use api_helpers::{
-  middleware::auth::AuthnMiddlewareFactory,
+  middleware::{
+    auth::AuthnMiddlewareFactory,
+    canva::CanvaMiddlewareFactory,
+  },
 };
 use super::{
   publish,
   create_canva_user,
   canva_configuration,
   auth,
-  
-  canva_middleware::CanvaMiddlewareFactory,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>, canva_key: String) -> impl FnOnce(&mut web::ServiceConfig) {

@@ -33,11 +33,3 @@ solana-client = "1.1.10"
 keccak-hash = "0.9.0"
 bs58 = "0.4.0"
 thiserror = "1.0.33"
-
-
-base64 = "0.13.0"
-hmac = "0.12.1"
-sha2 = "0.10.5"
-hex = "0.4"
-qstring = "0.7.2"
-actix-http = "3.2.1"

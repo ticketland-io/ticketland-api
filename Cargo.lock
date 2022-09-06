@@ -423,16 +423,23 @@ checksum = "a26fa4d7e3f2eebadf743988fc8aec9fa9a9e82611acafd77c1462ed6262440a"
 [[package]]
 name = "api-helpers"
 version = "0.1.5"
-source = "git+https://github.com/ticketland-io/common-rust#c1b58a85bc5cf1f900b24dac1af48399430fc0cf"
+source = "git+https://github.com/ticketland-io/common-rust#846c3e2cba892c39e47af44fa8404b757e5105b5"
 dependencies = [
  "actix",
+ "actix-http",
  "actix-web",
  "async-trait",
+ "base64 0.13.0",
  "bolt-client",
+ "chrono",
  "common-data",
  "fireauth",
  "futures-util",
+ "hex",
+ "hmac 0.12.1",
+ "qstring",
  "serde",
+ "sha2 0.10.5",
  "ticketland-core",
 ]
 
@@ -1094,7 +1101,7 @@ dependencies = [
 [[package]]
 name = "common-data"
 version = "0.1.3"
-source = "git+https://github.com/ticketland-io/common-rust#c1b58a85bc5cf1f900b24dac1af48399430fc0cf"
+source = "git+https://github.com/ticketland-io/common-rust#846c3e2cba892c39e47af44fa8404b757e5105b5"
 dependencies = [
  "actix",
  "bolt-client",
@@ -4681,13 +4688,11 @@ version = "0.1.0"
 dependencies = [
  "actix",
  "actix-cors",
- "actix-http",
  "actix-multipart",
  "actix-rt",
  "actix-web",
  "amqp-helpers",
  "api-helpers",
- "base64 0.13.0",
  "borsh",
  "bs58",
  "bytes",
@@ -4697,14 +4702,10 @@ dependencies = [
  "env_logger",
  "futures",
  "futures-util",
- "hex",
- "hmac 0.12.1",
  "keccak-hash",
  "mime",
- "qstring",
  "serde",
  "serde_json",
- "sha2 0.10.5",
  "solana-client",
  "solana-sdk",
  "thiserror",
@@ -4717,7 +4718,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.1.2"
-source = "git+https://github.com/ticketland-io/common-rust#c1b58a85bc5cf1f900b24dac1af48399430fc0cf"
+source = "git+https://github.com/ticketland-io/common-rust#846c3e2cba892c39e47af44fa8404b757e5105b5"
 dependencies = [
  "actix",
  "actix-multipart",
