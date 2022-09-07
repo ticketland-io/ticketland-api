@@ -7,16 +7,13 @@ use futures_util::stream::StreamExt;
 use serde::{Serialize, Deserialize};
 use chrono::{Utc};
 use ticketland_core::error::Error;
+use ticketland_event_handler::services::path;
 use common_data::{
   helpers::{send_write},
   repositories::event::upsert_event,
 };
 use crate::{
   utils::store::Store,
-  services::utils::{
-    get_event_metadata_path,
-    get_event_file_path,
-  },
 };
 
 pub type MetadataCID = String;
@@ -81,7 +78,7 @@ pub async fn store_event(
       media_content_type = Some(content_type.to_string().clone());
 
       store.minio.upload(
-        &get_event_file_path(&event_id, &content_type.to_string()),
+        &path::get_event_file_path(&event_id, &content_type.to_string()),
         content.as_ref()
       )
       .await
@@ -120,7 +117,7 @@ pub async fn store_event(
 
   // Store the metadata as JSON on S3
   store.minio.upload(
-    &get_event_metadata_path(&event_id),
+    &path::get_event_metadata_path(&event_id),
     serde_json::to_string(&metadata).unwrap().as_ref(),
   )
   .await

@@ -40,7 +40,6 @@ pub async fn exec(
   }
   
   let event = event.unwrap();
-
   store.new_event_queue.on_new_event(event.event_id, event.file_type).await;
 
   Ok(HttpResponse::Ok().finish())

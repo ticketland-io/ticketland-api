@@ -11,6 +11,7 @@ use solana_client::nonblocking::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
+  services::ticket_design_upload_queue::TicketDesignUploadQueue,
 };
 
 pub struct Store {
@@ -20,6 +21,7 @@ pub struct Store {
   pub rpc_client: Arc<RpcClient>,
   pub ipfs: Ipfs,
   pub new_event_queue: NewEventQueue,
+  pub ticket_design_upload_queue: TicketDesignUploadQueue,
 }
 
 impl Store {
@@ -52,6 +54,11 @@ impl Store {
       config.retry_ttl,
     ).await;
 
+    let ticket_design_upload_queue = TicketDesignUploadQueue::new(
+      config.rabbitmq_uri.clone(),
+      config.retry_ttl,
+    ).await;
+
     let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone()));
 
     Self {
@@ -61,6 +68,7 @@ impl Store {
       rpc_client,
       ipfs,
       new_event_queue,
+      ticket_design_upload_queue,
     }
   }
 }

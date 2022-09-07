@@ -49,6 +49,12 @@ pub async fn exec(
   body: Json<Body>,
 ) -> HttpResponse {
   let asset = body.assets.get(0).unwrap().clone();
+  
+  store.ticket_design_upload_queue.on_new_design(
+    body.design_id.clone(),
+    asset.name.clone(),
+    asset.file_type.clone(),
+  ).await;
 
   let (query, db_query_params) = upsert_ticket_design(
     body.user.clone(),

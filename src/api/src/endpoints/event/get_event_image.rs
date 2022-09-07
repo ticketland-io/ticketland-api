@@ -18,9 +18,11 @@ use common_data::{
   models::event::Event,
   repositories::event::{read_event},
 };
+use ticketland_event_handler::{
+  services::path,
+};
 use crate::{
   utils::store::Store,
-  services::utils::get_event_file_path,
 };
 use super::common::EventParams;
 
@@ -45,7 +47,7 @@ pub async fn exec(
   
   let event = event.unwrap();
   
-  let file_path = get_event_file_path(&event.event_id, &event.file_type);
+  let file_path = path::get_event_file_path(&event.event_id, &event.file_type);
 
   let ipfs_read_stream = S3Stream::new(
     file_path.clone(),

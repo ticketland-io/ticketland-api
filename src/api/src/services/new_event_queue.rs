@@ -1,11 +1,10 @@
 use borsh::{BorshSerialize};
 use amqp_helpers::producer::retry_producer::RetryProducer;
-use ticketland_event_handler::models::event::UploadFile;
-use crate::{
-  services::utils::get_event_file_path,
+use ticketland_event_handler::{
+  services::path,
+  models::event::UploadFile,
 };
 
-use super::utils::get_event_metadata_path;
 
 pub struct NewEventQueue {
   metadata_upload_producer: RetryProducer,
@@ -42,7 +41,7 @@ impl NewEventQueue {
   pub async fn on_new_event(&self, event_id: String, content_type: String) {
     let metadata_msg = UploadFile { 
       event_id: event_id.clone(),
-      path: get_event_file_path(&event_id, &content_type),
+      path: path::get_event_file_path(&event_id, &content_type),
     };
 
     self.metadata_upload_producer.publish(
@@ -53,7 +52,7 @@ impl NewEventQueue {
 
     let img_msg = UploadFile { 
       event_id: event_id.clone(),
-      path: get_event_metadata_path(&event_id),
+      path: path::get_event_metadata_path(&event_id),
     };
 
     self.image_upload_producer.publish(
