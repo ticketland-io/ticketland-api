@@ -1,7 +1,6 @@
 use borsh::{BorshSerialize};
 use amqp_helpers::producer::retry_producer::RetryProducer;
 use ticketland_event_handler::{
-  services::path,
   models::file::UploadFile,
 };
 
@@ -30,7 +29,7 @@ impl TicketDesignUploadQueue {
 
   pub async fn on_new_design(&self, design_id: String, content_type: String, source_url: String) {
     let file_msg = UploadFile { 
-      name: path::get_s3_path(&design_id, &content_type),
+      name: design_id,
       content_type,
       source_url,
     };
