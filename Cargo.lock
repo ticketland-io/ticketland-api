@@ -422,8 +422,8 @@ checksum = "a26fa4d7e3f2eebadf743988fc8aec9fa9a9e82611acafd77c1462ed6262440a"
 
 [[package]]
 name = "api-helpers"
-version = "0.1.5"
-source = "git+https://github.com/ticketland-io/common-rust#82d189b4243de99454babd406c087b5d621ec6c9"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/common-rust#681861387aae77686094f6d096441c93361d38a6"
 dependencies = [
  "actix",
  "actix-http",
@@ -1100,8 +1100,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.1.3"
-source = "git+https://github.com/ticketland-io/common-rust#82d189b4243de99454babd406c087b5d621ec6c9"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/common-rust#681861387aae77686094f6d096441c93361d38a6"
 dependencies = [
  "actix",
  "bolt-client",
@@ -4717,8 +4717,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-core"
-version = "0.1.2"
-source = "git+https://github.com/ticketland-io/common-rust#82d189b4243de99454babd406c087b5d621ec6c9"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/common-rust#681861387aae77686094f6d096441c93361d38a6"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -4741,7 +4741,7 @@ dependencies = [
 [[package]]
 name = "ticketland-event-handler"
 version = "0.1.0"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#42f4232bd8ca24fc334b563cb8f19ea88007962b"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#dc45aa9eebfe739decaf4129443dd23016c128b3"
 dependencies = [
  "actix",
  "actix-rt",
