@@ -42,6 +42,7 @@ impl Store {
 
     let minio = Arc::new(Minio::new(
       &config.minio_uri,
+      &config.minio_region,
       &config.minio_bucket,
       &config.minio_access_key,
       &config.minio_secret_key,
