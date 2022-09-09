@@ -130,7 +130,6 @@ pub async fn store_event(
     event_id,
     uid,
     media_content_type.unwrap(),
-    cid.clone(),
     Utc::now().timestamp(),
   );
 
