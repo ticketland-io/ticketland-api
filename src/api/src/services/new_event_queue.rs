@@ -31,7 +31,7 @@ impl NewEventQueue {
   pub async fn on_new_event(&self, event_id: String, content_type: String) {
     let img_msg = UploadImageFile { 
       event_id: event_id.clone(),
-      source_path: path::get_event_metadata_path(&event_id),
+      source_path: path::get_event_file_path(&event_id, &content_type),
       content_type: content_type.clone(),
     };
 
