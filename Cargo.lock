@@ -429,7 +429,7 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 [[package]]
 name = "api-helpers"
 version = "0.2.1"
-source = "git+https://github.com/ticketland-io/common-rust#1fb74d4e46a35621fcc067a07f4ad5980d442dfe"
+source = "git+https://github.com/ticketland-io/common-rust#2a821dbf843ea1f4571fd65128842a0502767685"
 dependencies = [
  "actix",
  "actix-http",
@@ -467,7 +467,7 @@ dependencies = [
  "env_logger",
  "futures",
  "glob",
- "infer",
+ "infer 0.7.0",
  "jsonwebkey",
  "log",
  "matches",
@@ -732,7 +732,7 @@ dependencies = [
  "strum_macros",
  "thiserror",
  "typed-builder",
- "uuid",
+ "uuid 0.8.2",
  "zerocopy",
 ]
 
@@ -1086,6 +1086,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cfb"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d38f2da7a0a2c4ccf0065be06397cc26a81f4e528be095826eee9d4adbb8c60f"
+dependencies = [
+ "byteorder",
+ "fnv",
+ "uuid 1.1.2",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1190,8 +1201,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.2.5"
-source = "git+https://github.com/ticketland-io/common-rust#1fb74d4e46a35621fcc067a07f4ad5980d442dfe"
+version = "0.2.6"
+source = "git+https://github.com/ticketland-io/common-rust#2a821dbf843ea1f4571fd65128842a0502767685"
 dependencies = [
  "actix",
  "bolt-client",
@@ -2273,6 +2284,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20b2b533137b9cad970793453d4f921c2e91312a6d88b1085c07bc15fc51bb3b"
 
 [[package]]
+name = "infer"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f178e61cdbfe084aa75a2f4f7a25a5bb09701a47ae1753608f194b15783c937a"
+dependencies = [
+ "cfb",
+]
+
+[[package]]
 name = "inout"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2294,7 +2314,7 @@ dependencies = [
 [[package]]
 name = "ipfs-api-backend-hyper"
 version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#695ff206ae21c0a32d29f3070cbfad81682b095b"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#3adb16969e2c1a233d600cba74ba1ac874a24672"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2309,7 +2329,7 @@ dependencies = [
 [[package]]
 name = "ipfs-api-prelude"
 version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#695ff206ae21c0a32d29f3070cbfad81682b095b"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#3adb16969e2c1a233d600cba74ba1ac874a24672"
 dependencies = [
  "async-trait",
  "bytes",
@@ -4928,8 +4948,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-core"
-version = "0.2.2"
-source = "git+https://github.com/ticketland-io/common-rust#1fb74d4e46a35621fcc067a07f4ad5980d442dfe"
+version = "0.2.3"
+source = "git+https://github.com/ticketland-io/common-rust#2a821dbf843ea1f4571fd65128842a0502767685"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -4940,6 +4960,7 @@ dependencies = [
  "bytes",
  "futures",
  "futures-util",
+ "infer 0.9.0",
  "ipfs-api-backend-hyper",
  "jsonwebkey",
  "reqwest",
@@ -5442,6 +5463,12 @@ dependencies = [
  "getrandom 0.2.7",
  "serde",
 ]
+
+[[package]]
+name = "uuid"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
 
 [[package]]
 name = "vcpkg"

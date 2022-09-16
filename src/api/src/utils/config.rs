@@ -14,8 +14,6 @@ pub struct Config {
   pub minio_bucket: String,
   pub minio_access_key: String,
   pub minio_secret_key: String,
-  pub ipfs_gateway: String,
-  pub ipfs_server: String,
   // Rabbitmq envs
   pub rabbitmq_uri: String,
   pub exchange_name: String,
@@ -40,8 +38,6 @@ impl Config {
         minio_bucket: env::var("NFT_BUCKET").unwrap(),
         minio_access_key: env::var("MINIO_ACCESS_KEY").unwrap(),
         minio_secret_key: env::var("MINIO_SECRET_KEY").unwrap(),
-        ipfs_gateway: env::var("IPFS_GATEWAY").unwrap(),
-        ipfs_server: env::var("IPFS_SERVER").unwrap(),
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),

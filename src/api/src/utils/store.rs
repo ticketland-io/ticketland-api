@@ -4,7 +4,6 @@ use ticketland_core::{
   actor::neo4j::Neo4jActor,
   services::{
     minio::Minio,
-    ipfs::Ipfs,
   },
 };
 use solana_client::nonblocking::rpc_client::RpcClient;
@@ -19,7 +18,6 @@ pub struct Store {
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
   pub rpc_client: Arc<RpcClient>,
-  pub ipfs: Ipfs,
   pub new_event_queue: NewEventQueue,
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
 }
@@ -48,8 +46,6 @@ impl Store {
       &config.minio_secret_key,
     ).await);
 
-    let ipfs = Ipfs::new(config.ipfs_server.clone());
-
     let new_event_queue = NewEventQueue::new(
       config.rabbitmq_uri.clone(),
       config.retry_ttl,
@@ -67,7 +63,6 @@ impl Store {
       neo4j,
       minio,
       rpc_client,
-      ipfs,
       new_event_queue,
       ticket_design_upload_queue,
     }
