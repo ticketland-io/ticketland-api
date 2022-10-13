@@ -36,8 +36,11 @@ pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
 ) -> HttpResponse {
-  let (query, db_query_params) = read_stripe_user(auth.user.local_id.clone());
+  let uid = auth.user.local_id.clone();
+  let (query, db_query_params) = read_stripe_user(uid.clone());
   let neo4j  = Arc::clone(&store.neo4j);
+  let ticketland_api  = store.config.ticketland_api.clone();
+  let ticketland_dapp  = store.config.ticketland_dapp.clone();
 
   let link = send_read(
     Arc::clone(&neo4j),
@@ -51,7 +54,10 @@ pub async fn exec(
           Ok((false, TryInto::<StripeAccount>::try_into(result).unwrap().account_link.clone()))
         } else {
           stripe::create_account_link(
-            store.config.stripe_key.clone()
+            store.config.stripe_key.clone(),
+            uid.clone(),
+            ticketland_api,
+            ticketland_dapp,
           )
           .await
           .map(|account_link| (true, account_link.url))

@@ -5,7 +5,12 @@ use stripe::{
 };
 use ticketland_core::error::Error;
 
-pub async fn create_account_link(secret_key: String) -> Result<AccountLink, Error> {
+pub async fn create_account_link(
+  secret_key: String,
+  uid: String,
+  ticketland_api: String,
+  ticketland_dapp: String,
+) -> Result<AccountLink, Error> {
   let client = Client::new(secret_key);
   let account = Account::create(
     &client,
@@ -31,8 +36,8 @@ pub async fn create_account_link(secret_key: String) -> Result<AccountLink, Erro
         type_: AccountLinkType::AccountOnboarding,
         collect: None,
         expand: &[],
-        refresh_url: Some("https://ticketland-api.loophole.site/stripe/webhooks/refresh-url"),
-        return_url: Some("https://ticketland-api.loophole.site/stripe/webhooks/return-url"),
+        refresh_url: Some(format!("{}/stripe/refresh-url?uid={}", &ticketland_api, &uid).as_str()),
+        return_url: Some(format!("{}/stripe/return-url", &ticketland_dapp).as_str()),
     },
   )
   .await
