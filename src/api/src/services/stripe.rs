@@ -106,24 +106,17 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Erro
           uid_copy.clone(),
           ticketland_dapp,
         )
-        .and_then(|account_link| {
-          async move {
-            let (query, db_query_params) = upsert_account_link(
-              uid.clone(),
-              account.stripe_uid.clone(),
-              account_link.url.clone()
-            );
-            
-            send_write(
-              Arc::clone(&neo4j),
-              query,
-              db_query_params,
-            )
-            .await
-            .map(|_| account_link.url.clone())
-          }
-        })
         .await
+        .map(|account_link| (account.stripe_uid.clone(), account_link))
+      }
+    })
+    .and_then(|(stripe_uid, account_link)| {
+      async move {
+        let (query, db_query_params) = upsert_account_link(uid.clone(), stripe_uid, account_link.url.clone());
+        
+        send_write(Arc::clone(&neo4j), query, db_query_params,)
+        .await
+        .map(|_| account_link.url.clone())
       }
     })
     .await
