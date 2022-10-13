@@ -25,7 +25,6 @@ pub struct Response {
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
   let (query, db_query_params) = read_stripe_user(uid.clone());
   let neo4j = Arc::clone(&store.neo4j);
-  let ticketland_api = store.config.ticketland_api.clone();
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
 
@@ -43,7 +42,6 @@ pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error
           create_stripe_account_link(
             store.config.stripe_key.clone(),
             uid_copy.clone(),
-            ticketland_api,
             ticketland_dapp,
           )
           .await
@@ -74,14 +72,12 @@ pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error
 
 pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
   let neo4j = Arc::clone(&store.neo4j);
-  let ticketland_api = store.config.ticketland_api.clone();
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
 
   create_stripe_account_link(
     store.config.stripe_key.clone(),
     uid_copy.clone(),
-    ticketland_api,
     ticketland_dapp,
   )
   .and_then(|account_link| {
@@ -103,7 +99,6 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Erro
 pub async fn create_stripe_account_link(
   secret_key: String,
   uid: String,
-  ticketland_api: String,
   ticketland_dapp: String,
 ) -> Result<AccountLink, Error> {
   let client = Client::new(secret_key);
@@ -131,7 +126,7 @@ pub async fn create_stripe_account_link(
         type_: AccountLinkType::AccountOnboarding,
         collect: None,
         expand: &[],
-        refresh_url: Some(format!("{}/stripe/refresh-url?uid={}", &ticketland_api, &uid).as_str()),
+        refresh_url: Some(format!("{}/stripe/refresh-url?uid={}", &ticketland_dapp, &uid).as_str()),
         return_url: Some(format!("{}/stripe/return-url", &ticketland_dapp).as_str()),
     },
   )

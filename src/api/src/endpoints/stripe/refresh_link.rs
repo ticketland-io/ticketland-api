@@ -1,13 +1,13 @@
 use std::sync::Arc;
-use serde::{Deserialize};
 use actix_web::{
-  web::{Data, Path},
+  web::{Data},
   HttpResponse,
 };
 use ticketland_core::{
   error::Error,
 };
 use api_helpers::{
+  middleware::auth::AuthData,
   services::{
     http::internal_server_error,
   },
@@ -20,16 +20,11 @@ use crate::{
   },
 };
 
-#[derive(Deserialize)]
-pub struct Params {
-  pub uid: String,
-}
-
 pub async fn exec(
   store: Data<Store>,
-  params: Path<Params>,
+  auth: AuthData,
 ) -> HttpResponse {
-  refresh_link(Arc::clone(&store), params.uid.clone())
+  refresh_link(Arc::clone(&store), auth.user.local_id)
   .await
   .map(|link| HttpResponse::Ok().json(Response {link}))
   .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
