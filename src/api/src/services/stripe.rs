@@ -31,7 +31,7 @@ pub async fn create_account_link(secret_key: String) -> Result<AccountLink, Erro
         type_: AccountLinkType::AccountOnboarding,
         collect: None,
         expand: &[],
-        refresh_url: Some("https://ticketland-api.loophole.site/stripe/webhooks/account-refresh"),
+        refresh_url: Some("https://ticketland-api.loophole.site/stripe/webhooks/refresh-url"),
         return_url: Some("https://ticketland-api.loophole.site/stripe/webhooks/return-url"),
     },
   )
