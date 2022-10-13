@@ -11,7 +11,7 @@ use common_data::{
   models::stripe_account::{StripeAccount},
   repositories::stripe::{
     read_stripe_user,
-    create_account_link,
+    upsert_account_link,
   }
 };
 use ticketland_core::error::Error;
@@ -53,7 +53,7 @@ pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error
       async move {
         if should_store {
           // We need to store the newly created 
-          let (query, db_query_params) = create_account_link(uid.clone(), account_link.clone());
+          let (query, db_query_params) = upsert_account_link(uid.clone(), account_link.clone());
       
           send_write(
             Arc::clone(&neo4j),
@@ -82,7 +82,7 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Erro
   )
   .and_then(|account_link| {
     async move {
-      let (query, db_query_params) = create_account_link(uid.clone(), account_link.url.clone());
+      let (query, db_query_params) = upsert_account_link(uid.clone(), account_link.url.clone());
       
       send_write(
         Arc::clone(&neo4j),
