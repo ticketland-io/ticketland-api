@@ -40,7 +40,6 @@ async fn main() -> std::io::Result<()> {
 
     let cors_origin = store.config.cors_origin.clone();
     let canva_key = store.config.canva_key.clone();
-    let stripe_key = store.config.stripe_key.clone();
 
     let cors = Cors::default()
       .allowed_origin_fn(move |origin, _| {
@@ -59,7 +58,7 @@ async fn main() -> std::io::Result<()> {
       .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/canva").configure(canva_config(Rc::clone(&authn_middleware), canva_key)))
-      .service(web::scope("/canva").configure(stripe_config(Rc::clone(&authn_middleware), stripe_key)))
+      .service(web::scope("/canva").configure(stripe_config(Rc::clone(&authn_middleware))))
       .route("/", web::get().to(|| HttpResponse::Ok()))
   })
   .bind(format!("0.0.0.0:{}", port))?

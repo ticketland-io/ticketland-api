@@ -429,7 +429,7 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 [[package]]
 name = "api-helpers"
 version = "0.2.1"
-source = "git+https://github.com/ticketland-io/common-rust#2a821dbf843ea1f4571fd65128842a0502767685"
+source = "git+https://github.com/ticketland-io/common-rust#a7db13b129f08453cf1f09b06526874779d116d0"
 dependencies = [
  "actix",
  "actix-http",
@@ -656,6 +656,30 @@ dependencies = [
  "async-trait",
  "futures-core",
  "reactor-trait",
+]
+
+[[package]]
+name = "async-stripe"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "218899c49b60727fcc0041f2823f9ee011419d1a485d1ee2cb784acf520898e7"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "hex",
+ "hmac 0.12.1",
+ "http-types",
+ "hyper",
+ "hyper-tls",
+ "serde",
+ "serde_json",
+ "serde_qs 0.9.2",
+ "sha2 0.10.5",
+ "smart-default",
+ "smol_str",
+ "thiserror",
+ "tokio",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1201,8 +1225,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.2.6"
-source = "git+https://github.com/ticketland-io/common-rust#2a821dbf843ea1f4571fd65128842a0502767685"
+version = "0.2.7"
+source = "git+https://github.com/ticketland-io/common-rust#a7db13b129f08453cf1f09b06526874779d116d0"
 dependencies = [
  "actix",
  "bolt-client",
@@ -2135,6 +2159,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-types"
+version = "2.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e9b187a72d63adbfba487f48095306ac823049cb504ee195541e91c7775f5ad"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "base64 0.13.0",
+ "futures-lite",
+ "http",
+ "infer 0.2.3",
+ "pin-project-lite",
+ "rand 0.7.3",
+ "serde",
+ "serde_json",
+ "serde_qs 0.8.5",
+ "serde_urlencoded",
+ "url",
+]
+
+[[package]]
 name = "httparse"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2279,6 +2324,12 @@ dependencies = [
 
 [[package]]
 name = "infer"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64e9829a50b42bb782c1df523f78d332fe371b10c661e78b7a3c34b0198e9fac"
+
+[[package]]
+name = "infer"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20b2b533137b9cad970793453d4f921c2e91312a6d88b1085c07bc15fc51bb3b"
@@ -2314,7 +2365,7 @@ dependencies = [
 [[package]]
 name = "ipfs-api-backend-hyper"
 version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#3adb16969e2c1a233d600cba74ba1ac874a24672"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#13e9823517c18bcb3e913da4e3b33dc50ffb2978"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2329,7 +2380,7 @@ dependencies = [
 [[package]]
 name = "ipfs-api-prelude"
 version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#3adb16969e2c1a233d600cba74ba1ac874a24672"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#13e9823517c18bcb3e913da4e3b33dc50ffb2978"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3946,6 +3997,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_qs"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7715380eec75f029a4ef7de39a9200e0a63823176b759d055b613f5a87df6a6"
+dependencies = [
+ "percent-encoding",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "serde_qs"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6af4cee6cd4b23b45e6709150d1e9af5c748131de7e3316a7c2b3008051ed725"
+dependencies = [
+ "percent-encoding",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4084,12 +4157,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
+name = "smart-default"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "133659a15339456eeeb07572eb02a91c91e9815e9cbc89566944d2c8d3efdbf6"
+dependencies = [
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "syn 1.0.99",
+]
+
+[[package]]
 name = "smartstring"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e714dff2b33f2321fdcd475b71cec79781a692d846f37f415fb395a1d2bcd48e"
 dependencies = [
  "static_assertions",
+]
+
+[[package]]
+name = "smol_str"
+version = "0.1.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7475118a28b7e3a2e157ce0131ba8c5526ea96e90ee601d9f6bb2e286a35ab44"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -4924,6 +5017,7 @@ dependencies = [
  "actix-web",
  "amqp-helpers",
  "api-helpers",
+ "async-stripe",
  "borsh",
  "bs58",
  "bytes",
@@ -4949,7 +5043,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#2a821dbf843ea1f4571fd65128842a0502767685"
+source = "git+https://github.com/ticketland-io/common-rust#a7db13b129f08453cf1f09b06526874779d116d0"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5446,6 +5540,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
