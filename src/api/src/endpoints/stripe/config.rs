@@ -14,7 +14,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("/account-links")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::post().to(create_account_link::exec))
+      .route(web::get().to(create_account_link::exec))
     );
   }
 }
