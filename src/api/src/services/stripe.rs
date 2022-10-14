@@ -2,7 +2,6 @@ use std::{
   sync::Arc,
   str::FromStr,
 };
-use futures_util::TryFutureExt;
 use serde::{Serialize};
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
@@ -13,7 +12,7 @@ use stripe::{
 };
 use common_data::{
   helpers::{send_read, send_write},
-  models::stripe_account::{StripeAccount, self},
+  models::stripe_account::{StripeAccount},
   repositories::{
     account::read_account,
     event::read_event_organizer_account,
