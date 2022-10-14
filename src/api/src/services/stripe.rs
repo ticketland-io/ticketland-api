@@ -7,7 +7,7 @@ use serde::{Serialize};
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
-  CreateAccountCapabilitiesTransfers, CreateAccountLink,
+  CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
   AccountId,
 };
 use common_data::{
@@ -156,7 +156,7 @@ pub async fn create_stripe_account_link(
     CreateAccountLink {
         account: stripe_uid,
         type_: AccountLinkType::AccountOnboarding,
-        collect: None,
+        collect: Some(AccountLinkCollect::EventuallyDue),
         expand: &[],
         refresh_url: Some(format!("{}/stripe/refresh-url?uid={}", &ticketland_dapp, &uid).as_str()),
         return_url: Some(format!("{}/stripe/return-url", &ticketland_dapp).as_str()),
