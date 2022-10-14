@@ -8,7 +8,8 @@ use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
   CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
-  AccountId,
+  AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
+  TransferScheduleInterval,
 };
 use common_data::{
   helpers::{send_read, send_write},
@@ -104,6 +105,12 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Erro
 pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error>  {
   let client = Client::new(secret_key);
   
+  // We need to create a manual payyout schedule. The reason is that buying a ticket requires two steps.
+  // We need to first charge user's card and then send a tx to the blockchain to mint the ticket.
+  // However, there are no atomicity guarantees here. For example, we might charge user's card and then realize
+  // that the ticket has already been purchased by someone else i.e. race condition. To avoid that we can essentially
+  // revert the payment by refunding the original account if something like that happens. In the happy path scenario
+  // we would release the payment to the event organizers bank account after a ticket is successfully minted.
   Account::create(
     &client,
     CreateAccount {
@@ -113,6 +120,16 @@ pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error
           requested: Some(true),
         }),
         transfers: Some(CreateAccountCapabilitiesTransfers {requested: Some(true)}),
+        ..Default::default()
+      }),
+      settings: Some(AccountSettingsParams {
+        payouts: Some(PayoutSettingsParams {
+          schedule: Some(TransferScheduleParams {
+            interval: Some(TransferScheduleInterval::Manual),
+            ..Default::default()
+          }),
+          ..Default::default()
+        }),
         ..Default::default()
       }),
       ..Default::default()
