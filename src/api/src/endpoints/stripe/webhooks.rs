@@ -19,10 +19,9 @@ use crate::{
   utils::store::Store,
 };
 
-
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
-		handle_webhook(store, req, payload).unwrap();
-		HttpResponse::Ok().finish()
+	handle_webhook(store, req, payload).unwrap();
+	HttpResponse::Ok().finish()
 }
 
 pub fn handle_webhook(
