@@ -27,62 +27,41 @@ pub struct Response {
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
-  let (query, db_query_params) = read_stripe_user(uid.clone());
   let neo4j = Arc::clone(&store.neo4j);
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
 
-  send_read(
-    Arc::clone(&neo4j),
-      query,
-      db_query_params,
-    )
-    .and_then(|result| {
-      async move {
-        // if no account link exist we would need to create one using Stripe API
-        if result.0.len() > 0 {
-          Ok((false, AccountId::default(), TryInto::<StripeAccount>::try_into(result).unwrap().account_link.clone()))
-        } else {
-          create_stripe_account(store.config.stripe_key.clone())
-          .and_then(|account| {
-            async move {
-              create_stripe_account_link(
-                store.config.stripe_key.clone(),
-                account.id.clone(),
-                uid_copy.clone(),
-                ticketland_dapp,
-              )
-              .await
-              .map(|account_link| (true, account.id.clone(), account_link.url))
-            }
-          })
-          .await
-        }
-      }
-    })
-    .and_then(|(should_store, stripe_uid, account_link)| {
-      async move {
-        if should_store {
-          // We need to store the newly created 
-          let (query, db_query_params) = upsert_account_link(
-            uid.clone(),
-            stripe_uid.to_string(),
-            account_link.clone()
-          );
-      
-          send_write(
-            Arc::clone(&neo4j),
-            query,
-            db_query_params,
-          )
-          .await
-          .map(|_| account_link.clone())
-        } else {
-          Ok(account_link.clone())
-        }
-      }
-    })
-    .await
+  create_stripe_account(store.config.stripe_key.clone())
+  .and_then(|account| {
+    async move {
+      create_stripe_account_link(
+        store.config.stripe_key.clone(),
+        account.id.clone(),
+        uid_copy.clone(),
+        ticketland_dapp,
+      )
+      .await
+      .map(|account_link| (account.id.clone(), account_link.url))
+    }
+  })
+  .and_then(|(stripe_uid, account_link)| {
+    async move {
+      let (query, db_query_params) = upsert_account_link(
+        uid.clone(),
+        stripe_uid.to_string(),
+        account_link.clone()
+      );
+  
+      send_write(
+        Arc::clone(&neo4j),
+        query,
+        db_query_params,
+      )
+      .await
+      .map(|_| account_link.clone())
+    }
+  })
+  .await
 }
 
 pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
