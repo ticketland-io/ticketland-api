@@ -76,6 +76,7 @@ async fn handle_account_updated(store: &Data<Store>, account: stripe::Account) -
 	.and_then(|requirements| requirements.eventually_due)
 	.unwrap_or(vec![]);
 
+	// If there are no pending info to be added by the conect use then `eventually_due` will be empty 
 	if eventually_due.len() == 0 {
 		let (query, db_query_params) = update_stripe_account_status(account.id.to_string());
 
@@ -88,6 +89,9 @@ async fn handle_account_updated(store: &Data<Store>, account: stripe::Account) -
 		.map(|_| ())
 	}
 
+	// return OK if the on boarding process for the connect account has not finished; that is there are
+	// still pending `eventually_due` items. Stripe will be calling this webhook eveytime there is an update
+	// e.g. user personal details added, identity card uploaded etc.
 	Ok(())
 }
 
