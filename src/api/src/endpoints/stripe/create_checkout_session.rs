@@ -32,7 +32,7 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> HttpResponse {
-  create_checkout_session(Arc::clone(&store), auth.user.local_id)
+  create_checkout_session(Arc::clone(&store), auth.user.local_id, body.event_id.clone(), body.ticket_nft.clone())
   .await
   .map(|session_id| HttpResponse::Ok().json(CheckoutSessionResponse {session_id}))
   .unwrap_or_else(|error: Error| internal_server_error(Some(error)))

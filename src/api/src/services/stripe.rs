@@ -8,7 +8,8 @@ use stripe::{
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
   CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
   AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
-  TransferScheduleInterval, CheckoutSession, Customer, CreateCustomer,
+  TransferScheduleInterval, CheckoutSession, Customer, CreateCustomer, CreateProduct,
+  Product, CreatePrice, Currency, IdOrCreate, Price
 };
 use common_data::{
   helpers::{send_read, send_write},
@@ -24,6 +25,7 @@ use common_data::{
 };
 use ticketland_core::error::Error;
 use crate::utils::store::Store;
+use super::price_feed::get_sol_price;
 
 #[derive(Serialize)]
 pub struct Response {
@@ -33,6 +35,10 @@ pub struct Response {
 #[derive(Serialize)]
 pub struct CheckoutSessionResponse {
   pub session_id: String,
+}
+
+fn into_stripe_error(error: impl std::error::Error) -> Error {
+  Into::<Error>::into(format!("Stripe Error {:?}", error).as_str())
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
@@ -114,7 +120,7 @@ pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error
     },
   )
   .await
-  .map_err(|error| Into::<Error>::into(format!("Stripe Error {:?}", error).as_str()))
+  .map_err(into_stripe_error)
 }
 
 pub async fn create_stripe_account_link(
@@ -137,7 +143,7 @@ pub async fn create_stripe_account_link(
     },
   )
   .await
-  .map_err(|error| format!("Stripe Error {:?}", error).as_str().into())
+  .map_err(into_stripe_error)
 }
 
 pub async fn create_checkout_session(
@@ -145,13 +151,13 @@ pub async fn create_checkout_session(
   buyer_uid: String,
   event_id: String,
   ticket_nft: String,
-) -> Result<CheckoutSession, Error> {
+) -> Result<String, Error> {
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
-  let (query, db_query_params) = read_account(buyer_uid.clone());
-  let buyer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
 
   // TODO: we need to add name and email as well
+  // let (query, db_query_params) = read_account(buyer_uid.clone());
+  // let buyer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
   // TODO: do we need this https://github.com/arlyon/async-stripe/blob/master/examples/checkout.rs#L31?
   let customer = Customer::create(
     &client,
@@ -159,7 +165,31 @@ pub async fn create_checkout_session(
       description: Some(&buyer_uid.clone()),
       ..Default::default()
     },
-  );
+  ).await
+  .map_err(into_stripe_error)?;
+
+  let product = {
+    // TODO: we can additional props to the product such as url
+    let product_name = format!("{}{}", &event_id, &ticket_nft);
+    let create_product = CreateProduct::new(&product_name);
+    
+    Product::create(&client, create_product)
+    .await
+    .map_err(|error| Into::<Error>::into(format!("Stripe Error {:?}", error).as_str()))?
+  };
+
+  // and add a price for it in USD
+  let price = {
+    // TODO: we might wnat to support multiple currencies
+    let mut create_price = CreatePrice::new(Currency::USD);
+    create_price.product = Some(IdOrCreate::Id(&product.id));
+    create_price.unit_amount = Some(get_sol_price().await?);
+    create_price.expand = &["product"];
+
+    Price::create(&client, create_price)
+    .await
+    .map_err(into_stripe_error)?
+  };
 
   let (query, db_query_params) = read_event_organizer_account(event_id.clone());
   let event_organizer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
