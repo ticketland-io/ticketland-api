@@ -10,6 +10,8 @@ pub struct Config {
   pub firebase_auth_key: String,
   pub cors_origin: Vec<String>,
   pub canva_key: String,
+  pub stripe_key: String,
+  pub stripe_webhook_key: String,
   pub minio_region: String,
   pub minio_bucket: String,
   pub minio_access_key: String,
@@ -19,6 +21,7 @@ pub struct Config {
   pub exchange_name: String,
   pub retry_ttl: u16,
   pub rpc_endpoint: String,
+  pub ticketland_api: String,
   pub ticketland_dapp: String,
 }
 
@@ -43,6 +46,9 @@ impl Config {
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
         rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
         canva_key: env::var("CANVA_CLIENT_SECRET").unwrap(),
+        stripe_key: env::var("STRIPE_CLIENT_SECRET").unwrap(),
+        stripe_webhook_key: env::var("STRIPE_WEBHOOK_SECRET").unwrap(),
+        ticketland_api: env::var("TICKETLAND_API").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
       }
     )
