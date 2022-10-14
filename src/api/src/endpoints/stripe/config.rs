@@ -8,6 +8,7 @@ use api_helpers::{
 use super::{
   create_account_link,
   refresh_link,
+  webhooks,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -21,6 +22,10 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/refresh-url")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(refresh_link::exec))
+    );
+    cfg.service(
+      web::resource("/webhooks")
+      .route(web::get().to(webhooks::exec))
     );
   }
 }

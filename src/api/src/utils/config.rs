@@ -11,6 +11,7 @@ pub struct Config {
   pub cors_origin: Vec<String>,
   pub canva_key: String,
   pub stripe_key: String,
+  pub stripe_webhook_key: String,
   pub minio_region: String,
   pub minio_bucket: String,
   pub minio_access_key: String,
@@ -46,6 +47,7 @@ impl Config {
         rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
         canva_key: env::var("CANVA_CLIENT_SECRET").unwrap(),
         stripe_key: env::var("STRIPE_CLIENT_SECRET").unwrap(),
+        stripe_webhook_key: env::var("STRIPE_WEBHOOK_SECRET").unwrap(),
         ticketland_api: env::var("TICKETLAND_API").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
       }
