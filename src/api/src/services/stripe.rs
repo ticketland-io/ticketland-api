@@ -111,6 +111,7 @@ pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error
   // that the ticket has already been purchased by someone else i.e. race condition. To avoid that we can essentially
   // revert the payment by refunding the original account if something like that happens. In the happy path scenario
   // we would release the payment to the event organizers bank account after a ticket is successfully minted.
+  // For more info check https://stripe.com/docs/connect/manual-payouts
   Account::create(
     &client,
     CreateAccount {
