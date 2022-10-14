@@ -25,7 +25,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
     cfg.service(
       web::resource("/webhooks")
-      .route(web::get().to(webhooks::exec))
+      .route(web::post().to(webhooks::exec))
     );
   }
 }
