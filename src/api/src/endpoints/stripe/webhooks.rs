@@ -11,9 +11,9 @@ use ticketland_core::error::Error;
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
   handle_webhook(store, req, payload)
-    .await
-    .map(|_| HttpResponse::Ok().finish())
-    .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+  .await
+  .map(|_| HttpResponse::Ok().finish())
+  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
 }
 
 pub async fn handle_webhook(
