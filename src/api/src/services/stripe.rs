@@ -9,14 +9,18 @@ use stripe::{
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
   CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
   AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
-  TransferScheduleInterval,
+  TransferScheduleInterval, CheckoutSession, Customer, CreateCustomer,
 };
 use common_data::{
   helpers::{send_read, send_write},
-  models::stripe_account::{StripeAccount},
-  repositories::stripe::{
-    read_stripe_user,
-    upsert_account_link,
+  models::stripe_account::{StripeAccount, self},
+  repositories::{
+    account::read_account,
+    event::read_event_organizer_account,
+    stripe::{
+      read_stripe_user,
+      upsert_account_link,
+    },
   }
 };
 use ticketland_core::error::Error;
@@ -25,6 +29,11 @@ use crate::utils::store::Store;
 #[derive(Serialize)]
 pub struct Response {
   pub link: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct CheckoutSessionResponse {
+  pub session_id: String,
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
@@ -71,35 +80,22 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Erro
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
 
-  send_read(
-    Arc::clone(&neo4j),
-      query,
-      db_query_params,
-    )
-    .and_then(|result| {
-      async move {
-        let account = TryInto::<StripeAccount>::try_into(result).unwrap();
+  let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+  let stripe_account = TryInto::<StripeAccount>::try_into(stripe_account).unwrap();
+  let stripe_uid = stripe_account.stripe_uid.clone();
 
-        create_stripe_account_link(
-          store.config.stripe_key.clone(),
-          AccountId::from_str(&account.stripe_uid.clone()).unwrap(),
-          uid_copy.clone(),
-          ticketland_dapp,
-        )
-        .await
-        .map(|account_link| (account.stripe_uid.clone(), account_link))
-      }
-    })
-    .and_then(|(stripe_uid, account_link)| {
-      async move {
-        let (query, db_query_params) = upsert_account_link(uid.clone(), stripe_uid, account_link.url.clone());
-        
-        send_write(Arc::clone(&neo4j), query, db_query_params,)
-        .await
-        .map(|_| account_link.url.clone())
-      }
-    })
-    .await
+  let account_link = create_stripe_account_link(
+    store.config.stripe_key.clone(),
+    AccountId::from_str(&stripe_uid.clone()).unwrap(),
+    uid_copy.clone(),
+    ticketland_dapp,
+  ).await?;
+
+  let (query, db_query_params) = upsert_account_link(uid.clone(), stripe_uid, account_link.url.clone());
+      
+  send_write(Arc::clone(&neo4j), query, db_query_params,)
+  .await
+  .map(|_| account_link.url.clone())
 }
 
 pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error>  {
@@ -161,4 +157,31 @@ pub async fn create_stripe_account_link(
   )
   .await
   .map_err(|error| format!("Stripe Error {:?}", error).as_str().into())
+}
+
+pub async fn create_checkout_session(
+  store: Arc<Store>,
+  buyer_uid: String,
+  event_id: String,
+  ticket_nft: String,
+) -> Result<CheckoutSession, Error> {
+  let client = Client::new(store.config.stripe_key.clone());
+  let neo4j = Arc::clone(&store.neo4j);
+  let (query, db_query_params) = read_account(buyer_uid.clone());
+  let buyer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+
+  // TODO: we need to add name and email as well
+  // TODO: do we need this https://github.com/arlyon/async-stripe/blob/master/examples/checkout.rs#L31?
+  let customer = Customer::create(
+    &client,
+    CreateCustomer {
+      description: Some(&buyer_uid.clone()),
+      ..Default::default()
+    },
+  );
+
+  let (query, db_query_params) = read_event_organizer_account(event_id.clone());
+  let event_organizer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+
+  todo!()
 }
