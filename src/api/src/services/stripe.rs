@@ -30,7 +30,8 @@ use super::price_feed::get_sol_price;
 
 // 1 unit in Stripe is 100
 const STRIPE_UNIT: i64 = 100;
-const STRIPE_FIXED_FEE: i64 = 30; // 0.3c
+const STRIPE_FIXED_FEE: i64 = 30; // 30c
+const STRIPE_FEE_PERC: i64 = 29; // 2.9%
 
 /// This is the amount in SOL needed to send a transaction that will mint a new ticket NFT
 /// TODO: use the correct value here
@@ -42,6 +43,7 @@ pub struct Response {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CheckoutSessionResponse {
   pub session_id: String,
 }
@@ -122,7 +124,7 @@ pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error
       settings: Some(AccountSettingsParams {
         payouts: Some(PayoutSettingsParams {
           schedule: Some(TransferScheduleParams {
-            interval: Some(TransferScheduleInterval::Manual),
+            interval: Some(TransferScheduleInterval::Daily),
             ..Default::default()
           }),
           ..Default::default()
@@ -183,7 +185,9 @@ async fn calculate_price_and_fees(_event_id: &str) -> Result<(i64, i64), Error> 
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
   let sol_price = to_stripe_unit(get_sol_price().await?);
   let mint_cost = (MINT_TICKER_COST_IN_SOL * sol_price) / 1000;
-  let total_fees = ticket_price - protocol_fee - mint_cost - STRIPE_FIXED_FEE;
+  let stripe_fee = (ticket_price * STRIPE_FEE_PERC) / 1000;
+  let total_stripe_fees = stripe_fee + STRIPE_FIXED_FEE; // 2.9% + 30c
+  let total_fees = protocol_fee + mint_cost + total_stripe_fees;
 
   Ok((ticket_price as i64, total_fees as i64))
 }
@@ -250,7 +254,6 @@ pub async fn create_checkout_session(
     params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
       application_fee_amount: Some(fee),
       transfer_data: Some(CreateCheckoutSessionPaymentIntentDataTransferData {
-        amount: Some(0),
         destination: stripe_account.stripe_uid,
         ..Default::default()  
       }),
@@ -265,7 +268,9 @@ pub async fn create_checkout_session(
     }]);
     params.expand = &["line_items", "line_items.data.price.product"];
 
-    CheckoutSession::create(&client, params).await.unwrap()
+    CheckoutSession::create(&client, params)
+    .await
+    .map_err(into_stripe_error)?
   };
 
   Ok(checkout_session.id.to_string())

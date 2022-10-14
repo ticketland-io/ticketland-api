@@ -34,7 +34,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("/checkouts")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::get().to(create_checkout_session::exec))
+      .route(web::post().to(create_checkout_session::exec))
     );
   }
 }
