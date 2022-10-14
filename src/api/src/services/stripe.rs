@@ -8,24 +8,33 @@ use stripe::{
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
   CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
   AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
-  TransferScheduleInterval, CheckoutSession, Customer, CreateCustomer, CreateProduct,
-  Product, CreatePrice, Currency, IdOrCreate, Price
+  TransferScheduleInterval, Customer, CreateCustomer, CreateProduct,
+  Product, CreatePrice, Currency, IdOrCreate, Price, CreateCheckoutSession, CheckoutSession,
+  CreateCheckoutSessionLineItems, CheckoutSessionMode, CreateCheckoutSessionPaymentIntentData,
+  CreateCheckoutSessionPaymentIntentDataTransferData,
 };
 use common_data::{
   helpers::{send_read, send_write},
   models::stripe_account::{StripeAccount},
   repositories::{
-    account::read_account,
-    event::read_event_organizer_account,
     stripe::{
       read_stripe_user,
       upsert_account_link,
+      read_event_organizer_stripe_account,
     },
   }
 };
 use ticketland_core::error::Error;
 use crate::utils::store::Store;
 use super::price_feed::get_sol_price;
+
+// 1 unit in Stripe is 100
+const STRIPE_UNIT: i64 = 100;
+const STRIPE_FIXED_FEE: i64 = 30; // 0.3c
+
+/// This is the amount in SOL needed to send a transaction that will mint a new ticket NFT
+/// TODO: use the correct value here
+const MINT_TICKER_COST_IN_SOL: i64 = 7; // this is 0.007 SOL
 
 #[derive(Serialize)]
 pub struct Response {
@@ -39,6 +48,10 @@ pub struct CheckoutSessionResponse {
 
 fn into_stripe_error(error: impl std::error::Error) -> Error {
   Into::<Error>::into(format!("Stripe Error {:?}", error).as_str())
+}
+
+fn to_stripe_unit(val: i64) -> i64 {
+  val * STRIPE_UNIT
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
@@ -146,6 +159,35 @@ pub async fn create_stripe_account_link(
   .map_err(into_stripe_error)
 }
 
+async fn calculate_price_and_fees(_event_id: &str) -> Result<(i64, i64), Error> {
+  // TODO: We would need to load the Sale account from Solana and then find the sale type of the ticket that is
+  // being purchased to find the ticket price. The sale account is a PDA which we calculate using the following seeds.
+  //
+  // seeds = [
+  //  b"sale",
+  //  state.key().as_ref(),
+  //  sale.ticket_type_index.to_string().as_ref(),
+  //  &sale.event_id
+  // ]
+  // 
+  // Note that user might try to pass a sale account for ticket types that are cheap but enter a ticket_nft that belongs to
+  // a more expensive ticket type. This won't be possible since a sevice will send the tx to the blockchain using the given ticket_nft
+  // which will cause the transaction to faile since there are alreayd checks that avoid something like this to happen.
+  // Reading accounts from the chain might be expensive, so we might store this information in our db for faster queries.
+  let ticket_price = to_stripe_unit(100);
+  
+  // This is part of the Event account data. We would need to load the event account from Solana and read this value.
+  // Unless we store this information in our database
+  let protocol_fee_perc = 100_i64;
+
+  let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
+  let sol_price = to_stripe_unit(get_sol_price().await?);
+  let mint_cost = (MINT_TICKER_COST_IN_SOL * sol_price) / 1000;
+  let total_fees = ticket_price - protocol_fee - mint_cost - STRIPE_FIXED_FEE;
+
+  Ok((ticket_price as i64, total_fees as i64))
+}
+
 pub async fn create_checkout_session(
   store: Arc<Store>,
   buyer_uid: String,
@@ -178,12 +220,14 @@ pub async fn create_checkout_session(
     .map_err(|error| Into::<Error>::into(format!("Stripe Error {:?}", error).as_str()))?
   };
 
+  let (price, fee) = calculate_price_and_fees(&event_id).await?;
+
   // and add a price for it in USD
   let price = {
     // TODO: we might wnat to support multiple currencies
     let mut create_price = CreatePrice::new(Currency::USD);
     create_price.product = Some(IdOrCreate::Id(&product.id));
-    create_price.unit_amount = Some(get_sol_price().await?);
+    create_price.unit_amount = Some(price);
     create_price.expand = &["product"];
 
     Price::create(&client, create_price)
@@ -191,8 +235,38 @@ pub async fn create_checkout_session(
     .map_err(into_stripe_error)?
   };
 
-  let (query, db_query_params) = read_event_organizer_account(event_id.clone());
-  let event_organizer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+  let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
+  let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+  let stripe_account = TryInto::<StripeAccount>::try_into(stripe_account).unwrap();
 
-  todo!()
+  let checkout_session = {
+    let ticketland_dapp = store.config.ticketland_dapp.clone();
+    // TODO: use the correct urls
+    let cancel_url = format!("{}/stripe/cancel", &ticketland_dapp);
+    let success_url = format!("{}/stripe/success", &ticketland_dapp);
+
+    let mut params = CreateCheckoutSession::new(&cancel_url, &success_url);
+    params.customer = Some(customer.id);
+    params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
+      application_fee_amount: Some(fee),
+      transfer_data: Some(CreateCheckoutSessionPaymentIntentDataTransferData {
+        amount: Some(0),
+        destination: stripe_account.stripe_uid,
+        ..Default::default()  
+      }),
+      ..Default::default()
+    });
+
+    params.mode = Some(CheckoutSessionMode::Payment);
+    params.line_items = Some(vec![CreateCheckoutSessionLineItems {
+      quantity: Some(1),
+      price: Some(price.id.to_string()),
+      ..Default::default()
+    }]);
+    params.expand = &["line_items", "line_items.data.price.product"];
+
+    CheckoutSession::create(&client, params).await.unwrap()
+  };
+
+  Ok(checkout_session.id.to_string())
 }
