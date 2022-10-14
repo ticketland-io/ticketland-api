@@ -43,18 +43,18 @@ pub async fn exec(
   
         // user has already created a Stripe connect account
         if stripe_account.status == 1 {
-          return Ok(HttpResponse::Ok().json(Response {link: "".to_owned()}))
+          return Ok(HttpResponse::Ok().json(Response {link: None}))
         } else {
           // user has probably started the stripe connect on-boarding since we've already created an account link
           // If the link is expired Stripe will call the refresh url which is handles by a different endpoint.
-          return Ok(HttpResponse::Ok().json(Response {link: stripe_account.account_link.clone()}))
+          return Ok(HttpResponse::Ok().json(Response {link: Some(stripe_account.account_link.clone())}))
         }
       }
 
       // If value is None this means that there is no Stripe account in the db at the moment
       create_link(Arc::clone(&store), uid.clone())
       .await
-      .map(|link| HttpResponse::Ok().json(Response {link}))
+      .map(|link| HttpResponse::Ok().json(Response {link: Some(link)}))
     }
   })
   .await

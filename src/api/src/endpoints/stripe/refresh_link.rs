@@ -26,6 +26,6 @@ pub async fn exec(
 ) -> HttpResponse {
   refresh_link(Arc::clone(&store), auth.user.local_id)
   .await
-  .map(|link| HttpResponse::Ok().json(Response {link}))
+  .map(|link| HttpResponse::Ok().json(Response {link: Some(link)}))
   .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
 }

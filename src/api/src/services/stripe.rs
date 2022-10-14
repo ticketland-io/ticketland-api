@@ -23,7 +23,7 @@ use crate::utils::store::Store;
 
 #[derive(Serialize)]
 pub struct Response {
-  pub link: String,
+  pub link: Option<String>,
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
