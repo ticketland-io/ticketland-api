@@ -25,6 +25,9 @@ use common_data::{
     },
   }
 };
+use program_artifacts::{
+  event_registry::pda,
+};
 use ticketland_core::error::Error;
 use crate::utils::store::Store;
 use super::ticket_purchase::{
@@ -155,7 +158,9 @@ pub async fn create_checkout_session(
   sale_account: String,
   event_id: String,
   ticket_nft: String,
+  recipient: String,
   seat_index: u32,
+  seat_name: String,
 ) -> Result<String> {
   let (price, fee) = pre_purchase_checks(
     Arc::clone(&store),
@@ -228,6 +233,17 @@ pub async fn create_checkout_session(
       ..Default::default()
     }]);
     params.expand = &["line_items", "line_items.data.price.product"];
+
+    // We will use this values in the webhook so we can construct the correct TicketPurchase message that will
+    // be further processed by another service.
+    params.metadata = Some([
+      ("event_account".to_string(), pda::event(&store.config.event_registry_state, &event_id).0.to_string()),
+      ("sale_account".to_string(), sale_account),
+      ("ticket_nft".to_string(), ticket_nft),
+      ("recipient".to_string(), recipient),
+      ("seat_index".to_string(), seat_index.to_string()),
+      ("seat_name".to_string(), seat_name),
+    ].iter().cloned().collect());
 
     CheckoutSession::create(&client, params).await?
   };

@@ -26,6 +26,7 @@ pub struct Config {
   pub ticketland_api: String,
   pub ticketland_dapp: String,
   pub ticket_nft_program_state: Pubkey,
+  pub event_registry_state: Pubkey,
   pub ticket_purchae_protocol_fee: i64,
 }
 
@@ -55,6 +56,7 @@ impl Config {
         ticketland_api: env::var("TICKETLAND_API").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
         ticket_nft_program_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
+        event_registry_state: pubkey_from_str(&env::var("EVENT_REGISTRY_STATE").unwrap()).unwrap(),
         ticket_purchae_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
       }
     )
