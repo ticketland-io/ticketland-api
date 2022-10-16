@@ -1,3 +1,4 @@
+use eyre::Result;
 use borsh::{BorshSerialize};
 use amqp_helpers::producer::retry_producer::RetryProducer;
 use ticketland_event_handler::{
@@ -19,14 +20,14 @@ impl TicketPurchaseQueue {
       &"ticket_purchase",
       &"ticket_purchase.new",
       retry_ttl,
-    ).await;
+    ).await.unwrap();
 
     Self {
       producer,
     }
   }
 
-  pub async fn on_new_ticket_purcchase(
+  pub async fn new_ticket_purchase(
     &self,
     event_account: String,
     sale_account: String,
@@ -34,7 +35,7 @@ impl TicketPurchaseQueue {
     recipient: String,
     seat_index: String,
     seat_name: String,
-  ) {
+  ) -> Result<()> {
     let msg = TicketPurchase { 
       event_account,
       sale_account,
@@ -48,6 +49,6 @@ impl TicketPurchaseQueue {
       &"ticket_purchase",
       &"ticket_purchase.new",
       &msg.try_to_vec().unwrap()
-    ).await;
+    ).await
   }
 }

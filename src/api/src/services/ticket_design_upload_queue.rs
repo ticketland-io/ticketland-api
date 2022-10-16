@@ -1,3 +1,4 @@
+use eyre::Result;
 use borsh::{BorshSerialize};
 use amqp_helpers::producer::retry_producer::RetryProducer;
 use ticketland_event_handler::{
@@ -20,14 +21,14 @@ impl TicketDesignUploadQueue {
       &"ticket_design_upload",
       &"ticket_design_upload.new",
       retry_ttl,
-    ).await;
+    ).await.unwrap();
 
     Self {
       s3_file_upload_producer,
     }
   }
 
-  pub async fn on_new_design(&self, design_id: String, content_type: String, source_url: String) {
+  pub async fn new_design(&self, design_id: String, content_type: String, source_url: String) -> Result<()> {
     let file_msg = UploadFile { 
       name: design_id,
       content_type,
@@ -38,6 +39,6 @@ impl TicketDesignUploadQueue {
       &"ticket_design_upload",
       &"ticket_design_upload.new",
       &file_msg.try_to_vec().unwrap()
-    ).await;
+    ).await
   }
 }

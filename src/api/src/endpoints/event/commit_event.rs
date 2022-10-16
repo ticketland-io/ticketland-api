@@ -24,7 +24,7 @@ pub async fn exec(
   store: Data<Store>,
   _auth: AuthData,
   params: Path<EventParams>,
-) -> Result<HttpResponse, Error> {
+) -> HttpResponse {
   let event_id = params.event_id.clone();
   let (query, db_query_params) = read_event(event_id);
 
@@ -36,11 +36,14 @@ pub async fn exec(
   .unwrap_or_else(|error: Error| Err(error));
 
   if let Err(error) = event {
-    return Ok(internal_server_error(Some(error)))
+    return internal_server_error(Some(error))
   }
   
   let event = event.unwrap();
-  store.new_event_queue.on_new_event(event.event_id, event.file_type).await;
-
-  Ok(HttpResponse::Ok().finish())
+  
+  store.new_event_queue
+  .new_event(event.event_id, event.file_type)
+  .await
+  .map(|_| HttpResponse::Ok().finish())
+  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
 }

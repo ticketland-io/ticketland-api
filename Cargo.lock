@@ -393,9 +393,10 @@ dependencies = [
 
 [[package]]
 name = "amqp-helpers"
-version = "0.1.5"
-source = "git+https://github.com/ticketland-io/amqp-helpers#72ee297ca18d2a87b86eeb655d9c3d0253e70d6c"
+version = "0.1.6"
+source = "git+https://github.com/ticketland-io/amqp-helpers#d111d179889afdf4719f1f77bb244420fdf09843"
 dependencies = [
+ "eyre",
  "futures-lite",
  "lapin",
  "tokio-executor-trait",
@@ -5175,8 +5176,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.1"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#ea3858b01ef441694c678c92dcaf49aa82b96f0b"
+version = "0.1.2"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#ed93688f9a070ff77636fae61c9ee661284e98b4"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5186,6 +5187,7 @@ dependencies = [
  "bytes",
  "common-data",
  "dotenv",
+ "eyre",
  "futures",
  "futures-util",
  "lapin",
