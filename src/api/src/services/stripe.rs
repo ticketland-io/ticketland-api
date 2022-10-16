@@ -2,6 +2,7 @@ use std::{
   sync::Arc,
   str::FromStr,
 };
+use eyre::Result;
 use serde::{Serialize};
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
@@ -27,6 +28,7 @@ use common_data::{
 use ticketland_core::error::Error;
 use crate::utils::store::Store;
 use super::ticket_purchase::{
+  pre_purchase_checks,
   calculate_price_and_fees,
 };
 
@@ -45,7 +47,7 @@ fn into_stripe_error(error: impl std::error::Error) -> Error {
   Into::<Error>::into(format!("Stripe Error {:?}", error).as_str())
 }
 
-pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
+pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String> {
   let neo4j = Arc::clone(&store.neo4j);
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
@@ -63,9 +65,10 @@ pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String, Error
   send_write(Arc::clone(&neo4j), query, db_query_params)
   .await
   .map(|_| account_link.url)
+  .map_err(Into::<_>::into)
 }
 
-pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Error> {
+pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String> {
   let neo4j = Arc::clone(&store.neo4j);
   let (query, db_query_params) = read_stripe_user(uid.clone());
   let ticketland_dapp = store.config.ticketland_dapp.clone();
@@ -84,12 +87,13 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String, Erro
 
   let (query, db_query_params) = upsert_account_link(uid.clone(), stripe_uid, account_link.url.clone());
       
-  send_write(Arc::clone(&neo4j), query, db_query_params,)
+  send_write(Arc::clone(&neo4j), query, db_query_params)
   .await
   .map(|_| account_link.url.clone())
+  .map_err(Into::<_>::into)
 }
 
-pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error>  {
+pub async fn create_stripe_account(secret_key: String,) -> Result<Account>  {
   let client = Client::new(secret_key);
   
   // We need to create a manual payyout schedule. The reason is that buying a ticket requires two steps.
@@ -124,7 +128,7 @@ pub async fn create_stripe_account(secret_key: String,) -> Result<Account, Error
     },
   )
   .await
-  .map_err(into_stripe_error)
+  .map_err(Into::<_>::into)
 }
 
 pub async fn create_stripe_account_link(
@@ -132,7 +136,7 @@ pub async fn create_stripe_account_link(
   stripe_uid: AccountId,
   uid: String,
   ticketland_dapp: String,
-) -> Result<AccountLink, Error> {
+) -> Result<AccountLink> {
   let client = Client::new(secret_key);
 
   AccountLink::create(
@@ -147,7 +151,7 @@ pub async fn create_stripe_account_link(
     },
   )
   .await
-  .map_err(into_stripe_error)
+  .map_err(Into::<_>::into)
 }
 
 pub async fn create_checkout_session(
@@ -155,7 +159,10 @@ pub async fn create_checkout_session(
   buyer_uid: String,
   event_id: String,
   ticket_nft: String,
-) -> Result<String, Error> {
+  ticket_type_index: u8,
+) -> Result<String> {
+  pre_purchase_checks(&event_id, &ticket_nft, ticket_type_index)?;
+
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
 
@@ -169,8 +176,7 @@ pub async fn create_checkout_session(
       description: Some(&buyer_uid.clone()),
       ..Default::default()
     },
-  ).await
-  .map_err(into_stripe_error)?;
+  ).await?;
 
   let product = {
     // TODO: we can additional props to the product such as url
@@ -192,7 +198,7 @@ pub async fn create_checkout_session(
     create_price.unit_amount = Some(price);
     create_price.expand = &["product"];
 
-    Price::create(&client, create_price).await.map_err(into_stripe_error)?
+    Price::create(&client, create_price).await?
   };
 
   let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
@@ -224,9 +230,7 @@ pub async fn create_checkout_session(
     }]);
     params.expand = &["line_items", "line_items.data.price.product"];
 
-    CheckoutSession::create(&client, params)
-    .await
-    .map_err(into_stripe_error)?
+    CheckoutSession::create(&client, params).await?
   };
 
   Ok(checkout_session.id.to_string())

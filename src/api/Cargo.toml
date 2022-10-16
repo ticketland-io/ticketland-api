@@ -15,11 +15,12 @@ actix-multipart = "0.4.0"
 bytes = "1.2.0"
 borsh = "0.9.3"
 env_logger = "0.9.0"
+eyre = "0.6.8"
 dotenv = "0.15"
 futures-util = "0.3.15"
 futures = "0.3.12"
 ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.2" }
-api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.2" }
+api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.5" }
 common-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.19" }
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.1.5" }
 ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.0" }

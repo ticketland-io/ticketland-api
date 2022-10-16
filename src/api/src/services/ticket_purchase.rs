@@ -1,4 +1,4 @@
-use ticketland_core::error::Error;
+use eyre::Result;
 use super::price_feed::get_sol_price;
 
 // 1 unit in Stripe is 100
@@ -14,7 +14,7 @@ fn to_stripe_unit(val: i64) -> i64 {
   val * STRIPE_UNIT
 }
 
-pub async fn calculate_price_and_fees(_event_id: &str) -> Result<(i64, i64), Error> {
+pub async fn calculate_price_and_fees(_event_id: &str) -> Result<(i64, i64)> {
   // TODO: We would need to load the Sale account from Solana and then find the sale type of the ticket that is
   // being purchased to find the ticket price. The sale account is a PDA which we calculate using the following seeds.
   //
@@ -45,6 +45,6 @@ pub async fn calculate_price_and_fees(_event_id: &str) -> Result<(i64, i64), Err
   Ok((ticket_price as i64, total_fees as i64))
 }
 
-pub fn pre_purchae(event_id: String, ticket_nft: String) {
-  
+pub fn pre_purchase_checks(event_id: &str, ticket_nft: &str, ticket_type_index: u8) -> Result<String> {
+  todo!()
 }

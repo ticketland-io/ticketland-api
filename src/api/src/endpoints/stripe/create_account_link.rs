@@ -53,6 +53,6 @@ pub async fn exec(
     create_link(Arc::clone(&store), uid.clone())
     .await
     .map(|link| HttpResponse::Ok().json(Response {link: Some(link)}))
-    .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+    .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
   )
 }

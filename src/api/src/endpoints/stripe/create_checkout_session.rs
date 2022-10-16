@@ -4,9 +4,6 @@ use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use ticketland_core::{
-  error::Error,
-};
 use api_helpers::{
   middleware::auth::AuthData,
   services::{
@@ -25,6 +22,7 @@ use crate::{
 pub struct Body {
   event_id: String,
   ticket_nft: String,
+  ticket_type_index: u8,
 }
 
 pub async fn exec(
@@ -32,8 +30,14 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> HttpResponse {
-  create_checkout_session(Arc::clone(&store), auth.user.local_id, body.event_id.clone(), body.ticket_nft.clone())
+  create_checkout_session(
+    Arc::clone(&store),
+    auth.user.local_id,
+    body.event_id.clone(),
+    body.ticket_nft.clone(),
+    body.ticket_type_index,
+  )
   .await
   .map(|session_id| HttpResponse::Ok().json(CheckoutSessionResponse {session_id}))
-  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
 }
