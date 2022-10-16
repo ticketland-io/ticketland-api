@@ -7,7 +7,10 @@ use program_artifacts::{
   ticket_sale::account_data::Sale,
   ticket_nft::pda,
 };
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{
+  pubkey::Pubkey,
+  commitment_config::CommitmentConfig,
+};
 use crate::utils::store::Store;
 
 use super::price_feed::get_sol_price;
@@ -85,7 +88,14 @@ pub async fn pre_purchase_checks(
   // We need to check whether this ticket nft account exists. If it does it means that someone else
   // has already purchased it. We could alternatively load the event_capacity account and check the
   // bit array for availability.
-  
+  let is_ticket_available = store.rpc_client.account_exists(
+    &Pubkey::from_str(&ticket_nft)?,
+    CommitmentConfig::processed()
+  ).await?;
+
+  if !is_ticket_available {
+    return Err(Report::msg("Ticket unavailable"))?
+  }
 
   todo!()
 }
