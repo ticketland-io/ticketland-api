@@ -29,7 +29,6 @@ use ticketland_core::error::Error;
 use crate::utils::store::Store;
 use super::ticket_purchase::{
   pre_purchase_checks,
-  calculate_price_and_fees,
 };
 
 #[derive(Serialize)]
@@ -158,7 +157,7 @@ pub async fn create_checkout_session(
   ticket_nft: String,
   seat_index: u32,
 ) -> Result<String> {
-  pre_purchase_checks(
+  let (price, fee) = pre_purchase_checks(
     Arc::clone(&store),
     &store.config.ticket_nft_program_state,
     seat_index,
@@ -190,8 +189,6 @@ pub async fn create_checkout_session(
     .await
     .map_err(|error| Into::<Error>::into(format!("Stripe Error {:?}", error).as_str()))?
   };
-
-  let (price, fee) = calculate_price_and_fees(&event_id).await?;
 
   // and add a price for it in USD
   let price = {
