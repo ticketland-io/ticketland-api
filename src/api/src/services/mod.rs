@@ -4,3 +4,4 @@ pub mod ticket_design_upload_queue;
 pub mod ticket;
 pub mod stripe;
 pub mod price_feed;
+pub mod ticket_purchase;
