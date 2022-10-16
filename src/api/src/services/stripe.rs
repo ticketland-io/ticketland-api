@@ -91,7 +91,7 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String> {
 pub async fn create_stripe_account(secret_key: String,) -> Result<Account>  {
   let client = Client::new(secret_key);
   
-  // We need to create a manual payyout schedule. The reason is that buying a ticket requires two steps.
+  // We need to create a manual payout schedule. The reason is that buying a ticket requires two steps.
   // We need to first charge user's card and then send a tx to the blockchain to mint the ticket.
   // However, there are no atomicity guarantees here. For example, we might charge user's card and then realize
   // that the ticket has already been purchased by someone else i.e. race condition. To avoid that we can essentially
@@ -190,7 +190,6 @@ pub async fn create_checkout_session(
     .map_err(|error| Into::<Error>::into(format!("Stripe Error {:?}", error).as_str()))?
   };
 
-  // and add a price for it in USD
   let price = {
     // TODO: we might wnat to support multiple currencies
     let mut create_price = CreatePrice::new(Currency::USD);
