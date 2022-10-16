@@ -81,8 +81,8 @@ async fn handle_checkout_session(
   store: &Data<Store>,
   session: stripe::CheckoutSession,
 ) -> Result<()> {
-  // TODO: send message to rabbitmq so another service can send the mint tx to the blockchain
   let metadata = session.metadata;
+  
   store.ticket_purchase_queue.new_ticket_purchase(
     metadata.get("event_account").unwrap().to_string(),
     metadata.get("sale_account").unwrap().to_string(),
@@ -90,9 +90,5 @@ async fn handle_checkout_session(
     metadata.get("recipient").unwrap().to_string(),
     metadata.get("seat_index").unwrap().to_string(),
     metadata.get("seat_name").unwrap().to_string(),
-  ).await?;
-
-  println!("Received checkout session completed webhook with id: {:?}", session.id);
-
-  Ok(())
+  ).await
 }
