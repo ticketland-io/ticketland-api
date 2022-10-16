@@ -3,25 +3,25 @@ use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
+use eyre::{Result, Report};
 use api_helpers::services::http::{get_header_value, internal_server_error};
 use common_data::{helpers::send_write, repositories::stripe::update_stripe_account_status};
 use std::{borrow::Borrow, sync::Arc};
 use stripe::{EventObject, EventType, Webhook};
-use ticketland_core::error::Error;
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
   handle_webhook(store, req, payload)
   .await
   .map(|_| HttpResponse::Ok().finish())
-  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
 }
 
 pub async fn handle_webhook(
   store: Data<Store>,
   req: HttpRequest,
   payload: Bytes,
-) -> Result<(), Error> {
-  let payload_str = std::str::from_utf8(payload.borrow()).unwrap();
+) -> Result<()> {
+  let payload_str = std::str::from_utf8(payload.borrow())?;
   let stripe_signature = get_header_value(&req, "Stripe-Signature").unwrap_or_default();
 
   if let Ok(event) = Webhook::construct_event(
@@ -43,13 +43,13 @@ pub async fn handle_webhook(
         _ => {
           println!("Unknown event encountered in webhook: {:?}", event.event_type);
 
-          return Err(format!("Unknown event encountered in webhook: {:?}", event.event_type).as_str().into());
+          return Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event.event_type)))?
         }
       }
   } else {
     println!("Failed to construct webhook event, ensure your webhook secret is correct.");
 
-    return Err("Failed to construct webhook event, ensure your webhook secret is correct.".into());
+    return Err(Report::msg("Failed to construct webhook event, ensure your webhook secret is correct."))?;
   }
 
   Ok(())
@@ -58,7 +58,7 @@ pub async fn handle_webhook(
 async fn handle_account_updated(
   store: &Data<Store>,
   account: stripe::Account,
-) -> Result<(), Error> {
+) -> Result<()> {
   let eventually_due = account
   .requirements
   .and_then(|requirements| requirements.eventually_due)
@@ -68,9 +68,7 @@ async fn handle_account_updated(
   if eventually_due.len() == 0 {
     let (query, db_query_params) = update_stripe_account_status(account.id.to_string());
 
-    return send_write(Arc::clone(&store.neo4j), query, db_query_params)
-    .await
-    .map(|_| ());
+    return send_write(Arc::clone(&store.neo4j), query, db_query_params).await.map(|_| ()).map_err(Into::<_>::into)
   }
 
   // return OK if the on boarding process for the connect account has not finished; that is there are
@@ -82,7 +80,7 @@ async fn handle_account_updated(
 async fn handle_checkout_session(
   _store: &Data<Store>,
   session: stripe::CheckoutSession,
-) -> Result<(), Error> {
+) -> Result<()> {
   println!("Received checkout session completed webhook with id: {:?}", session.id);
 
   Ok(())

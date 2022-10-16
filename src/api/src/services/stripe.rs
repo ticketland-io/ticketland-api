@@ -181,8 +181,8 @@ pub async fn create_checkout_session(
   ).await?;
 
   let product = {
-    // TODO: we can additional props to the product such as url
-    let product_name = format!("{}{}", &event_id, &ticket_nft);
+    // TODO: we can additional props to the product such as url name of the event etc.
+    let product_name = format!("Ticket {} for event {}", &ticket_nft, &event_id);
     let create_product = CreateProduct::new(&product_name);
     
     Product::create(&client, create_product)
