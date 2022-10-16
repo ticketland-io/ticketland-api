@@ -70,12 +70,12 @@ pub async fn pre_purchase_checks(
   // We need to check whether this ticket nft account exists. If it does it means that someone else
   // has already purchased it. We could alternatively load the event_capacity account and check the
   // bit array for availability.
-  let is_ticket_available = store.rpc_client.account_exists(
+  let is_ticket_unavailable = store.rpc_client.account_exists(
     &Pubkey::from_str(&ticket_nft)?,
     CommitmentConfig::processed()
   ).await?;
 
-  if !is_ticket_available {
+  if is_ticket_unavailable {
     return Err(Report::msg("Ticket unavailable"))?
   }
 
