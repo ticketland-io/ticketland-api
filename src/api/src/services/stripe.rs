@@ -43,10 +43,6 @@ pub struct CheckoutSessionResponse {
   pub session_id: String,
 }
 
-fn into_stripe_error(error: impl std::error::Error) -> Error {
-  Into::<Error>::into(format!("Stripe Error {:?}", error).as_str())
-}
-
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String> {
   let neo4j = Arc::clone(&store.neo4j);
   let ticketland_dapp = store.config.ticketland_dapp.clone();
@@ -157,11 +153,18 @@ pub async fn create_stripe_account_link(
 pub async fn create_checkout_session(
   store: Arc<Store>,
   buyer_uid: String,
+  sale_account: String,
   event_id: String,
   ticket_nft: String,
-  ticket_type_index: u8,
+  seat_index: u32,
 ) -> Result<String> {
-  pre_purchase_checks(&event_id, &ticket_nft, ticket_type_index)?;
+  pre_purchase_checks(
+    Arc::clone(&store),
+    &store.config.ticket_nft_program_state,
+    seat_index,
+    &sale_account,
+    &ticket_nft,
+  ).await?;
 
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);

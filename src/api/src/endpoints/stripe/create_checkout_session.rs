@@ -22,7 +22,8 @@ use crate::{
 pub struct Body {
   event_id: String,
   ticket_nft: String,
-  ticket_type_index: u8,
+  sale_account: String,
+  seat_index: u32,
 }
 
 pub async fn exec(
@@ -33,9 +34,10 @@ pub async fn exec(
   create_checkout_session(
     Arc::clone(&store),
     auth.user.local_id,
+    body.sale_account.clone(),
     body.event_id.clone(),
     body.ticket_nft.clone(),
-    body.ticket_type_index,
+    body.seat_index,
   )
   .await
   .map(|session_id| HttpResponse::Ok().json(CheckoutSessionResponse {session_id}))

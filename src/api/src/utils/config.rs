@@ -1,4 +1,6 @@
 use std::env;
+use solana_sdk::pubkey::Pubkey;
+use solana_web3_rust::utils::pubkey_from_str;
 
 pub struct Config {
   pub port: u64,
@@ -23,6 +25,7 @@ pub struct Config {
   pub rpc_endpoint: String,
   pub ticketland_api: String,
   pub ticketland_dapp: String,
+  pub ticket_nft_program_state: Pubkey,
 }
 
 impl Config {
@@ -50,6 +53,7 @@ impl Config {
         stripe_webhook_key: env::var("STRIPE_WEBHOOK_SECRET").unwrap(),
         ticketland_api: env::var("TICKETLAND_API").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
+        ticket_nft_program_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
       }
     )
   }

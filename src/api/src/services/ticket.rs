@@ -1,19 +1,17 @@
 use std::str::FromStr;
-use borsh::{
-  BorshSerialize,
-  BorshDeserialize,
-};
+use eyre::{Result};
+use borsh::BorshSerialize;
 use solana_sdk::{
   pubkey::Pubkey,
   signer::keypair::Keypair,
   signature::Signer,
   signature::Signature,
-  borsh::try_from_slice_unchecked,
   keccak::hashv,
 };
 use actix_web::{
   web::{Data},
 };
+use program_artifacts::ticket_nft::account_data::TicketMetadata;
 use crate::{
   utils::store::Store,
   error::Error,
@@ -24,27 +22,6 @@ struct VerifyTicketMsg<'a> {
   pub event_id: &'a str,
   pub code_challenge: &'a str,
   pub ticket_metadata: &'a str,
-}
-
-async fn load_ticket_metadata_account<T>(store: &Data<Store>, account_key: &Pubkey) -> T
-  where 
-    T: borsh::de::BorshDeserialize
-{
-  let mut account_data = store.rpc_client.get_account_data(account_key).await.unwrap();
-  // remove the Anchor account discriminator
-  account_data.drain(0..8);
-  try_from_slice_unchecked::<T>(&account_data).unwrap()
-}
-
-#[derive(BorshDeserialize)]
-struct TicketMetadata {
-  _attended: bool,
-  _event_id: [u8; 32],
-  _seat_index: u32,
-  _sale: Pubkey,
-  _price_sold: u64,
-  owner: Pubkey,
-  _metadata: Pubkey,
 }
 
 #[derive(BorshSerialize)]
@@ -72,7 +49,7 @@ pub async fn verify_ticket(
   ticket_metadata: &str,
   ticket_owner_pubkey: &str,
   sig: &str,
-) -> Result<String, Error> {
+) -> Result<String> {
   // 1. recover the signer
   let raw_message = VerifyTicketMsg {
     event_id: &event_id,
@@ -89,10 +66,9 @@ pub async fn verify_ticket(
 
   if sig.verify(&ticket_owner.to_bytes(), message_hash) {
     // 2. check that signer is the owner of the given ticket_metadata 
-    let ticket_metadata_account = load_ticket_metadata_account::<TicketMetadata>(
-      &store, 
-      &Pubkey::from_str(&ticket_metadata).unwrap()
-    ).await;
+    let ticket_metadata_account = store.rpc_client.get_anchor_account_data::<TicketMetadata>(
+      &Pubkey::from_str(&ticket_metadata)?
+    ).await?;
 
     if ticket_metadata_account.owner == ticket_owner {
       let sig = sign_msg(VerifyTicketResult {
@@ -104,9 +80,9 @@ pub async fn verify_ticket(
 
       Ok(sig)
     } else {
-      return Err(Error::TicketVerificationError)
+      return Err(Error::TicketVerificationError)?
     }
   } else {
-    return Err(Error::TicketVerificationError)
+    return Err(Error::TicketVerificationError)?
   }
 }

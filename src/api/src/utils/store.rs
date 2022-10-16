@@ -6,7 +6,7 @@ use ticketland_core::{
     minio::Minio,
   },
 };
-use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_web3_rust::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
@@ -56,7 +56,7 @@ impl Store {
       config.retry_ttl,
     ).await;
 
-    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone()));
+    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
 
     Self {
       config,

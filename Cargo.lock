@@ -3406,6 +3406,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "program-artifacts"
+version = "0.1.9"
+source = "git+https://github.com/ticketland-io/program-artifacts#1311d3063ea7eb38738cdefd0a54c282c9402ae7"
+dependencies = [
+ "borsh",
+ "solana-sdk",
+]
+
+[[package]]
 name = "qstring"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4754,6 +4763,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-web3-rust"
+version = "0.1.2"
+source = "git+https://github.com/ticketland-io/solana-web3-rust#cfff7c839721623232141ac3c18f421cabf0ed03"
+dependencies = [
+ "borsh",
+ "eyre",
+ "solana-client",
+ "solana-sdk",
+]
+
+[[package]]
 name = "solana-zk-token-sdk"
 version = "1.11.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5046,10 +5066,12 @@ dependencies = [
  "futures-util",
  "keccak-hash",
  "mime",
+ "program-artifacts",
  "serde",
  "serde_json",
  "solana-client",
  "solana-sdk",
+ "solana-web3-rust",
  "thiserror",
  "ticketland-core",
  "ticketland-event-handler",

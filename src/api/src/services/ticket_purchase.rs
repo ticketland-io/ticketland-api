@@ -1,4 +1,15 @@
-use eyre::Result;
+use std::{
+  sync::Arc,
+  str::FromStr,
+};
+use eyre::{Result, Report};
+use program_artifacts::{
+  ticket_sale::account_data::Sale,
+  ticket_nft::pda,
+};
+use solana_sdk::pubkey::Pubkey;
+use crate::utils::store::Store;
+
 use super::price_feed::get_sol_price;
 
 // 1 unit in Stripe is 100
@@ -45,6 +56,36 @@ pub async fn calculate_price_and_fees(_event_id: &str) -> Result<(i64, i64)> {
   Ok((ticket_price as i64, total_fees as i64))
 }
 
-pub fn pre_purchase_checks(event_id: &str, ticket_nft: &str, ticket_type_index: u8) -> Result<String> {
+pub async fn pre_purchase_checks(
+  store: Arc<Store>,
+  ticket_nft_program_state: &Pubkey,
+  seat_index: u32,
+  sale_account: &str,
+  ticket_nft: &str
+) -> Result<String> {
+  let sale = store.rpc_client.get_anchor_account_data::<Sale>(
+    &Pubkey::from_str(&sale_account)?
+  ).await?;
+
+  let (ticket_nft_pda, _) = pda::ticket_nft(
+    ticket_nft_program_state,
+    seat_index,
+    std::str::from_utf8(&sale.event_id)?,
+    sale.ticket_type_index,
+  );
+
+  // Using PDA seeds allows us to impose some constraints and do some validation.
+  // Ticket nfts are PDAs and part of the seed list is the ticket type index. This allows
+  // us to validatate that user does not pass a ticket type which has has lower prices but 
+  // use a ticket nft that is of a higher more expensive type.
+  if ticket_nft_pda.to_string() != ticket_nft {
+    return Err(Report::msg("Invalid ticket_nft"))?
+  }
+
+  // We need to check whether this ticket nft account exists. If it does it means that someone else
+  // has already purchased it. We could alternatively load the event_capacity account and check the
+  // bit array for availability.
+  
+
   todo!()
 }
