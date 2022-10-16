@@ -11,6 +11,7 @@ use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
   services::ticket_design_upload_queue::TicketDesignUploadQueue,
+  services::ticket_purchase_queue::TicketPurchaseQueue,
 };
 
 pub struct Store {
@@ -20,6 +21,7 @@ pub struct Store {
   pub rpc_client: Arc<RpcClient>,
   pub new_event_queue: NewEventQueue,
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
+  pub ticket_purchase_queue: TicketPurchaseQueue,
 }
 
 impl Store {
@@ -56,6 +58,11 @@ impl Store {
       config.retry_ttl,
     ).await;
 
+    let ticket_purchase_queue = TicketPurchaseQueue::new(
+      config.rabbitmq_uri.clone(),
+      config.retry_ttl,
+    ).await;
+
     let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
 
     Self {
@@ -65,6 +72,7 @@ impl Store {
       rpc_client,
       new_event_queue,
       ticket_design_upload_queue,
+      ticket_purchase_queue,
     }
   }
 }

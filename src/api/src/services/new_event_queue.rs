@@ -5,7 +5,6 @@ use ticketland_event_handler::{
   models::event::UploadImageFile,
 };
 
-
 pub struct NewEventQueue {
   image_upload_producer: RetryProducer,
 }

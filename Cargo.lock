@@ -394,7 +394,7 @@ dependencies = [
 [[package]]
 name = "amqp-helpers"
 version = "0.1.5"
-source = "git+https://github.com/ticketland-io/amqp-helpers#2af2fbc7a6b9d0b1560919e471d8ddbed02f78f9"
+source = "git+https://github.com/ticketland-io/amqp-helpers#72ee297ca18d2a87b86eeb655d9c3d0253e70d6c"
 dependencies = [
  "futures-lite",
  "lapin",
@@ -2777,6 +2777,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-metadata"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e719d7e0b5a9d97c7fd4d6f52ebfc32f1e3942e068173e47355f8c275656488a"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-token-vault",
+ "num-derive",
+ "num-traits",
+ "shank",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-vault"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ade4ef15bc06a6033076c4ff28cba9b42521df5ec61211d6f419415ace2746a"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "multibase"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4136,6 +4168,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "shank"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90b0d7b8998cc311310854451e7f5903cf3a151ca93ef6aa2b8b6c369a037b21"
+dependencies = [
+ "shank_macro",
+]
+
+[[package]]
+name = "shank_macro"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3a37d6cf5df84eb622cb6fc74071d5d773c6a23b9ec55691db7b6a8c2286926"
+dependencies = [
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "shank_macro_impl",
+ "syn 1.0.99",
+]
+
+[[package]]
+name = "shank_macro_impl"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1314ff5d5a3dffd9b93de1463e2b6afc2350f17596d7d9b3fe0924c9edd250df"
+dependencies = [
+ "anyhow",
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "serde",
+ "syn 1.0.99",
+]
+
+[[package]]
 name = "signal-hook-registry"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5109,24 +5175,30 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.0"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#b25afd1607b9b5240bdb7169360930c356084803"
+version = "0.1.1"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#ea3858b01ef441694c678c92dcaf49aa82b96f0b"
 dependencies = [
  "actix",
  "actix-rt",
  "amqp-helpers",
  "async-trait",
  "borsh",
+ "bytes",
  "common-data",
  "dotenv",
  "futures",
  "futures-util",
  "lapin",
+ "mpl-token-metadata",
+ "program-artifacts",
  "reqwest",
  "serde",
  "serde_json",
+ "solana-client",
+ "solana-sdk",
  "ticketland-core",
  "tokio",
+ "tokio-stream",
  "tokio-util 0.7.4",
 ]
 
