@@ -81,6 +81,7 @@ async fn handle_checkout_session(
   _store: &Data<Store>,
   session: stripe::CheckoutSession,
 ) -> Result<()> {
+  // TODO: send message to rabbitmq so another service can send the mint tx to the blockchain
   println!("Received checkout session completed webhook with id: {:?}", session.id);
 
   Ok(())
