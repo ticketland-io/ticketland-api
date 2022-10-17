@@ -252,6 +252,7 @@ pub async fn create_checkout_session(
     CheckoutSession::create(&client, params).await?
   };
 
+  // TODO: store ticket nft in Redis to mark it unavailable
   store.redlock.unlock(lock).await;
   Ok(checkout_session.id.to_string())
 }
