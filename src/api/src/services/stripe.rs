@@ -163,7 +163,8 @@ pub async fn create_checkout_session(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
-  let lock = store.redlock.lock(format!("{:?}", ticket_nft).as_bytes(), 60).await?;
+  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(30).num_milliseconds() as usize).await?;
+  // TODO: check if the ticket_nft key is in Redis; If so then the ticket is not available
   let (price, fee) = pre_purchase_checks(
     Arc::clone(&store),
     &store.config.ticket_nft_program_state,
@@ -218,7 +219,7 @@ pub async fn create_checkout_session(
     let success_url = format!("{}/stripe/success", &ticketland_dapp);
 
     let mut params = CreateCheckoutSession::new(&cancel_url, &success_url);
-    params.expires_at = Some(Utc::now().timestamp() + Duration::minutes(5).num_seconds());
+    params.expires_at = Some(Utc::now().timestamp() + Duration::minutes(30).num_seconds());
     params.customer = Some(customer.id);
     params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
       application_fee_amount: Some(fee),
