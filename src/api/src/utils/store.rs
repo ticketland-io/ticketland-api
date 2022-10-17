@@ -9,6 +9,8 @@ use ticketland_core::{
 use solana_web3_rust::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
+  services::redis::Redis,
+  services::redlock::RedLock,
   services::new_event_queue::NewEventQueue,
   services::ticket_design_upload_queue::TicketDesignUploadQueue,
   services::ticket_purchase_queue::TicketPurchaseQueue,
@@ -18,6 +20,8 @@ pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
+  pub redis: Arc<Redis>,
+  pub redlock: Arc<RedLock>,
   pub rpc_client: Arc<RpcClient>,
   pub new_event_queue: NewEventQueue,
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
@@ -48,6 +52,9 @@ impl Store {
       &config.minio_secret_key,
     ).await);
 
+    let redis = Arc::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap());
+    let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
+
     let new_event_queue = NewEventQueue::new(
       config.rabbitmq_uri.clone(),
       config.retry_ttl,
@@ -68,6 +75,8 @@ impl Store {
     Self {
       config,
       neo4j,
+      redis,
+      redlock,
       minio,
       rpc_client,
       new_event_queue,

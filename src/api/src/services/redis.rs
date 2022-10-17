@@ -9,8 +9,9 @@ pub struct Redis {
 }
 
 impl Redis {
-  pub async fn new(redis_url: &str) -> Result<Self> {
-    let client = redis::Client::open(redis_url)?;
+  pub async fn new(redis_host: &str, password: &str) -> Result<Self> {
+    let conn_string = format!("redis://:{}@{}:6379", password, redis_host);
+    let client = redis::Client::open(conn_string)?;
     let conn = client.get_async_connection().await?;
 
     Ok(Redis {conn})

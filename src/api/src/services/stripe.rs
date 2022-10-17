@@ -163,6 +163,7 @@ pub async fn create_checkout_session(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
+  let lock = store.redlock.lock(format!("{:?}", ticket_nft).as_bytes(), 60).await?;
   let (price, fee) = pre_purchase_checks(
     Arc::clone(&store),
     &store.config.ticket_nft_program_state,
@@ -250,5 +251,6 @@ pub async fn create_checkout_session(
     CheckoutSession::create(&client, params).await?
   };
 
+  store.redlock.unlock(lock).await;
   Ok(checkout_session.id.to_string())
 }
