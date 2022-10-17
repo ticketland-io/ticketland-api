@@ -22,4 +22,25 @@ impl Redis {
     .query_async(&mut self.conn).await
     .map_err(Into::<_>::into)
   }
+
+  pub async fn get(&mut self, key: &str) -> Result<()> {
+    cmd("GET")
+    .arg(&[key])
+    .query_async(&mut self.conn).await
+    .map_err(Into::<_>::into)
+  }
+
+  pub async fn mget(&mut self, keys: &[&str]) -> Result<()> {
+    cmd("MGET")
+    .arg(keys)
+    .query_async(&mut self.conn).await
+    .map_err(Into::<_>::into)
+  }
+
+  pub async fn keys(&mut self, key_pattern: &str) -> Result<()> {
+    cmd("keys")
+    .arg(key_pattern)
+    .query_async(&mut self.conn).await
+    .map_err(Into::<_>::into)
+  }
 }
