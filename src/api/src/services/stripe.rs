@@ -2,7 +2,7 @@ use std::{
   sync::Arc,
   str::FromStr,
 };
-use chrono::{Utc};
+use chrono::{Utc, Duration};
 use eyre::Result;
 use serde::{Serialize};
 use stripe::{
@@ -217,7 +217,7 @@ pub async fn create_checkout_session(
     let success_url = format!("{}/stripe/success", &ticketland_dapp);
 
     let mut params = CreateCheckoutSession::new(&cancel_url, &success_url);
-    params.expires_at = Some(Utc::now().timestamp());
+    params.expires_at = Some(Utc::now().timestamp() + Duration::minutes(5).num_seconds());
     params.customer = Some(customer.id);
     params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
       application_fee_amount: Some(fee),
