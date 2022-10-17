@@ -6,3 +6,4 @@ pub mod ticket;
 pub mod stripe;
 pub mod price_feed;
 pub mod ticket_purchase;
+pub mod redis;
