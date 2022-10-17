@@ -4,13 +4,13 @@ use ticketland_core::{
   actor::neo4j::Neo4jActor,
   services::{
     minio::Minio,
+    redis::Redis,
+    redlock::RedLock,
   },
 };
 use solana_web3_rust::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
-  services::redis::Redis,
-  services::redlock::RedLock,
   services::new_event_queue::NewEventQueue,
   services::ticket_design_upload_queue::TicketDesignUploadQueue,
   services::ticket_purchase_queue::TicketPurchaseQueue,
