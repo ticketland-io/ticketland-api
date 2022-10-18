@@ -132,5 +132,6 @@ async fn handle_checkout_session(
 
   send_write(Arc::clone(&store.neo4j), query, db_query_params)
   .await
-  .map(|_| ()).map_err(Into::<_>::into)
+  .map(|_| ())
+  .map_err(Into::<_>::into)
 }
