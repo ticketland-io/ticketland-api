@@ -3512,8 +3512,8 @@ dependencies = [
 
 [[package]]
 name = "program-artifacts"
-version = "0.1.10"
-source = "git+https://github.com/ticketland-io/program-artifacts#2bcfc3ad6d96c80816f35f67d0ce490d262a8cbb"
+version = "0.1.11"
+source = "git+https://github.com/ticketland-io/program-artifacts#2806d4dead0c7c540e8fa9af15dfd92a1ede5ad7"
 dependencies = [
  "borsh",
  "solana-sdk",

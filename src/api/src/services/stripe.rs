@@ -252,6 +252,7 @@ pub async fn create_checkout_session(
     // We will use this values in the webhook so we can construct the correct TicketPurchase message that will
     // be further processed by another service.
     params.metadata = Some([
+      ("buyer_uid".to_string(), buyer_uid),
       ("event_account".to_string(), pda::event(&store.config.event_registry_state, &event_id.replace("-", "")).0.to_string()),
       ("sale_account".to_string(), sale_account),
       ("event_id".to_string(), event_id),

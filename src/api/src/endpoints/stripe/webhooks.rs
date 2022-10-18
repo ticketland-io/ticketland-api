@@ -1,15 +1,27 @@
-use crate::utils::store::Store;
+use std::{borrow::Borrow, sync::Arc};
 use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
-use chrono::Duration;
-use eyre::{Result, Report};
-use api_helpers::services::http::{get_header_value, internal_server_error};
-use common_data::{helpers::send_write, repositories::stripe::update_stripe_account_status};
-use std::{borrow::Borrow, sync::Arc};
 use stripe::{EventObject, EventType, Webhook};
-use crate::services::ticket_purchase::pending_ticket_key;
+use chrono::{Utc, Duration};
+use eyre::{Result, Report};
+use api_helpers::services::http::{
+  get_header_value,
+  internal_server_error
+};
+use common_data::{
+  helpers::send_write,
+  repositories::{
+    ticket::create_user_ticket,
+    stripe::update_stripe_account_status,
+  },
+};
+use program_artifacts::ticket_nft::pda::ticket_metadata;
+use crate::{
+  utils::store::Store,
+  services::ticket_purchase::pending_ticket_key,
+};
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
   handle_webhook(store, req, payload)
@@ -84,7 +96,7 @@ async fn handle_checkout_session(
   session: stripe::CheckoutSession,
 ) -> Result<()> {
   let metadata = session.metadata;
-  let ticket_nft = metadata.get("ticket_nft").unwrap();
+  let ticket_nft = metadata.get("ticket_nft").unwrap().to_string();
   let event_id = metadata.get("event_id").unwrap();
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
@@ -94,12 +106,30 @@ async fn handle_checkout_session(
   let mut redis = store.redis.lock().unwrap();
   redis.set(&redis_key, &"1").await?;
 
+  let seat_index = metadata.get("seat_index").unwrap().to_string();
+  let seat_name = metadata.get("seat_name").unwrap().to_string();
+
   store.ticket_purchase_queue.new_ticket_purchase(
     metadata.get("event_account").unwrap().to_string(),
     metadata.get("sale_account").unwrap().to_string(),
-    ticket_nft.to_string(),
+    ticket_nft.clone(),
     metadata.get("recipient").unwrap().to_string(),
-    metadata.get("seat_index").unwrap().to_string(),
-    metadata.get("seat_name").unwrap().to_string(),
-  ).await
+    seat_index.clone(),
+    seat_name.clone(),
+  ).await?;
+
+  // Store the ticket nft in the db
+  let (query, db_query_params) = create_user_ticket(
+    metadata.get("buyer_id").unwrap().to_string(),
+    event_id.clone(),
+    ticket_nft.clone(),
+    ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),
+    seat_index.parse::<u32>().unwrap(),
+    seat_name,
+    Utc::now().timestamp(),
+  );
+
+  send_write(Arc::clone(&store.neo4j), query, db_query_params)
+  .await
+  .map(|_| ()).map_err(Into::<_>::into)
 }
