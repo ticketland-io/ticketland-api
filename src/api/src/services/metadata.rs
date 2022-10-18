@@ -26,6 +26,7 @@ fn is_supported_media_type(mime_type: mime::Name) -> bool {
 pub async fn store_event(
   store: Arc<Store>,
   event_id: String,
+  event_capacity: String,
   uid: String,
   mut payload: Multipart,
 ) -> Result<Metadata, Error> {
@@ -94,6 +95,7 @@ pub async fn store_event(
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
+    event_capacity,
     media_content_type.unwrap(),
     Utc::now().timestamp(),
   );
