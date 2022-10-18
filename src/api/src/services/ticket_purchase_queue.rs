@@ -29,15 +29,17 @@ impl TicketPurchaseQueue {
 
   pub async fn new_ticket_purchase(
     &self,
-    event_account: String,
+    buyer_uid: String,
+    event_id: String,
     sale_account: String,
     ticket_nft: String,
     recipient: String,
     seat_index: String,
     seat_name: String,
   ) -> Result<()> {
-    let msg = TicketPurchase { 
-      event_account,
+    let msg = TicketPurchase {
+      buyer_uid,
+      event_id,
       sale_account,
       ticket_nft,
       recipient,

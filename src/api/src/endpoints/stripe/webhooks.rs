@@ -106,12 +106,14 @@ async fn handle_checkout_session(
   let mut redis = store.redis.lock().unwrap();
   redis.set(&redis_key, &"1").await?;
 
+  let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
   let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
 
   // the ticket will ultimately be minted by another service that is handling these message
   store.ticket_purchase_queue.new_ticket_purchase(
-    metadata.get("event_account").unwrap().to_string(),
+    buyer_uid.clone(),
+    event_id.clone(),
     metadata.get("sale_account").unwrap().to_string(),
     ticket_nft.clone(),
     metadata.get("recipient").unwrap().to_string(),
@@ -121,7 +123,7 @@ async fn handle_checkout_session(
 
   // Store the ticket nft in the db
   let (query, db_query_params) = create_user_ticket(
-    metadata.get("buyer_id").unwrap().to_string(),
+    buyer_uid.clone(),
     event_id.clone(),
     ticket_nft.clone(),
     ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),

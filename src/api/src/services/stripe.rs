@@ -26,9 +26,6 @@ use common_data::{
     },
   }
 };
-use program_artifacts::{
-  event_registry::pda,
-};
 use ticketland_core::error::Error;
 use crate::utils::store::Store;
 use super::ticket_purchase::{
@@ -253,7 +250,6 @@ pub async fn create_checkout_session(
     // be further processed by another service.
     params.metadata = Some([
       ("buyer_uid".to_string(), buyer_uid),
-      ("event_account".to_string(), pda::event(&store.config.event_registry_state, &event_id.replace("-", "")).0.to_string()),
       ("sale_account".to_string(), sale_account),
       ("event_id".to_string(), event_id),
       ("ticket_nft".to_string(), ticket_nft),
