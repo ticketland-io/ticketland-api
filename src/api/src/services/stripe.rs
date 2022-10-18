@@ -164,7 +164,7 @@ pub async fn create_checkout_session(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
-  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(30).num_milliseconds() as usize).await?;
+  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(31).num_milliseconds() as usize).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
   // This can happen when someone tries to create a checkout session straigth after someone else
