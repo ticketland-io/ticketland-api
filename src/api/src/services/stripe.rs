@@ -164,7 +164,7 @@ pub async fn create_checkout_session(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
-  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(31).num_milliseconds() as usize).await?;
+  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(30).num_milliseconds() as usize).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
   // This can happen when someone tries to create a checkout session straigth after someone else
@@ -264,8 +264,13 @@ pub async fn create_checkout_session(
   };
 
   // Store ticket nft in Redis to mark it unavailable
+  // Add ttl that last one minute longer than the checkout duration. This is to avoid some weird
+  // race conditions i.e. user checkouts the last second, the entry is removed from redis and another
+  // user calls this function at the same time at which point the ticket will not be minted nor the record
+  // will be in Redis because it expired and because the checkout webhook has not be called yet to insert the
+  // entry again into Redis.
   let mut redis = store.redis.lock().unwrap();
-  redis.set(&redis_key, &"1").await?;
+  redis.set_ex(&redis_key, &"1", Duration::minutes(31).num_milliseconds() as usize).await?;
 
   store.redlock.unlock(lock).await;
   Ok(checkout_session.id.to_string())
