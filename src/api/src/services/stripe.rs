@@ -3,7 +3,7 @@ use std::{
   str::FromStr,
 };
 use chrono::{Utc, Duration};
-use eyre::Result;
+use eyre::{Result, Report};
 use serde::{Serialize};
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
@@ -33,6 +33,7 @@ use ticketland_core::error::Error;
 use crate::utils::store::Store;
 use super::ticket_purchase::{
   pre_purchase_checks,
+  pending_ticket_key,
 };
 
 #[derive(Serialize)]
@@ -164,7 +165,17 @@ pub async fn create_checkout_session(
   seat_name: String,
 ) -> Result<String> {
   let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(30).num_milliseconds() as usize).await?;
-  // TODO: check if the ticket_nft key is in Redis; If so then the ticket is not available
+  
+  // Check if the ticket_nft key is in Redis; If so then the ticket is not available
+  // This can happen when someone tries to create a checkout session straigth after someone else
+  // has already purchased or is in the middle of checkout or waiting for the service to send the
+  // mint tx to the blockchain.
+  let mut redis = store.redis.lock().unwrap();
+  let redis_key = pending_ticket_key(&event_id, &ticket_nft);
+  if let Ok(_) = redis.get(&redis_key).await {
+    return Err(Report::msg("Ticket not available"))
+  }
+
   let (price, fee) = pre_purchase_checks(
     Arc::clone(&store),
     &store.config.ticket_nft_program_state,
@@ -252,7 +263,10 @@ pub async fn create_checkout_session(
     CheckoutSession::create(&client, params).await?
   };
 
-  // TODO: store ticket nft in Redis to mark it unavailable
+  // Store ticket nft in Redis to mark it unavailable
+  let mut redis = store.redis.lock().unwrap();
+  redis.set(&redis_key, &"1").await?;
+
   store.redlock.unlock(lock).await;
   Ok(checkout_session.id.to_string())
 }

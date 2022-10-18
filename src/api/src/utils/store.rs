@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use actix::prelude::*;
 use ticketland_core::{
   actor::neo4j::Neo4jActor,
@@ -20,7 +20,7 @@ pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
-  pub redis: Arc<Redis>,
+  pub redis: Arc<Mutex<Redis>>,
   pub redlock: Arc<RedLock>,
   pub rpc_client: Arc<RpcClient>,
   pub new_event_queue: NewEventQueue,
@@ -52,7 +52,7 @@ impl Store {
       &config.minio_secret_key,
     ).await);
 
-    let redis = Arc::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap());
+    let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
     let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
 
     let new_event_queue = NewEventQueue::new(
