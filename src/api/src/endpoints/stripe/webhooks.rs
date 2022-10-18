@@ -109,6 +109,7 @@ async fn handle_checkout_session(
   let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
 
+  // the ticket will ultimately be minted by another service that is handling these message
   store.ticket_purchase_queue.new_ticket_purchase(
     metadata.get("event_account").unwrap().to_string(),
     metadata.get("sale_account").unwrap().to_string(),
