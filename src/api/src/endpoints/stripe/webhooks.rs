@@ -3,11 +3,13 @@ use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
+use chrono::Duration;
 use eyre::{Result, Report};
 use api_helpers::services::http::{get_header_value, internal_server_error};
 use common_data::{helpers::send_write, repositories::stripe::update_stripe_account_status};
 use std::{borrow::Borrow, sync::Arc};
 use stripe::{EventObject, EventType, Webhook};
+use crate::services::ticket_purchase::pending_ticket_key;
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
   handle_webhook(store, req, payload)
@@ -82,11 +84,20 @@ async fn handle_checkout_session(
   session: stripe::CheckoutSession,
 ) -> Result<()> {
   let metadata = session.metadata;
-  
+  let ticket_nft = metadata.get("ticket_nft").unwrap();
+  let event_id = metadata.get("event_id").unwrap();
+  let redis_key = pending_ticket_key(&event_id, &ticket_nft);
+
+  // Acquire a lock again so we update the state in Redis and Neo4j before someone else
+  // tries to purchase the same ticket which the current user has already purchased via Stripe
+  let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(5).num_milliseconds() as usize).await?;
+  let mut redis = store.redis.lock().unwrap();
+  redis.set(&redis_key, &"1").await?;
+
   store.ticket_purchase_queue.new_ticket_purchase(
     metadata.get("event_account").unwrap().to_string(),
     metadata.get("sale_account").unwrap().to_string(),
-    metadata.get("ticket_nft").unwrap().to_string(),
+    ticket_nft.to_string(),
     metadata.get("recipient").unwrap().to_string(),
     metadata.get("seat_index").unwrap().to_string(),
     metadata.get("seat_name").unwrap().to_string(),

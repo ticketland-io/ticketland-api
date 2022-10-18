@@ -254,6 +254,7 @@ pub async fn create_checkout_session(
     params.metadata = Some([
       ("event_account".to_string(), pda::event(&store.config.event_registry_state, &event_id.replace("-", "")).0.to_string()),
       ("sale_account".to_string(), sale_account),
+      ("event_id".to_string(), event_id),
       ("ticket_nft".to_string(), ticket_nft),
       ("recipient".to_string(), recipient),
       ("seat_index".to_string(), seat_index.to_string()),
