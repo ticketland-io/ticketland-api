@@ -30,9 +30,7 @@ pub async fn exec(
 
   let event = send_read(Arc::clone(&store.neo4j), query, db_query_params)
   .await
-  .map(|db_result| {
-    TryInto::<Event>::try_into(db_result)
-  })
+  .map(TryInto::<Event>::try_into)
   .unwrap_or_else(|error: Error| Err(error));
 
   if let Err(error) = event {
