@@ -430,7 +430,7 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 [[package]]
 name = "api-helpers"
 version = "0.2.5"
-source = "git+https://github.com/ticketland-io/common-rust#1cf2427449cbc047f3dc86884cfc47daf0cbf0c2"
+source = "git+https://github.com/ticketland-io/common-rust#f523da2a959010474392a5b2e29bd56a1453fcba"
 dependencies = [
  "actix",
  "actix-http",
@@ -1267,7 +1267,7 @@ dependencies = [
 [[package]]
 name = "common-data"
 version = "0.2.20"
-source = "git+https://github.com/ticketland-io/common-rust#1cf2427449cbc047f3dc86884cfc47daf0cbf0c2"
+source = "git+https://github.com/ticketland-io/common-rust#f523da2a959010474392a5b2e29bd56a1453fcba"
 dependencies = [
  "actix",
  "bolt-client",
@@ -2798,6 +2798,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "micromath"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39617bc909d64b068dcffd0e3e31679195b5576d0c83fadc52690268cc2b2b55"
+
+[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3512,11 +3518,12 @@ dependencies = [
 
 [[package]]
 name = "program-artifacts"
-version = "0.1.14"
-source = "git+https://github.com/ticketland-io/program-artifacts#7098a01ab31552509b864e94be92abc43e8ba4b3"
+version = "0.1.21"
+source = "git+https://github.com/ticketland-io/program-artifacts#24dd4abbb24f0bebc0a1d626be6773299cf55a43"
 dependencies = [
  "borsh",
  "solana-sdk",
+ "solana-web3-rust",
 ]
 
 [[package]]
@@ -3910,6 +3917,16 @@ dependencies = [
  "serde",
  "serde_json",
  "winapi",
+]
+
+[[package]]
+name = "rs_merkle"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a632a43487c1332be8e183588079f89b6820fab24e04db49521eacd536837372"
+dependencies = [
+ "micromath",
+ "sha2 0.10.5",
 ]
 
 [[package]]
@@ -4971,13 +4988,16 @@ dependencies = [
 
 [[package]]
 name = "solana-web3-rust"
-version = "0.1.4"
-source = "git+https://github.com/ticketland-io/solana-web3-rust#506e1cb1b83f5fc5793245c5491021781b39abd8"
+version = "0.1.9"
+source = "git+https://github.com/ticketland-io/solana-web3-rust#c64d29c0f4543f4b1624d6169b693ffc144959a1"
 dependencies = [
  "borsh",
  "eyre",
+ "lazy_static",
+ "rs_merkle",
  "solana-client",
  "solana-sdk",
+ "spl-associated-token-account",
 ]
 
 [[package]]
@@ -5288,8 +5308,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-core"
-version = "0.2.5"
-source = "git+https://github.com/ticketland-io/common-rust#1cf2427449cbc047f3dc86884cfc47daf0cbf0c2"
+version = "0.2.6"
+source = "git+https://github.com/ticketland-io/common-rust#f523da2a959010474392a5b2e29bd56a1453fcba"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5319,8 +5339,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.3"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#9fc42e4c58f3986fc2103ae6795dcc73d0a5e5ed"
+version = "0.1.4"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#3f15c057da2c23aecbc2cf460b6b03555b1f0c7c"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5341,6 +5361,7 @@ dependencies = [
  "serde_json",
  "solana-client",
  "solana-sdk",
+ "solana-web3-rust",
  "ticketland-core",
  "tokio",
  "tokio-stream",

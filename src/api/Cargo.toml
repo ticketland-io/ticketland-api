@@ -19,13 +19,13 @@ eyre = "0.6.8"
 dotenv = "0.15"
 futures-util = "0.3.15"
 futures = "0.3.12"
-ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.5" }
+ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.6" }
 api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.5" }
 common-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.20" }
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.1.6" }
-ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.3" }
-program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.14" }
-solana-web3-rust = { git = "https://github.com/ticketland-io/solana-web3-rust", version = "0.1.4" }
+ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.4" }
+program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.21" }
+solana-web3-rust = { git = "https://github.com/ticketland-io/solana-web3-rust", version = "0.1.9" }
 chrono = "0.4.21"
 serde = "1.0"
 serde_json = "1.0"

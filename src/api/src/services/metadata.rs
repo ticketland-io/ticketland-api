@@ -2,6 +2,7 @@ use std::{
   sync::Arc,
   str::from_utf8,
 };
+use eyre::{Result, Report};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
 use chrono::{Utc};
@@ -29,7 +30,7 @@ pub async fn store_event(
   event_capacity: String,
   uid: String,
   mut payload: Multipart,
-) -> Result<Metadata, Error> {
+) -> Result<Metadata> {
   let mut metadata = Metadata::default();
   let mut media_content_type = None;
 
@@ -56,8 +57,7 @@ pub async fn store_event(
         &path::get_event_file_path(&event_id, &content_type.to_string()),
         content.as_ref()
       )
-      .await
-      .map_err(Into::<Error>::into)?;
+      .await?;
     } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
       let value = from_utf8(content.as_ref()).unwrap().to_owned();
 
@@ -80,7 +80,7 @@ pub async fn store_event(
   };
 
   if metadata.is_default() && media_content_type.is_none() {
-    return Err(Error::GenericError("Bad request".to_owned()))
+    return Err(Report::msg("Bad request".to_owned()))
   }
 
   // Store the metadata as JSON on S3
@@ -88,8 +88,7 @@ pub async fn store_event(
     &path::get_event_metadata_path(&event_id),
     serde_json::to_string(&metadata).unwrap().as_ref(),
   )
-  .await
-  .map_err(Into::<Error>::into)?;
+  .await?;
 
   // Update the db
   let (query, db_query_params) = upsert_event(
