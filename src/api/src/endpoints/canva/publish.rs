@@ -10,6 +10,9 @@ use common_data::{
   helpers::{send_write},
   repositories::design::{upsert_ticket_design},
 };
+use api_helpers::{
+  services::http::internal_server_error,
+};
 use crate::{
   utils::store::Store,
 };
@@ -50,11 +53,17 @@ pub async fn exec(
 ) -> HttpResponse {
   let asset = body.assets.get(0).unwrap().clone();
   
-  store.ticket_design_upload_queue.on_new_design(
+  let result = store.ticket_design_upload_queue.new_design(
     body.design_id.clone(),
     asset.file_type.clone(),
     asset.url.clone(),
-  ).await;
+  )
+  .await
+  .map(|_| HttpResponse::Ok().finish());
+
+  if let Err(error) = result {
+    return internal_server_error(Some(error.root_cause()))
+  }
 
   let (query, db_query_params) = upsert_ticket_design(
     body.user.clone(),

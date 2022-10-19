@@ -1,4 +1,6 @@
 use std::env;
+use solana_sdk::pubkey::Pubkey;
+use solana_web3_rust::utils::pubkey_from_str;
 
 pub struct Config {
   pub port: u64,
@@ -7,6 +9,8 @@ pub struct Config {
   pub neo4j_username: String,
   pub neo4j_password: String,
   pub neo4j_database: Option<String>,
+  pub redis_host: String,
+  pub redis_password: String,
   pub firebase_auth_key: String,
   pub cors_origin: Vec<String>,
   pub canva_key: String,
@@ -23,6 +27,9 @@ pub struct Config {
   pub rpc_endpoint: String,
   pub ticketland_api: String,
   pub ticketland_dapp: String,
+  pub ticket_nft_program_state: Pubkey,
+  pub event_registry_state: Pubkey,
+  pub ticket_purchae_protocol_fee: i64,
 }
 
 impl Config {
@@ -35,6 +42,8 @@ impl Config {
         neo4j_username: env::var("NEO4J_USERNAME").unwrap(),
         neo4j_password: env::var("NEO4J_PASSWORD").unwrap(),
         neo4j_database: env::var("NEO4J_DATABASE").ok(),
+        redis_host: env::var("REDIS_HOST").unwrap(),
+        redis_password: env::var("REDIS_PASSWORD").unwrap(),
         firebase_auth_key: env::var("FIREBASE_API_KEY").unwrap(),
         cors_origin: env::var("CORS_ORIGIN").unwrap().split(",").map(|val| val.to_owned()).collect(),
         minio_region: env::var("MINIO_REGION").unwrap(),
@@ -50,6 +59,9 @@ impl Config {
         stripe_webhook_key: env::var("STRIPE_WEBHOOK_SECRET").unwrap(),
         ticketland_api: env::var("TICKETLAND_API").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
+        ticket_nft_program_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
+        event_registry_state: pubkey_from_str(&env::var("EVENT_REGISTRY_STATE").unwrap()).unwrap(),
+        ticket_purchae_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
       }
     )
   }

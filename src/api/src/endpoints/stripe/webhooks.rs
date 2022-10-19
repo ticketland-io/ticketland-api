@@ -1,27 +1,41 @@
-use crate::utils::store::Store;
+use std::{borrow::Borrow, sync::Arc};
 use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
-use api_helpers::services::http::{get_header_value, internal_server_error};
-use common_data::{helpers::send_write, repositories::stripe::update_stripe_account_status};
-use std::{borrow::Borrow, sync::Arc};
 use stripe::{EventObject, EventType, Webhook};
-use ticketland_core::error::Error;
+use chrono::{Utc, Duration};
+use eyre::{Result, Report};
+use api_helpers::services::http::{
+  get_header_value,
+  internal_server_error
+};
+use common_data::{
+  helpers::send_write,
+  repositories::{
+    ticket::create_user_ticket,
+    stripe::update_stripe_account_status,
+  },
+};
+use program_artifacts::ticket_nft::pda::ticket_metadata;
+use crate::{
+  utils::store::Store,
+  services::ticket_purchase::pending_ticket_key,
+};
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
   handle_webhook(store, req, payload)
   .await
   .map(|_| HttpResponse::Ok().finish())
-  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
 }
 
 pub async fn handle_webhook(
   store: Data<Store>,
   req: HttpRequest,
   payload: Bytes,
-) -> Result<(), Error> {
-  let payload_str = std::str::from_utf8(payload.borrow()).unwrap();
+) -> Result<()> {
+  let payload_str = std::str::from_utf8(payload.borrow())?;
   let stripe_signature = get_header_value(&req, "Stripe-Signature").unwrap_or_default();
 
   if let Ok(event) = Webhook::construct_event(
@@ -43,13 +57,13 @@ pub async fn handle_webhook(
         _ => {
           println!("Unknown event encountered in webhook: {:?}", event.event_type);
 
-          return Err(format!("Unknown event encountered in webhook: {:?}", event.event_type).as_str().into());
+          return Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event.event_type)))?
         }
       }
   } else {
     println!("Failed to construct webhook event, ensure your webhook secret is correct.");
 
-    return Err("Failed to construct webhook event, ensure your webhook secret is correct.".into());
+    return Err(Report::msg("Failed to construct webhook event, ensure your webhook secret is correct."))?;
   }
 
   Ok(())
@@ -58,7 +72,7 @@ pub async fn handle_webhook(
 async fn handle_account_updated(
   store: &Data<Store>,
   account: stripe::Account,
-) -> Result<(), Error> {
+) -> Result<()> {
   let eventually_due = account
   .requirements
   .and_then(|requirements| requirements.eventually_due)
@@ -68,9 +82,7 @@ async fn handle_account_updated(
   if eventually_due.len() == 0 {
     let (query, db_query_params) = update_stripe_account_status(account.id.to_string());
 
-    return send_write(Arc::clone(&store.neo4j), query, db_query_params)
-    .await
-    .map(|_| ());
+    return send_write(Arc::clone(&store.neo4j), query, db_query_params).await.map(|_| ()).map_err(Into::<_>::into)
   }
 
   // return OK if the on boarding process for the connect account has not finished; that is there are
@@ -80,10 +92,48 @@ async fn handle_account_updated(
 }
 
 async fn handle_checkout_session(
-  _store: &Data<Store>,
+  store: &Data<Store>,
   session: stripe::CheckoutSession,
-) -> Result<(), Error> {
-  println!("Received checkout session completed webhook with id: {:?}", session.id);
+) -> Result<()> {
+  let metadata = session.metadata;
+  let ticket_nft = metadata.get("ticket_nft").unwrap().to_string();
+  let event_id = metadata.get("event_id").unwrap();
+  let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
-  Ok(())
+  // Acquire a lock again so we update the state in Redis and Neo4j before someone else
+  // tries to purchase the same ticket which the current user has already purchased via Stripe
+  let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(5).num_milliseconds() as usize).await?;
+  let mut redis = store.redis.lock().unwrap();
+  redis.set(&redis_key, &"1").await?;
+
+  let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
+  let seat_index = metadata.get("seat_index").unwrap().to_string();
+  let seat_name = metadata.get("seat_name").unwrap().to_string();
+
+  // the ticket will ultimately be minted by another service that is handling these message
+  store.ticket_purchase_queue.new_ticket_purchase(
+    buyer_uid.clone(),
+    event_id.clone(),
+    metadata.get("sale_account").unwrap().to_string(),
+    ticket_nft.clone(),
+    metadata.get("recipient").unwrap().to_string(),
+    seat_index.clone(),
+    seat_name.clone(),
+  ).await?;
+
+  // Store the ticket nft in the db
+  let (query, db_query_params) = create_user_ticket(
+    buyer_uid.clone(),
+    event_id.clone(),
+    ticket_nft.clone(),
+    ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),
+    seat_index.parse::<u32>().unwrap(),
+    seat_name,
+    Utc::now().timestamp(),
+  );
+
+  send_write(Arc::clone(&store.neo4j), query, db_query_params)
+  .await
+  .map(|_| ())
+  .map_err(Into::<_>::into)
 }

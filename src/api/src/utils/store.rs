@@ -1,25 +1,31 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use actix::prelude::*;
 use ticketland_core::{
   actor::neo4j::Neo4jActor,
   services::{
     minio::Minio,
+    redis::Redis,
+    redlock::RedLock,
   },
 };
-use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_web3_rust::rpc_client::RpcClient;
 use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
   services::ticket_design_upload_queue::TicketDesignUploadQueue,
+  services::ticket_purchase_queue::TicketPurchaseQueue,
 };
 
 pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
+  pub redis: Arc<Mutex<Redis>>,
+  pub redlock: Arc<RedLock>,
   pub rpc_client: Arc<RpcClient>,
   pub new_event_queue: NewEventQueue,
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
+  pub ticket_purchase_queue: TicketPurchaseQueue,
 }
 
 impl Store {
@@ -46,6 +52,9 @@ impl Store {
       &config.minio_secret_key,
     ).await);
 
+    let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
+    let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
+
     let new_event_queue = NewEventQueue::new(
       config.rabbitmq_uri.clone(),
       config.retry_ttl,
@@ -56,15 +65,23 @@ impl Store {
       config.retry_ttl,
     ).await;
 
-    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone()));
+    let ticket_purchase_queue = TicketPurchaseQueue::new(
+      config.rabbitmq_uri.clone(),
+      config.retry_ttl,
+    ).await;
+
+    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
 
     Self {
       config,
       neo4j,
+      redis,
+      redlock,
       minio,
       rpc_client,
       new_event_queue,
       ticket_design_upload_queue,
+      ticket_purchase_queue,
     }
   }
 }

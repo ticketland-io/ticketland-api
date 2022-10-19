@@ -3,9 +3,6 @@ use actix_web::{
   web::{Data},
   HttpResponse,
 };
-use ticketland_core::{
-  error::Error,
-};
 use api_helpers::{
   middleware::auth::AuthData,
   services::{
@@ -27,5 +24,5 @@ pub async fn exec(
   refresh_link(Arc::clone(&store), auth.user.local_id)
   .await
   .map(|link| HttpResponse::Ok().json(Response {link: Some(link)}))
-  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
 }
