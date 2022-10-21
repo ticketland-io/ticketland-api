@@ -9,7 +9,8 @@ use super::{
   get_all_events,
   create_event,
   get_event_image,
-  commit_event,
+  commit_event, 
+  get_events_by_category,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -23,6 +24,11 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/current-user")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_all_events::exec))
+    );
+
+    cfg.service(
+      web::resource("/category")
+      .route(web::get().to(get_events_by_category::exec))
     );
 
     cfg.service(
