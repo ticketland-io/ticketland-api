@@ -17,6 +17,9 @@ use common_data::{
     stripe::update_stripe_account_status,
   },
 };
+use ticketland_core::{
+  async_helpers::timeout,
+};
 use program_artifacts::ticket_nft::pda::ticket_metadata;
 use crate::{
   utils::store::Store,
@@ -102,7 +105,7 @@ async fn handle_checkout_session(
 
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
   // tries to purchase the same ticket which the current user has already purchased via Stripe
-  let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
+  let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(15).num_milliseconds() as usize).await?;
   let mut redis = store.redis.lock().unwrap();
   redis.set(&redis_key, &"1").await?;
 
@@ -121,16 +124,24 @@ async fn handle_checkout_session(
     Utc::now().timestamp(),
   );
 
-  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+  let sale_accountt = metadata.get("sale_account").unwrap().to_string();
+  let recipient = metadata.get("recipient").unwrap().to_string();
 
-  // the ticket will ultimately be minted by another service that is handling these message
-  store.ticket_purchase_queue.new_ticket_purchase(
-    buyer_uid,
-    event_id.clone(),
-    metadata.get("sale_account").unwrap().to_string(),
-    ticket_nft,
-    metadata.get("recipient").unwrap().to_string(),
-    seat_index,
-    seat_name,
-  ).await
+  timeout(
+    Duration::seconds(2).num_milliseconds() as u64,
+    async move {
+      send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+
+      // the ticket will ultimately be minted by another service that is handling these message
+      store.ticket_purchase_queue.new_ticket_purchase(
+        buyer_uid,
+        event_id.clone(),
+        sale_accountt,
+        ticket_nft,
+        recipient,
+        seat_index,
+        seat_name,
+      ).await
+    },
+  ).await?
 }
