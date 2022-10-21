@@ -116,7 +116,7 @@ async fn handle_checkout_session(
   let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
 
-    // Store the ticket nft in the db
+  // Store the ticket nft in the db
   let (query, db_query_params) = create_user_ticket(
     buyer_uid.clone(),
     event_id.clone(),
