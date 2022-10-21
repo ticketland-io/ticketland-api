@@ -110,30 +110,27 @@ async fn handle_checkout_session(
   let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
 
-  // the ticket will ultimately be minted by another service that is handling these message
-  store.ticket_purchase_queue.new_ticket_purchase(
-    buyer_uid.clone(),
-    event_id.clone(),
-    metadata.get("sale_account").unwrap().to_string(),
-    ticket_nft.clone(),
-    metadata.get("recipient").unwrap().to_string(),
-    seat_index.clone(),
-    seat_name.clone(),
-  ).await?;
-
-  // Store the ticket nft in the db
+    // Store the ticket nft in the db
   let (query, db_query_params) = create_user_ticket(
     buyer_uid.clone(),
     event_id.clone(),
     ticket_nft.clone(),
     ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),
     seat_index.parse::<u32>().unwrap(),
-    seat_name,
+    seat_name.clone(),
     Utc::now().timestamp(),
   );
 
-  send_write(Arc::clone(&store.neo4j), query, db_query_params)
-  .await
-  .map(|_| ())
-  .map_err(Into::<_>::into)
+  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+
+  // the ticket will ultimately be minted by another service that is handling these message
+  store.ticket_purchase_queue.new_ticket_purchase(
+    buyer_uid,
+    event_id.clone(),
+    metadata.get("sale_account").unwrap().to_string(),
+    ticket_nft,
+    metadata.get("recipient").unwrap().to_string(),
+    seat_index,
+    seat_name,
+  ).await
 }
