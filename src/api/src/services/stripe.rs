@@ -26,7 +26,9 @@ use common_data::{
     },
   }
 };
-use ticketland_core::error::Error;
+use ticketland_core::{
+  async_helpers::timeout,
+};
 use crate::utils::store::Store;
 use super::ticket_purchase::{
   pre_purchase_checks,
@@ -93,7 +95,7 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String> {
 pub async fn create_stripe_account(secret_key: String,) -> Result<Account>  {
   let client = Client::new(secret_key);
   
-  // We need to create a manual payout schedule. The reason is that buying a ticket requires two steps.
+  // Do we need to create a manual payout schedule? The reason is that buying a ticket requires two steps.
   // We need to first charge user's card and then send a tx to the blockchain to mint the ticket.
   // However, there are no atomicity guarantees here. For example, we might charge user's card and then realize
   // that the ticket has already been purchased by someone else i.e. race condition. To avoid that we can essentially
@@ -161,7 +163,10 @@ pub async fn create_checkout_session(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
-  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
+  // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
+  // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
+  // returned to the user and thus the Scenario #3 we describe in the technical documentation will not pose an issue.
+  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(15).num_milliseconds() as usize).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
   // This can happen when someone tries to create a checkout session straigth after someone else
@@ -173,13 +178,17 @@ pub async fn create_checkout_session(
     return Err(Report::msg("Ticket not available"))
   }
 
-  let (price, fee) = pre_purchase_checks(
-    Arc::clone(&store),
-    &store.config.ticket_nft_program_state,
-    seat_index,
-    &sale_account,
-    &ticket_nft,
-  ).await?;
+  let (price, fee) = timeout(
+    Duration::seconds(5).num_milliseconds() as u64,
+    pre_purchase_checks(
+      Arc::clone(&store),
+      &store.config.ticket_nft_program_state,
+      seat_index,
+      &sale_account,
+      &ticket_nft,
+    ),
+  ).await??;
+
 
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
@@ -199,10 +208,11 @@ pub async fn create_checkout_session(
     // TODO: we can additional props to the product such as url name of the event etc.
     let product_name = format!("Ticket {} for event {}", &ticket_nft, &event_id);
     let create_product = CreateProduct::new(&product_name);
-    
-    Product::create(&client, create_product)
-    .await
-    .map_err(|error| Into::<Error>::into(format!("Stripe Error {:?}", error).as_str()))?
+
+    timeout(
+      Duration::seconds(2).num_milliseconds() as u64,
+      Product::create(&client, create_product),
+    ).await??
   };
 
   let price = {
@@ -212,7 +222,10 @@ pub async fn create_checkout_session(
     create_price.unit_amount = Some(price);
     create_price.expand = &["product"];
 
-    Price::create(&client, create_price).await?
+    timeout(
+      Duration::seconds(2).num_milliseconds() as u64,
+      Price::create(&client, create_price),
+    ).await??
   };
 
   let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
@@ -257,7 +270,10 @@ pub async fn create_checkout_session(
       ("seat_name".to_string(), seat_name),
     ].iter().cloned().collect());
 
-    CheckoutSession::create(&client, params).await?
+    timeout(
+      Duration::seconds(2).num_milliseconds() as u64,
+      CheckoutSession::create(&client, params),
+    ).await??
   };
 
   // Store ticket nft in Redis to mark it unavailable
@@ -267,7 +283,10 @@ pub async fn create_checkout_session(
   // will be in Redis because it expired and because the checkout webhook has not be called yet to insert the
   // entry again into Redis.
   let mut redis = store.redis.lock().unwrap();
-  redis.set_ex(&redis_key, &"1", Duration::minutes(31).num_milliseconds() as usize).await?;
+  timeout(
+    Duration::seconds(2).num_milliseconds() as u64,
+    redis.set_ex(&redis_key, &"1", Duration::minutes(31).num_milliseconds() as usize),
+  ).await??;
 
   store.redlock.unlock(lock).await;
   Ok(checkout_session.id.to_string())
