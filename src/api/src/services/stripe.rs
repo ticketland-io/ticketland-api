@@ -161,7 +161,7 @@ pub async fn create_checkout_session(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
-  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(30).num_milliseconds() as usize).await?;
+  let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::minutes(1).num_milliseconds() as usize).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
   // This can happen when someone tries to create a checkout session straigth after someone else
@@ -187,7 +187,6 @@ pub async fn create_checkout_session(
   // TODO: we need to add name and email as well
   // let (query, db_query_params) = read_account(buyer_uid.clone());
   // let buyer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
-  // TODO: do we need this https://github.com/arlyon/async-stripe/blob/master/examples/checkout.rs#L31?
   let customer = Customer::create(
     &client,
     CreateCustomer {

@@ -61,8 +61,8 @@ pub async fn pre_purchase_checks(
 
   // Using PDA seeds allows us to impose some constraints and do some validation.
   // Ticket nfts are PDAs and part of the seed list is the ticket type index. This allows
-  // us to validatate that user does not pass a ticket type which has has lower prices but 
-  // use a ticket nft that is of a higher more expensive type.
+  // us to validatate that user does not pass a ticket type which has has lower price but 
+  // use a ticket nft that is of a higher, more expensive type.
   if ticket_nft_pda.to_string() != ticket_nft {
     return Err(Report::msg("Invalid ticket_nft"))?
   }
