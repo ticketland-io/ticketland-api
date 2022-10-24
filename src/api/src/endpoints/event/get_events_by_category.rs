@@ -17,7 +17,7 @@ use crate::{
 
 QueryString! {
   pub struct QueryString {
-    pub created_at: u32,
+    pub category: String,
   }
 }
 
@@ -32,7 +32,7 @@ pub async fn exec(
     Arc::clone(&store.neo4j),
     Box::new(qs.clone().into_inner()),
     Box::new(move || {
-      read_events_by_category(qs.created_at.clone(), skip, limit)
+      read_events_by_category(qs.category.clone(), skip, limit)
     })
   ).await
 }
