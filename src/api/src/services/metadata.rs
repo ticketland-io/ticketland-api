@@ -9,7 +9,7 @@ use chrono::{Utc};
 use ticketland_core::error::Error;
 use ticketland_event_handler::services::path;
 use common_data::{
-  models::metadata::{Attribute, Metadata},
+  models::{metadata::{Attribute, Metadata}, event::Event},
   helpers::{send_write},
   repositories::event::upsert_event,
 };
@@ -22,6 +22,40 @@ fn is_supported_media_type(mime_type: mime::Name) -> bool {
     mime::IMAGE | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
     _ => false,
   }
+}
+
+fn get_event_obj (metadata: Metadata) -> Event {
+  let mut event = Event {
+    name: metadata.name,
+    description: metadata.description,
+    ..Event::default()
+  };
+
+  for attribute in metadata.attributes {
+    match attribute.trait_type.as_ref() {
+      "location" => {
+        event.location = attribute.value;
+      },
+      "venue" => {
+        event.venue = attribute.value;
+      },
+      "type" => {
+        event.event_type = attribute.value;
+      },
+      "startDate" => {
+        event.start_date = attribute.value;
+      },
+      "endDate" => {
+        event.end_date = attribute.value;
+      },
+      "category" => {
+        event.category = attribute.value;
+      },
+      _ => todo!(), // Simply ignore
+    }
+  };
+
+  event
 }
 
 pub async fn store_event(
@@ -90,6 +124,7 @@ pub async fn store_event(
   )
   .await?;
 
+  let event_obj = get_event_obj(metadata.clone());
   // Update the db
   let (query, db_query_params) = upsert_event(
     event_id,
@@ -97,6 +132,12 @@ pub async fn store_event(
     event_capacity,
     media_content_type.unwrap(),
     Utc::now().timestamp(),
+    event_obj.location,
+    event_obj.venue,
+    event_obj.event_type,
+    event_obj.start_date,
+    event_obj.end_date,
+    event_obj.category
   );
 
   send_write(
