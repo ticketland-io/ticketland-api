@@ -24,7 +24,7 @@ fn is_supported_media_type(mime_type: mime::Name) -> bool {
   }
 }
 
-fn get_event_obj (metadata: Metadata) -> Event {
+fn convert_metadata_to_event (metadata: Metadata) -> Event {
   let mut event = Event {
     name: metadata.name,
     description: metadata.description,
@@ -124,7 +124,7 @@ pub async fn store_event(
   )
   .await?;
 
-  let event_obj = get_event_obj(metadata.clone());
+  let event_obj = convert_metadata_to_event(metadata.clone());
   // Update the db
   let (query, db_query_params) = upsert_event(
     event_id,
