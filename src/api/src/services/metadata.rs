@@ -39,7 +39,7 @@ fn convert_metadata_to_event (metadata: Metadata) -> Event {
       "venue" => {
         event.venue = attribute.value;
       },
-      "type" => {
+      "event_type" => {
         event.event_type = attribute.value;
       },
       "startDate" => {
@@ -61,7 +61,7 @@ fn convert_metadata_to_event (metadata: Metadata) -> Event {
 pub async fn store_event(
   store: Arc<Store>,
   event_id: String,
-  event_capacity: String,
+  // event_capacity: String,
   uid: String,
   mut payload: Multipart,
 ) -> Result<Metadata> {
@@ -129,7 +129,7 @@ pub async fn store_event(
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
-    event_capacity,
+    // event_capacity,
     media_content_type.unwrap(),
     Utc::now().timestamp(),
     event_obj.location,
@@ -137,7 +137,9 @@ pub async fn store_event(
     event_obj.event_type,
     event_obj.start_date,
     event_obj.end_date,
-    event_obj.category
+    event_obj.category,
+    event_obj.name,
+    event_obj.description
   );
 
   send_write(
