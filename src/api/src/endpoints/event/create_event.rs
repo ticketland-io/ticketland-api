@@ -21,15 +21,13 @@ pub async fn exec(
   store: web::Data<Store>,
   auth: AuthData,
   params: web::Path<EventParams>,
-  payload: Multipart,
-  body: web::Json<Body>,
+  payload: Multipart
 ) -> HttpResponse {
   let event_id = params.event_id.clone();
 
   store_event(
     Arc::clone(&store),
     event_id,
-    body.event_capacity.clone(),
     auth.user.local_id,
     payload,
   ).await
