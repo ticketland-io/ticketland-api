@@ -29,10 +29,12 @@ use common_data::{
 use ticketland_core::{
   async_helpers::timeout,
 };
+use ticketland_event_handler::{
+  services::ticket_purchase::pending_ticket_key,
+};
 use crate::utils::store::Store;
 use super::ticket_purchase::{
   pre_purchase_checks,
-  pending_ticket_key,
 };
 
 #[derive(Serialize)]

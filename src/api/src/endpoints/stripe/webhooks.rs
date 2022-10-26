@@ -18,10 +18,12 @@ use common_data::{
     stripe::update_stripe_account_status,
   },
 };
+use ticketland_event_handler::{
+  services::ticket_purchase::pending_ticket_key,
+};
 use program_artifacts::ticket_nft::pda::ticket_metadata;
 use crate::{
   utils::store::Store,
-  services::ticket_purchase::pending_ticket_key,
 };
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {

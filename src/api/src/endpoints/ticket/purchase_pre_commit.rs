@@ -14,9 +14,11 @@ use common_data::{
   helpers::{send_write},
   repositories::ticket::{upsert_user_ticket},
 };
+use ticketland_event_handler::{
+  services::ticket_purchase::pending_ticket_key,
+};
 use crate::{
   utils::store::Store,
-  services::ticket_purchase::pending_ticket_key,
 };
 
 #[derive(Deserialize)]

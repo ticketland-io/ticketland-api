@@ -5339,8 +5339,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.5"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#da42f0052788ae962df189b2b6b22ae6eff597c2"
+version = "0.1.6"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#43c20a5fb6214b98b6c5437af28a6900b7d91e94"
 dependencies = [
  "actix",
  "actix-rt",

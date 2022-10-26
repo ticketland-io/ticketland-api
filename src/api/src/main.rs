@@ -26,7 +26,7 @@ async fn main() -> std::io::Result<()> {
   }));
 
   if env::var("ENV").unwrap() == "development" {
-      dotenv::from_filename(".env").expect("cannot load env from a file");
+    dotenv::from_filename(".env").expect("cannot load env from a file");
   }
 
   let store = web::Data::new(Store::new().await);

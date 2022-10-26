@@ -85,11 +85,3 @@ pub async fn pre_purchase_checks(
     return Err(Report::msg("Only fixed price ticket types are supported"))?
   }
 }
-
-pub fn pending_ticket_prefix() -> String {
-  "pt_".to_owned()
-}
-
-pub fn pending_ticket_key(event_id: &str, ticket_nft: &str) -> String {
-  format!("{:?}{:?}/{:?}", pending_ticket_prefix(), event_id, ticket_nft)
-}
