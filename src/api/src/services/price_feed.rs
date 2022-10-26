@@ -1,8 +1,13 @@
-use ticketland_core::error::Error;
+use std::sync::Arc;
+use eyre::Result;
+use price_feed::actors::price::get_price_key;
+use crate::utils::store::Store;
 
-// TODO: we need to read the SOL price from Redis.
-// There will be a Price Oracle service that will be updating this entry
-// on a regular basis
-pub async fn get_sol_price() -> Result<i64, Error> {
-  Ok(30)
+pub async fn get_sol_price(store: Arc<Store>,) -> Result<i64> {
+  let mut redis = store.redis.lock().unwrap();
+  let price = redis.get(&get_price_key("solana"))
+  .await?
+  .parse::<i64>()?;
+
+  Ok(price)
 }
