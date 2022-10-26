@@ -4,7 +4,6 @@ use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
-use chrono::{Utc};
 use api_helpers::{
   services::{
     data::{exec_basic_db_write_endpoint},
@@ -39,7 +38,6 @@ pub async fn exec(
         body.ticket_metadata.clone(),
         params.listing_account.clone(),
         body.ask_price.clone(),
-        Utc::now().timestamp(),
       )
     })
   ).await;

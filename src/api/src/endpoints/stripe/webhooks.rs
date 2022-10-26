@@ -4,7 +4,7 @@ use actix_web::{
   HttpRequest, HttpResponse,
 };
 use stripe::{EventObject, EventType, Webhook};
-use chrono::{Utc, Duration};
+use chrono::{Duration};
 use eyre::{Result, Report};
 use api_helpers::services::http::{
   get_header_value,
@@ -14,7 +14,7 @@ use ticketland_core::async_helpers::timeout;
 use common_data::{
   helpers::send_write,
   repositories::{
-    ticket::create_user_ticket,
+    ticket::upsert_user_ticket,
     stripe::update_stripe_account_status,
   },
 };
@@ -117,14 +117,13 @@ async fn handle_checkout_session(
   let seat_name = metadata.get("seat_name").unwrap().to_string();
 
   // Store the ticket nft in the db
-  let (query, db_query_params) = create_user_ticket(
+  let (query, db_query_params) = upsert_user_ticket(
     buyer_uid.clone(),
     event_id.clone(),
     ticket_nft.clone(),
     ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),
     seat_index.parse::<u32>().unwrap(),
     seat_name.clone(),
-    Utc::now().timestamp(),
   );
 
   send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;

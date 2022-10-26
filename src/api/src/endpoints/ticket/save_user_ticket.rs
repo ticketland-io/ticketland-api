@@ -4,7 +4,6 @@ use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use chrono::{Utc};
 use api_helpers::{
   services::{
     data::{exec_basic_db_write_endpoint},
@@ -12,7 +11,7 @@ use api_helpers::{
   middleware::auth::AuthData,
 };
 use common_data::{
-  repositories::ticket::{create_user_ticket},
+  repositories::ticket::{upsert_user_ticket},
 };
 use crate::{
   utils::store::Store,
@@ -35,14 +34,13 @@ pub async fn exec(
   exec_basic_db_write_endpoint(
     Arc::clone(&store.neo4j),
     Box::new(move || {
-      create_user_ticket(
+      upsert_user_ticket(
         auth.user.local_id.clone(),
         body.event_id.clone(),
         body.ticket_nft.clone(),
         body.ticket_metadata.clone(),
         body.seat_index,
         body.seat_name.clone(),
-        Utc::now().timestamp(),
       )
     })
   ).await;
