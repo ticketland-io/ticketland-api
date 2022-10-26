@@ -45,7 +45,7 @@ pub async fn exec(
   let store = Arc::clone(&store);
   let store_copy = Arc::clone(&store);
 
-  redis.set_ex(&redis_key, &"1", Duration::minutes(1).num_milliseconds() as usize)
+  redis.set_ex(&redis_key, &"1", Duration::minutes(5).num_milliseconds() as usize)
   .and_then(|_| {
     let store = Arc::clone(&store);
 
