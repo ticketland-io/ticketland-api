@@ -31,7 +31,7 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
-  // Update DB
+  // 1. Update DB
   let (query, db_query_params) = upsert_user_ticket(
     auth.user.local_id.clone(),
     body.event_id.clone(),
@@ -47,7 +47,7 @@ pub async fn exec(
     db_query_params,
   ).await?;
 
-  // Remove ending key from Redis
+  // 2. Remove ending key from Redis
   let mut redis = store.redis.lock().unwrap();
   let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
   
