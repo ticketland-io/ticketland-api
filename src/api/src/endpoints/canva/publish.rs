@@ -4,7 +4,6 @@ use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use chrono::{Utc};
 use common_data::{
   models::ticket_design::{TicketDesign},
   helpers::{send_write},
@@ -71,7 +70,6 @@ pub async fn exec(
     asset.url.clone(),
     asset.file_type.clone(),
     asset.name.clone(),
-    Utc::now().timestamp(),
   );
 
   send_write(

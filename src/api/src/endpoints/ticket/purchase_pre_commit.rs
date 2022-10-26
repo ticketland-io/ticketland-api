@@ -19,6 +19,9 @@ use crate::{
 pub struct Body {
   event_id: String,
   ticket_nft: String,
+  ticket_metadata: String,
+  seat_index: u32,
+  seat_name: String,
 }
 
 pub async fn exec(
