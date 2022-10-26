@@ -30,6 +30,7 @@ pub struct Config {
   pub ticket_nft_program_state: Pubkey,
   pub event_registry_state: Pubkey,
   pub ticket_purchae_protocol_fee: i64,
+  pub ticket_verifier_priv_key: String,
 }
 
 impl Config {
@@ -62,6 +63,7 @@ impl Config {
         ticket_nft_program_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
         event_registry_state: pubkey_from_str(&env::var("EVENT_REGISTRY_STATE").unwrap()).unwrap(),
         ticket_purchae_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
+        ticket_verifier_priv_key: env::var("TICKET_VERIFIER_PRIV_KEY").unwrap(),
       }
     )
   }

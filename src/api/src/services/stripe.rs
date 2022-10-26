@@ -29,10 +29,12 @@ use common_data::{
 use ticketland_core::{
   async_helpers::timeout,
 };
+use ticketland_event_handler::{
+  services::ticket_purchase::pending_ticket_key,
+};
 use crate::utils::store::Store;
 use super::ticket_purchase::{
   pre_purchase_checks,
-  pending_ticket_key,
 };
 
 #[derive(Serialize)]
@@ -188,7 +190,6 @@ pub async fn create_checkout_session(
       &ticket_nft,
     ),
   ).await??;
-
 
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);

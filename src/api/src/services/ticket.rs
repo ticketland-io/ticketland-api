@@ -32,9 +32,8 @@ struct VerifyTicketResult<'a> {
   pub ticket_metadata: &'a str,
 }
 
-fn sign_msg<'a>(msg: VerifyTicketResult<'a>) -> String {
-  // TODO: this will be read from config.rs
-  let signer = Keypair::from_base58_string(&"2jCJYqD2DYBK9wiQ55SLzV6umpcKzEpczQ3o6QyCXLLYahmoFD3GeuN2R36QR85BuqELSZTqHKAwMwC6ev9Nr75u");
+fn sign_msg<'a>(signer_key: &str, msg: VerifyTicketResult<'a>) -> String {
+  let signer = Keypair::from_base58_string(signer_key);
   let mut message: Vec<u8> = Vec::new();
   msg.serialize(&mut message).unwrap();
   let message_hash = &hashv(&[&message]).0;
@@ -71,7 +70,7 @@ pub async fn verify_ticket(
     ).await?;
 
     if ticket_metadata_account.owner == ticket_owner {
-      let sig = sign_msg(VerifyTicketResult {
+      let sig = sign_msg(&store.config.ticket_verifier_priv_key, VerifyTicketResult {
         event_id: &event_id,
         code_challenge: &code_challenge,
         ticket_owner_pubkey: &ticket_owner_pubkey,

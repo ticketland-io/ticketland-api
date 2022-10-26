@@ -5,7 +5,6 @@ use std::{
 use eyre::{Result, Report};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
-use chrono::{Utc};
 use ticketland_core::error::Error;
 use ticketland_event_handler::services::path;
 use common_data::{

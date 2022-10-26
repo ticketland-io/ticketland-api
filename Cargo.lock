@@ -429,8 +429,8 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 
 [[package]]
 name = "api-helpers"
-version = "0.2.5"
-source = "git+https://github.com/ticketland-io/common-rust#c870e7d483b6a1af330043fa69f81197fc7b02e6"
+version = "0.3.0"
+source = "git+https://github.com/ticketland-io/common-rust#4c3a90a334a6a30c54b4e5509e0c880cf5e85086"
 dependencies = [
  "actix",
  "actix-http",
@@ -1266,8 +1266,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.2.20"
-source = "git+https://github.com/ticketland-io/common-rust#c870e7d483b6a1af330043fa69f81197fc7b02e6"
+version = "0.3.0"
+source = "git+https://github.com/ticketland-io/common-rust#4c3a90a334a6a30c54b4e5509e0c880cf5e85086"
 dependencies = [
  "actix",
  "bolt-client",
@@ -3445,6 +3445,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 
 [[package]]
+name = "price-feed"
+version = "0.1.1"
+source = "git+https://github.com/ticketland-io/price-feed#70d09eec1539c534d2b1d268e437329f76bf9599"
+dependencies = [
+ "actix",
+ "actix-rt",
+ "dotenv",
+ "eyre",
+ "reqwest",
+ "ticketland-core",
+ "ticketland-utils",
+ "tokio",
+]
+
+[[package]]
 name = "primitive-types"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5293,6 +5308,7 @@ dependencies = [
  "futures-util",
  "keccak-hash",
  "mime",
+ "price-feed",
  "program-artifacts",
  "serde",
  "serde_json",
@@ -5308,8 +5324,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-core"
-version = "0.2.8"
-source = "git+https://github.com/ticketland-io/common-rust#c870e7d483b6a1af330043fa69f81197fc7b02e6"
+version = "0.2.11"
+source = "git+https://github.com/ticketland-io/common-rust#4c3a90a334a6a30c54b4e5509e0c880cf5e85086"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5339,8 +5355,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.4"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#3f15c057da2c23aecbc2cf460b6b03555b1f0c7c"
+version = "0.1.6"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#43c20a5fb6214b98b6c5437af28a6900b7d91e94"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5366,6 +5382,14 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.4",
+]
+
+[[package]]
+name = "ticketland-utils"
+version = "0.2.3"
+source = "git+https://github.com/ticketland-io/common-rust#4c3a90a334a6a30c54b4e5509e0c880cf5e85086"
+dependencies = [
+ "lazy_static",
 ]
 
 [[package]]
