@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use serde::{Deserialize};
 use actix_web::{web, HttpResponse};
 use actix_multipart::Multipart;
 use api_helpers::{
@@ -11,11 +10,6 @@ use crate::{
   services::metadata::{store_event},
 };
 use super::common::EventParams;
-
-#[derive(Deserialize)]
-pub struct Body {
-  event_capacity: String,
-}
 
 pub async fn exec(
   store: web::Data<Store>,
