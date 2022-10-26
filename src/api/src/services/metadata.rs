@@ -24,41 +24,6 @@ fn is_supported_media_type(mime_type: mime::Name) -> bool {
   }
 }
 
-fn convert_metadata_to_event (metadata: Metadata, event_capacity: String) -> Event {
-  let mut event = Event {
-    name: metadata.name,
-    description: metadata.description,
-    event_capacity,
-    ..Event::default()
-  };
-
-  for attribute in metadata.attributes {
-    match attribute.trait_type.as_ref() {
-      "location" => {
-        event.location = attribute.value;
-      },
-      "venue" => {
-        event.venue = attribute.value;
-      },
-      "event_type" => {
-        event.event_type = attribute.value;
-      },
-      "startDate" => {
-        event.start_date = attribute.value;
-      },
-      "endDate" => {
-        event.end_date = attribute.value;
-      },
-      "category" => {
-        event.category = attribute.value;
-      },
-      _ => todo!(), // Simply ignore
-    }
-  };
-
-  event
-}
-
 pub async fn store_event(
   store: Arc<Store>,
   event_id: String,
@@ -128,23 +93,22 @@ pub async fn store_event(
   )
   .await?;
 
-  let event_obj = convert_metadata_to_event(metadata.clone(), event_capacity);
-  
+  let mut event_map = metadata.to_map();
   // Update the db
   let (query, db_query_params) = upsert_event(
     event_id,
     uid,
-    event_obj.event_capacity,
+    event_capacity,
     media_content_type.unwrap(),
     Utc::now().timestamp(),
-    event_obj.location,
-    event_obj.venue,
-    event_obj.event_type,
-    event_obj.start_date,
-    event_obj.end_date,
-    event_obj.category,
-    event_obj.name,
-    event_obj.description
+    event_map.get("location").unwrap().to_string(),
+    event_map.get("venue").unwrap().to_string(),
+    event_map.get("eventType").unwrap().to_string(),
+    event_map.get("startDate").unwrap().to_string(),
+    event_map.get("endDate").unwrap().to_string(),
+    event_map.get("category").unwrap().to_string(),
+    event_map.get("name").unwrap().to_string(),
+    event_map.get("description").unwrap().to_string()
   );
 
   send_write(
