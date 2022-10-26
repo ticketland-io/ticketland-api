@@ -101,14 +101,14 @@ pub async fn store_event(
     event_capacity,
     media_content_type.unwrap(),
     Utc::now().timestamp(),
-    event_map.get("location").unwrap().to_string(),
-    event_map.get("venue").unwrap().to_string(),
-    event_map.get("eventType").unwrap().to_string(),
-    event_map.get("startDate").unwrap().to_string(),
-    event_map.get("endDate").unwrap().to_string(),
-    event_map.get("category").unwrap().to_string(),
-    event_map.get("name").unwrap().to_string(),
-    event_map.get("description").unwrap().to_string()
+    event_map.remove("location").unwrap(),
+    event_map.remove("venue").unwrap(),
+    event_map.remove("eventType").unwrap(),
+    event_map.remove("startDate").unwrap(),
+    event_map.remove("endDate").unwrap(),
+    event_map.remove("category").unwrap(),
+    event_map.remove("name").unwrap(),
+    event_map.remove("description").unwrap()
   );
 
   send_write(
