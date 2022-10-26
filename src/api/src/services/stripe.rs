@@ -191,7 +191,6 @@ pub async fn create_checkout_session(
     ),
   ).await??;
 
-
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
 

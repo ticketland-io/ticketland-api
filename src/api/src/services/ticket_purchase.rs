@@ -29,11 +29,12 @@ fn to_stripe_unit(val: i64) -> i64 {
 }
 
 pub async fn calculate_price_and_fees(
+  store: Arc<Store>,
   ticket_price: i64,
   protocol_fee_perc: i64
 ) -> Result<(i64, i64)> {
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
-  let sol_price = to_stripe_unit(get_sol_price().await?);
+  let sol_price = to_stripe_unit(get_sol_price(store).await?);
   let mint_cost = (MINT_TICKER_COST_IN_SOL * sol_price) / 1000;
   let stripe_fee = (ticket_price * STRIPE_FEE_PERC) / 1000;
   let total_stripe_fees = stripe_fee + STRIPE_FIXED_FEE; // 2.9% + 30c
@@ -80,7 +81,7 @@ pub async fn pre_purchase_checks(
   }
 
   if let SaleType::FixedPrice {amount} = sale.ticket_type.sale_type {
-    calculate_price_and_fees(amount as i64, store.config.ticket_purchae_protocol_fee).await
+    calculate_price_and_fees(Arc::clone(&store), amount as i64, store.config.ticket_purchae_protocol_fee).await
   } else {
     return Err(Report::msg("Only fixed price ticket types are supported"))?
   }
