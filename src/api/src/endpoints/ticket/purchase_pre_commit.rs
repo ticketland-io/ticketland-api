@@ -10,6 +10,10 @@ use api_helpers::{
   middleware::auth::AuthData,
   services::http::internal_server_error,
 };
+use common_data::{
+  helpers::{send_write},
+  repositories::ticket::{upsert_user_ticket},
+};
 use crate::{
   utils::store::Store,
   services::ticket_purchase::pending_ticket_key,
@@ -26,7 +30,7 @@ pub struct Body {
 
 pub async fn exec(
   store: Data<Store>,
-  _auth: AuthData,
+  auth: AuthData,
   body: Json<Body>,
 ) -> HttpResponse {
   let lock = store.redlock.lock(body.ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await;
@@ -39,11 +43,33 @@ pub async fn exec(
   let mut redis = store.redis.lock().unwrap();
   let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
   let store = Arc::clone(&store);
+  let store_copy = Arc::clone(&store);
 
   redis.set_ex(&redis_key, &"1", Duration::minutes(1).num_milliseconds() as usize)
-  .and_then(|()| {
+  .and_then(|_| {
+    let store = Arc::clone(&store);
+
+    async move {
+      let (query, db_query_params) = upsert_user_ticket(
+        auth.user.local_id.clone(),
+        body.event_id.clone(),
+        body.ticket_nft.clone(),
+        body.ticket_metadata.clone(),
+        body.seat_index,
+        body.seat_name.clone(),
+      );
+
+      send_write(
+        Arc::clone(&store.neo4j),
+        query,
+        db_query_params,
+      ).await
+      .map_err(Into::<_>::into)
+    }
+  })
+  .and_then(|_| {
     async move { 
-      store.redlock.unlock(lock.unwrap()).await;
+      store_copy.redlock.unlock(lock.unwrap()).await;
       Ok(())
     }
   })
