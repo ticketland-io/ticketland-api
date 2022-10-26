@@ -8,7 +8,7 @@ use futures_util::stream::StreamExt;
 use ticketland_core::error::Error;
 use ticketland_event_handler::services::path;
 use common_data::{
-  models::{metadata::{Attribute, Metadata}, event::Event},
+  models::metadata::{Attribute, Metadata},
   helpers::{send_write},
   repositories::event::upsert_event,
 };
@@ -99,7 +99,6 @@ pub async fn store_event(
     uid,
     event_capacity,
     media_content_type.unwrap(),
-    Utc::now().timestamp(),
     event_map.remove("location").unwrap(),
     event_map.remove("venue").unwrap(),
     event_map.remove("eventType").unwrap(),
