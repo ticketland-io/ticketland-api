@@ -44,7 +44,7 @@ pub async fn store_event(
       content.push(chunk);
     }
 
-    if content.len() > store.config.max_image_size {
+    if content[0].len() > store.config.max_image_size {
       return Err(Report::msg("Image limit".to_owned()))
     }
 
