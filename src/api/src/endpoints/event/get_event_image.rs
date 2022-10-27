@@ -36,9 +36,7 @@ pub async fn exec(
   let (query, db_query_params) = read_event(event_id);
   let event = send_read(Arc::clone(&store.neo4j), query, db_query_params)
   .await
-  .map(|db_result| {
-    TryInto::<Event>::try_into(db_result)
-  })
+  .map(TryInto::<Event>::try_into)
   .unwrap_or_else(|error: Error| Err(error));
 
   if let Err(error) = event {
@@ -46,7 +44,6 @@ pub async fn exec(
   }
   
   let event = event.unwrap();
-  
   let file_path = path::get_event_file_path(&event.event_id, &event.file_type);
 
   let ipfs_read_stream = S3Stream::new(
