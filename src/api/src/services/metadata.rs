@@ -44,6 +44,10 @@ pub async fn store_event(
       content.push(chunk);
     }
 
+    if content.len() > store.config.max_image_size {
+      return Err(Report::msg("Image limit".to_owned()))
+    }
+
     let field_name = field.name();
     let mime_type = field.content_type().type_();
     let content =  content.concat();
