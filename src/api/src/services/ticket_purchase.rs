@@ -3,8 +3,12 @@ use std::{
   str::FromStr,
 };
 use eyre::{Result, Report};
+use common_data::{
+  helpers::{send_read},
+  models::sale::{Sale, SaleType},
+  repositories::sale::read_event_sale,
+};
 use program_artifacts::{
-  ticket_sale::account_data::{Sale, SaleType},
   ticket_nft::pda,
 };
 use solana_sdk::{
@@ -45,18 +49,21 @@ pub async fn calculate_price_and_fees(
 
 pub async fn pre_purchase_checks(
   store: Arc<Store>,
+  event_id: &str,
   ticket_nft_program_state: &Pubkey,
   seat_index: u32,
   sale_account: &str,
   ticket_nft: &str
 ) -> Result<(i64, i64)> {
-  // TODO: Reading accounts from the chain might be expensive, so we might store this information in our db for faster queries.
-  let sale = store.rpc_client.get_anchor_account_data::<Sale>(&Pubkey::from_str(&sale_account)?).await?;
+  let (query, db_query_params) = read_event_sale(sale_account.to_string());
+  let sale: Sale = send_read(Arc::clone(&store.neo4j), query, db_query_params)
+  .await
+  .map(TryInto::<Sale>::try_into)??;
 
   let (ticket_nft_pda, _) = pda::ticket_nft(
     ticket_nft_program_state,
     seat_index,
-    std::str::from_utf8(&sale.event_id)?,
+    event_id,
     sale.ticket_type_index,
   );
 
@@ -80,8 +87,8 @@ pub async fn pre_purchase_checks(
     return Err(Report::msg("Ticket unavailable"))?
   }
 
-  if let SaleType::FixedPrice {amount} = sale.ticket_type.sale_type {
-    calculate_price_and_fees(Arc::clone(&store), amount as i64, store.config.ticket_purchae_protocol_fee).await
+  if let SaleType::FixedPrice {price} = sale.sale_type {
+    calculate_price_and_fees(Arc::clone(&store), price as i64, store.config.ticket_purchae_protocol_fee).await
   } else {
     return Err(Report::msg("Only fixed price ticket types are supported"))?
   }

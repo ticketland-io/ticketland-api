@@ -184,6 +184,7 @@ pub async fn create_checkout_session(
     Duration::seconds(5).num_milliseconds() as u64,
     pre_purchase_checks(
       Arc::clone(&store),
+      &event_id,
       &store.config.ticket_nft_program_state,
       seat_index,
       &sale_account,

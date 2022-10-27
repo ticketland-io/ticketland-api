@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use actix_web::{web, HttpResponse};
 use common_data::{
-  repositories::event::upsert_event_sale,
+  repositories::sale::upsert_event_sale,
   models::sale::Sale,
 };
 use api_helpers::{
