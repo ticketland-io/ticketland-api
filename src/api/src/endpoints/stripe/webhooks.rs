@@ -94,10 +94,18 @@ async fn handle_account_updated(
   Ok(())
 }
 
-async fn handle_checkout_session(
-  store: &Data<Store>,
-  session: stripe::CheckoutSession,
-) -> Result<()> {
+async fn handle_checkout_session(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
+  let metadata = &session.metadata;
+  let sale_type = metadata.get("sale_type").unwrap();
+
+  match sale_type.as_str() {
+    "primary" => handle_new_ticket_purchase(&store, session).await,
+    "secondary" => handle_fill_sell_listing(&store, session).await,
+    _ => Err(Report::msg("invalid sale type"))?,
+  }
+}
+
+async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
   let metadata = session.metadata;
   let ticket_nft = metadata.get("ticket_nft").unwrap().to_string();
   let event_id = metadata.get("event_id").unwrap();
@@ -140,4 +148,8 @@ async fn handle_checkout_session(
     seat_index,
     seat_name,
   ).await
+}
+
+async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
+  todo!()
 }

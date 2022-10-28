@@ -183,6 +183,7 @@ pub async fn create_primary_sale_checkout(
   };
 
   let checkout_metadata = Some([
+    ("sale_type".to_string(), "primary".to_string()),
     ("buyer_uid".to_string(), buyer_uid.clone()),
     ("sale_account".to_string(), sale_account.clone()),
     ("event_id".to_string(), event_id.clone()),
@@ -224,6 +225,7 @@ pub async fn create_secondary_sale_checkout(
   };
 
   let checkout_metadata = Some([
+    ("sale_type".to_string(), "secondary".to_string()),
     ("buyer_uid".to_string(), buyer_uid.clone()),
     ("sale_account".to_string(), sale_account.clone()),
     ("event_id".to_string(), event_id.clone()),
