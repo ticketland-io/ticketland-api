@@ -20,7 +20,7 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  ticket_metadata: String,
+  ticket_nft: String,
 }
 
 pub async fn exec(
@@ -35,7 +35,7 @@ pub async fn exec(
       fill_sell_listing(
         auth.user.local_id.clone(),
         params.listing_account.clone(),
-        body.ticket_metadata.clone(),
+        body.ticket_nft.clone(),
       )
     })
   ).await;

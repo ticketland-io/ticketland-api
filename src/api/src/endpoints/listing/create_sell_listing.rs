@@ -20,7 +20,7 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  ticket_metadata: String,
+  ticket_nft: String,
   ask_price: i64,
 }
 
@@ -35,7 +35,7 @@ pub async fn exec(
     Box::new(move || {
       create_sell_listing(
         auth.user.local_id.clone(),
-        body.ticket_metadata.clone(),
+        body.ticket_nft.clone(),
         params.listing_account.clone(),
         body.ask_price.clone(),
       )

@@ -10,6 +10,7 @@ use super::{
   refresh_link,
   webhooks,
   create_checkout_session,
+  create_fill_listing_checkout_session,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -32,9 +33,15 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("/checkouts")
+      web::resource("/checkouts/primary")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(create_checkout_session::exec))
+    );
+
+    cfg.service(
+      web::resource("/checkouts/secondary")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::post().to(create_fill_listing_checkout_session::exec))
     );
   }
 }

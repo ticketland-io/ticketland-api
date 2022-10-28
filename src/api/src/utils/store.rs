@@ -12,9 +12,12 @@ use solana_web3_rust::rpc_client::RpcClient;
 use ticketland_ai::image_recognition::aws_rekognition::AwsRekognition;
 use super::config::Config;
 use crate::{
-  services::new_event_queue::NewEventQueue,
-  services::ticket_design_upload_queue::TicketDesignUploadQueue,
-  services::ticket_purchase_queue::TicketPurchaseQueue,
+  services::{
+    new_event_queue::NewEventQueue,
+    ticket_design_upload_queue::TicketDesignUploadQueue,
+    ticket_purchase_queue::TicketPurchaseQueue,
+    fill_sell_listing_queue::FillSellListingQueue,
+  },
 };
 
 pub struct Store {
@@ -28,6 +31,7 @@ pub struct Store {
   pub new_event_queue: NewEventQueue,
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
   pub ticket_purchase_queue: TicketPurchaseQueue,
+  pub fill_sell_listing_queue: FillSellListingQueue,
 }
 
 impl Store {
@@ -78,6 +82,12 @@ impl Store {
       config.retry_ttl,
     ).await;
 
+    let fill_sell_listing_queue = FillSellListingQueue::new(
+      config.rabbitmq_uri.clone(),
+      config.retry_ttl,
+    ).await;
+
+
     let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
 
     Self {
@@ -91,6 +101,7 @@ impl Store {
       new_event_queue,
       ticket_design_upload_queue,
       ticket_purchase_queue,
+      fill_sell_listing_queue,
     }
   }
 }

@@ -1,6 +1,8 @@
 use std::{
   sync::Arc,
   str::FromStr,
+  future::Future,
+  pin::Pin,
 };
 use chrono::{Utc, Duration};
 use eyre::{Result, Report};
@@ -13,7 +15,7 @@ use stripe::{
   TransferScheduleInterval, Customer, CreateCustomer, CreateProduct,
   Product, CreatePrice, Currency, IdOrCreate, Price, CreateCheckoutSession, CheckoutSession,
   CreateCheckoutSessionLineItems, CheckoutSessionMode, CreateCheckoutSessionPaymentIntentData,
-  CreateCheckoutSessionPaymentIntentDataTransferData,
+  CreateCheckoutSessionPaymentIntentDataTransferData, Metadata,
 };
 use common_data::{
   helpers::{send_read, send_write},
@@ -32,9 +34,14 @@ use ticketland_core::{
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
 };
+use program_artifacts::{
+  ticket_nft::pda as ticket_nft_pda,
+  secondary_market::pda,
+};
 use crate::utils::store::Store;
 use super::ticket_purchase::{
-  pre_purchase_checks,
+  PrePurchaseChecksParams,
+  pre_primary_purchase_checks,
 };
 
 #[derive(Serialize)]
@@ -155,7 +162,9 @@ pub async fn create_stripe_account_link(
   .map_err(Into::<_>::into)
 }
 
-pub async fn create_checkout_session(
+type PrePurchaseCheck = Pin<Box<dyn Future<Output = Result<(i64, i64)>>>>;
+
+pub async fn create_primary_sale_checkout(
   store: Arc<Store>,
   buyer_uid: String,
   sale_account: String,
@@ -164,6 +173,84 @@ pub async fn create_checkout_session(
   recipient: String,
   seat_index: u32,
   seat_name: String,
+) -> Result<String> {
+  let pre_purchase_check_params = PrePurchaseChecksParams::Primary {
+    store: Arc::clone(&store),
+    event_id: event_id.clone(),
+    seat_index: seat_index,
+    sale_account: sale_account.clone(),
+    ticket_nft: ticket_nft.clone(),
+  };
+
+  let checkout_metadata = Some([
+    ("sale_type".to_string(), "primary".to_string()),
+    ("buyer_uid".to_string(), buyer_uid.clone()),
+    ("sale_account".to_string(), sale_account.clone()),
+    ("event_id".to_string(), event_id.clone()),
+    ("ticket_nft".to_string(), ticket_nft.clone()),
+    ("recipient".to_string(), recipient.clone()),
+    ("seat_index".to_string(), seat_index.to_string()),
+    ("seat_name".to_string(), seat_name.clone()),
+  ].iter().cloned().collect());
+
+  create_checkout_session(
+    store,
+    buyer_uid,
+    event_id,
+    ticket_nft,
+    Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
+    checkout_metadata,
+  ).await
+}
+
+pub async fn create_secondary_sale_checkout(
+  store: Arc<Store>,
+  buyer_uid: String,
+  sale_account: String,
+  event_id: String,
+  ticket_nft: String,
+  recipient: String,
+) -> Result<String> {
+  let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0;
+  let sell_listing_account = pda::sell_listing(
+    &store.config.secondary_market_state,
+    &event_id,
+    &ticket_matadata,
+  ).0;
+
+  let pre_purchase_check_params = PrePurchaseChecksParams::Secondary {
+    store: Arc::clone(&store),
+    ticket_nft: ticket_nft.clone(),
+    sell_listing_account: sell_listing_account.to_string(),
+  };
+
+  let checkout_metadata = Some([
+    ("sale_type".to_string(), "secondary".to_string()),
+    ("buyer_uid".to_string(), buyer_uid.clone()),
+    ("sale_account".to_string(), sale_account.clone()),
+    ("event_id".to_string(), event_id.clone()),
+    ("ticket_nft".to_string(), ticket_nft.clone()),
+    ("recipient".to_string(), recipient.clone()),
+    ("sell_listing_account".to_string(), sell_listing_account.to_string()),
+  ].iter().cloned().collect());
+
+  create_checkout_session(
+    store,
+    buyer_uid,
+    event_id,
+    ticket_nft,
+    Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
+    checkout_metadata,
+  ).await
+}
+
+pub async fn create_checkout_session(
+  store: Arc<Store>,
+  buyer_uid: String,
+  event_id: String,
+  ticket_nft: String,
+  pre_purchase_checks: PrePurchaseCheck,
+  checkout_metadata: Option<Metadata>,
 ) -> Result<String> {
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
@@ -182,22 +269,13 @@ pub async fn create_checkout_session(
 
   let (price, fee) = timeout(
     Duration::seconds(5).num_milliseconds() as u64,
-    pre_purchase_checks(
-      Arc::clone(&store),
-      &event_id,
-      &store.config.ticket_nft_program_state,
-      seat_index,
-      &sale_account,
-      &ticket_nft,
-    ),
+    pre_purchase_checks,
   ).await??;
 
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
 
-  // TODO: we need to add name and email as well
-  // let (query, db_query_params) = read_account(buyer_uid.clone());
-  // let buyer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+  // TODO: we need to add name and email as well. We can read these values from the DB
   let customer = Customer::create(
     &client,
     CreateCustomer {
@@ -262,15 +340,7 @@ pub async fn create_checkout_session(
 
     // We will use this values in the webhook so we can construct the correct TicketPurchase message that will
     // be further processed by another service.
-    params.metadata = Some([
-      ("buyer_uid".to_string(), buyer_uid),
-      ("sale_account".to_string(), sale_account),
-      ("event_id".to_string(), event_id),
-      ("ticket_nft".to_string(), ticket_nft),
-      ("recipient".to_string(), recipient),
-      ("seat_index".to_string(), seat_index.to_string()),
-      ("seat_name".to_string(), seat_name),
-    ].iter().cloned().collect());
+    params.metadata = checkout_metadata;
 
     timeout(
       Duration::seconds(2).num_milliseconds() as u64,
