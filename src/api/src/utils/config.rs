@@ -20,6 +20,8 @@ pub struct Config {
   pub minio_bucket: String,
   pub minio_access_key: String,
   pub minio_secret_key: String,
+  pub aws_rekognition_access_key: String,
+  pub aws_rekognition_secret_key: String,
   // Rabbitmq envs
   pub rabbitmq_uri: String,
   pub exchange_name: String,
@@ -52,6 +54,8 @@ impl Config {
         minio_bucket: env::var("NFT_BUCKET").unwrap(),
         minio_access_key: env::var("MINIO_ACCESS_KEY").unwrap(),
         minio_secret_key: env::var("MINIO_SECRET_KEY").unwrap(),
+        aws_rekognition_access_key: env::var("AWS_RECOGNITION_ACCESS_KEY").unwrap(),
+        aws_rekognition_secret_key: env::var("AWS_RECOGNITION_SECRET_KEY").unwrap(),
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),

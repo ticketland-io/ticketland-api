@@ -9,6 +9,7 @@ use ticketland_core::{
   },
 };
 use solana_web3_rust::rpc_client::RpcClient;
+use ticketland_ai::image_recognition::aws_rekognition::AwsRekognition;
 use super::config::Config;
 use crate::{
   services::new_event_queue::NewEventQueue,
@@ -20,6 +21,7 @@ pub struct Store {
   pub config: Config,
   pub neo4j: Arc<Addr<Neo4jActor>>,
   pub minio: Arc<Minio>,
+  pub aws_rekognition: Arc<AwsRekognition>,
   pub redis: Arc<Mutex<Redis>>,
   pub redlock: Arc<RedLock>,
   pub rpc_client: Arc<RpcClient>,
@@ -52,6 +54,11 @@ impl Store {
       &config.minio_secret_key,
     ).await);
 
+    let aws_rekognition = Arc::new(AwsRekognition::new(
+      &config.aws_rekognition_access_key,
+      &config.aws_rekognition_secret_key,
+    ).await);
+
     let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
     let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
 
@@ -78,6 +85,7 @@ impl Store {
       redis,
       redlock,
       minio,
+      aws_rekognition,
       rpc_client,
       new_event_queue,
       ticket_design_upload_queue,
