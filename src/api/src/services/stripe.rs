@@ -34,6 +34,10 @@ use ticketland_core::{
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
 };
+use program_artifacts::{
+  ticket_nft::pda as ticket_nft_pda,
+  secondary_market::pda,
+};
 use crate::utils::store::Store;
 use super::ticket_purchase::{
   PrePurchaseChecksParams,
@@ -208,12 +212,20 @@ pub async fn create_secondary_sale_checkout(
   seat_index: u32,
   seat_name: String,
 ) -> Result<String> {
+  let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0;
+  let sell_listing_account = pda::sell_listing(
+    &store.config.secondary_market_state,
+    &event_id,
+    &ticket_matadata,
+  ).0;
+
   let pre_purchase_check_params = PrePurchaseChecksParams::Secondary {
     store: Arc::clone(&store),
     event_id: event_id.clone(),
     seat_index: seat_index,
     sale_account: sale_account.clone(),
     ticket_nft: ticket_nft.clone(),
+    sell_listing_account: sell_listing_account.to_string(),
   };
 
   let checkout_metadata = Some([
