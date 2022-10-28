@@ -7,7 +7,7 @@ use api_helpers::{
 };
 use crate::{
   utils::store::Store,
-  services::metadata::{store_event},
+  services::event::{store_event},
 };
 use super::common::EventParams;
 

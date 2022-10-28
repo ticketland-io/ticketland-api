@@ -5,7 +5,6 @@ use std::{
 use eyre::{Result, Report};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
-use ticketland_core::error::Error;
 use ticketland_event_handler::services::path;
 use common_data::{
   models::metadata::{Attribute, Metadata},
@@ -23,6 +22,20 @@ fn is_supported_media_type(mime_type: mime::Name) -> bool {
   }
 }
 
+async fn inspect_moderation_labels(store: Arc<Store>, image_content: Vec<u8>) -> Result<()> {
+  let min_confidence = store.config.image_recognition_confidence;
+  let labels = store.aws_rekognition.recognise(image_content, Some(min_confidence)).await?;
+
+  // Inspect labels https://docs.aws.amazon.com/rekognition/latest/dg/moderation.html
+  // At the moment we dissalow any of the labels to be present. In the future we might relax this
+  // and inspect each label and decide accordingly..
+  if labels.is_some() && labels.unwrap().len() > 0 {
+    return Err(Report::msg("Inappropriate image".to_string()))
+  }
+
+  Ok(())
+}
+
 pub async fn store_event(
   store: Arc<Store>,
   event_id: String,
@@ -34,19 +47,20 @@ pub async fn store_event(
   let mut event_capacity= String::new();
 
   while let Some(item) = payload.next().await {
-    let mut field = item
-    .map_err(Into::<Error>::into)?;
+    let mut field = item?;
 
     let mut content = vec![];
     // Field in turn is stream of *Bytes* object
     while let Some(chunk) = field.next().await {
-      let chunk = chunk.map_err(Into::<Error>::into)?;
+      let chunk = chunk?;
       content.push(chunk);
     }
 
     if content[0].len() > store.config.max_image_size {
-      return Err(Report::msg("Image limit".to_owned()))
+      return Err(Report::msg("Image limit".to_string()))
     }
+
+    inspect_moderation_labels(Arc::clone(&store), content[0].to_vec()).await?;
 
     let field_name = field.name();
     let mime_type = field.content_type().type_();
@@ -62,7 +76,7 @@ pub async fn store_event(
       )
       .await?;
     } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
-      let value = from_utf8(content.as_ref()).unwrap().to_owned();
+      let value = from_utf8(content.as_ref()).unwrap().to_string();
 
       match field_name {
         "name" => {
@@ -76,8 +90,7 @@ pub async fn store_event(
         },
         "trait_type" => {
           metadata.attributes.push(
-            serde_json::from_str::<Attribute>(&value)
-            .map_err(Into::<Error>::into)?
+            serde_json::from_str::<Attribute>(&value)?
           );
         },
         _ => todo!(), // Simply ignore
@@ -86,7 +99,7 @@ pub async fn store_event(
   };
 
   if metadata.is_default() && media_content_type.is_none() {
-    return Err(Report::msg("Bad request".to_owned()))
+    return Err(Report::msg("Bad request".to_string()))
   }
 
   // Store the metadata as JSON on S3
