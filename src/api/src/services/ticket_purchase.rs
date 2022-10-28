@@ -113,7 +113,7 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
   }
 
   if let SaleType::FixedPrice {price} = sale.sale_type {
-    calculate_price_and_fees(Arc::clone(&store), price as i64, store.config.ticket_purchae_protocol_fee).await
+    calculate_price_and_fees(Arc::clone(&store), price as i64, store.config.ticket_purchase_protocol_fee).await
   } else {
     return Err(Report::msg("Only fixed price ticket types are supported"))?
   }

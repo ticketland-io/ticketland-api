@@ -14,7 +14,7 @@ use crate::{
   utils::store::Store,
   services::stripe::{
     CheckoutSessionResponse,
-    create_checkout_session,
+    create_primary_sale_checkout,
   },
 };
 
@@ -33,5 +33,17 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> HttpResponse {
-  todo!()
+  create_primary_sale_checkout(
+    Arc::clone(&store),
+    auth.user.local_id,
+    body.sale_account.clone(),
+    body.event_id.clone(),
+    body.ticket_nft.clone(),
+    body.recipient.clone(),
+    body.seat_index,
+    body.seat_name.clone(),
+  )
+  .await
+  .map(|session_id| HttpResponse::Ok().json(CheckoutSessionResponse {session_id}))
+  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
 }

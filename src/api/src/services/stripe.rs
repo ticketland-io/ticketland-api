@@ -198,6 +198,44 @@ pub async fn create_primary_sale_checkout(
   ).await
 }
 
+pub async fn create_secondary_sale_checkout(
+  store: Arc<Store>,
+  buyer_uid: String,
+  sale_account: String,
+  event_id: String,
+  ticket_nft: String,
+  recipient: String,
+  seat_index: u32,
+  seat_name: String,
+) -> Result<String> {
+  let pre_purchase_check_params = PrePurchaseChecksParams::Secondary {
+    store: Arc::clone(&store),
+    event_id: event_id.clone(),
+    seat_index: seat_index,
+    sale_account: sale_account.clone(),
+    ticket_nft: ticket_nft.clone(),
+  };
+
+  let checkout_metadata = Some([
+    ("buyer_uid".to_string(), buyer_uid.clone()),
+    ("sale_account".to_string(), sale_account.clone()),
+    ("event_id".to_string(), event_id.clone()),
+    ("ticket_nft".to_string(), ticket_nft.clone()),
+    ("recipient".to_string(), recipient.clone()),
+    ("seat_index".to_string(), seat_index.to_string()),
+    ("seat_name".to_string(), seat_name.clone()),
+  ].iter().cloned().collect());
+
+  create_checkout_session(
+    store,
+    buyer_uid,
+    event_id,
+    ticket_nft,
+    Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
+    checkout_metadata,
+  ).await
+}
+
 pub async fn create_checkout_session(
   store: Arc<Store>,
   buyer_uid: String,

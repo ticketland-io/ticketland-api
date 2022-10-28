@@ -14,7 +14,7 @@ use crate::{
   utils::store::Store,
   services::stripe::{
     CheckoutSessionResponse,
-    create_primary_sale_checkout,
+    create_secondary_sale_checkout,
   },
 };
 
@@ -33,7 +33,7 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> HttpResponse {
-  create_primary_sale_checkout(
+  create_secondary_sale_checkout(
     Arc::clone(&store),
     auth.user.local_id,
     body.sale_account.clone(),
