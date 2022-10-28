@@ -178,8 +178,6 @@ pub async fn create_primary_sale_checkout(
     ticket_nft: ticket_nft.clone(),
   };
 
-  let pre_purchase_checks = Box::pin(pre_primary_purchase_checks(pre_purchase_check_params));
-
   create_checkout_session(
     store,
     buyer_uid,
@@ -189,7 +187,7 @@ pub async fn create_primary_sale_checkout(
     recipient,
     seat_index,
     seat_name,
-    pre_purchase_checks,
+    Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
   ).await
 }
 
