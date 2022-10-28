@@ -222,14 +222,6 @@ pub async fn create_checkout_session(
   let (price, fee) = timeout(
     Duration::seconds(5).num_milliseconds() as u64,
     pre_purchase_checks,
-    // pre_purchase_checks(
-    //   Arc::clone(&store),
-    //   &event_id,
-    //   &store.config.ticket_nft_program_state,
-    //   seat_index,
-    //   &sale_account,
-    //   &ticket_nft,
-    // ),
   ).await??;
 
   let client = Client::new(store.config.stripe_key.clone());
