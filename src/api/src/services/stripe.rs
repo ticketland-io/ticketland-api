@@ -229,6 +229,7 @@ pub async fn create_secondary_sale_checkout(
     ("event_id".to_string(), event_id.clone()),
     ("ticket_nft".to_string(), ticket_nft.clone()),
     ("recipient".to_string(), recipient.clone()),
+    ("sell_listing_account".to_string(), sell_listing_account.to_string()),
   ].iter().cloned().collect());
 
   create_checkout_session(
