@@ -158,6 +158,8 @@ pub async fn create_stripe_account_link(
   .map_err(Into::<_>::into)
 }
 
+type PrePurchaseCheck = Pin<Box<dyn Future<Output = Result<(i64, i64)>>>>;
+
 pub async fn create_primary_sale_checkout(
   store: Arc<Store>,
   buyer_uid: String,
@@ -176,9 +178,7 @@ pub async fn create_primary_sale_checkout(
     ticket_nft: ticket_nft.clone(),
   };
 
-  let pre_purchase_checks = Box::pin(async { 
-    pre_primary_purchase_checks(pre_purchase_check_params).await
-  });
+  let pre_purchase_checks = Box::pin(pre_primary_purchase_checks(pre_purchase_check_params));
 
   create_checkout_session(
     store,
@@ -202,7 +202,7 @@ pub async fn create_checkout_session(
   recipient: String,
   seat_index: u32,
   seat_name: String,
-  pre_purchase_checks: Pin<Box<dyn Future<Output = Result<(i64, i64)>>>>,
+  pre_purchase_checks: PrePurchaseCheck,
 ) -> Result<String> {
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
