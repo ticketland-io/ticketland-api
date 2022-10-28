@@ -24,8 +24,6 @@ pub struct Body {
   ticket_nft: String,
   sale_account: String,
   recipient: String,
-  seat_index: u32,
-  seat_name: String,
 }
 
 pub async fn exec(
@@ -40,8 +38,6 @@ pub async fn exec(
     body.event_id.clone(),
     body.ticket_nft.clone(),
     body.recipient.clone(),
-    body.seat_index,
-    body.seat_name.clone(),
   )
   .await
   .map(|session_id| HttpResponse::Ok().json(CheckoutSessionResponse {session_id}))

@@ -209,8 +209,6 @@ pub async fn create_secondary_sale_checkout(
   event_id: String,
   ticket_nft: String,
   recipient: String,
-  seat_index: u32,
-  seat_name: String,
 ) -> Result<String> {
   let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0;
   let sell_listing_account = pda::sell_listing(
@@ -221,9 +219,6 @@ pub async fn create_secondary_sale_checkout(
 
   let pre_purchase_check_params = PrePurchaseChecksParams::Secondary {
     store: Arc::clone(&store),
-    event_id: event_id.clone(),
-    seat_index: seat_index,
-    sale_account: sale_account.clone(),
     ticket_nft: ticket_nft.clone(),
     sell_listing_account: sell_listing_account.to_string(),
   };
@@ -234,8 +229,6 @@ pub async fn create_secondary_sale_checkout(
     ("event_id".to_string(), event_id.clone()),
     ("ticket_nft".to_string(), ticket_nft.clone()),
     ("recipient".to_string(), recipient.clone()),
-    ("seat_index".to_string(), seat_index.to_string()),
-    ("seat_name".to_string(), seat_name.clone()),
   ].iter().cloned().collect());
 
   create_checkout_session(

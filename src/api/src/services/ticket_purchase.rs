@@ -67,9 +67,6 @@ pub enum PrePurchaseChecksParams {
   Secondary {
     store: Arc<Store>,
     sell_listing_account: String,
-    event_id: String,
-    seat_index: u32,
-    sale_account: String,
     ticket_nft: String
   }
 }
@@ -88,28 +85,20 @@ impl PrePurchaseChecksParams {
     }
   }
 
-  fn secondary(self) -> (Arc<Store>, String, String, u32, String, String) {
+  fn secondary(self) -> (Arc<Store>, String, String) {
     match self {
       PrePurchaseChecksParams::Secondary {
         store,
         sell_listing_account,
-        event_id,
-        seat_index,
-        sale_account,
         ticket_nft,
-      } => (store, sell_listing_account, event_id, seat_index, sale_account, ticket_nft),
+      } => (store, sell_listing_account, ticket_nft),
       _ => panic!("should never call secondary")
     }
   }
 }
 
-async fn common_checks(
-  store: Arc<Store>,
-  event_id: String,
-  seat_index: u32,
-  sale_account: String,
-  ticket_nft: String,
-) -> Result<Sale> {
+pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
+  let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
   let ticket_nft_program_state = &store.config.ticket_nft_program_state;
   let (query, db_query_params) = read_event_sale(sale_account.to_string());
   let sale: Sale = send_read(Arc::clone(&store.neo4j), query, db_query_params)
@@ -130,20 +119,6 @@ async fn common_checks(
   if ticket_nft_pda.to_string() != ticket_nft {
     return Err(Report::msg("Invalid ticket_nft"))?
   }
-
-  Ok(sale)
-}
-
-pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
-  let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
-  let sale = common_checks(
-    Arc::clone(&store),
-    event_id.clone(),
-    seat_index,
-    sale_account.clone(),
-    ticket_nft.clone(),
-  ).await?;
-
   // We need to check whether this ticket nft account exists. If it does it means that someone else
   // has already purchased it. We could alternatively load the event_capacity account and check the
   // bit array for availability.
@@ -169,14 +144,17 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
 }
 
 pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
-  let (store, sell_listing_account, event_id, seat_index, sale_account, ticket_nft) = params.secondary();
-  common_checks(
-    Arc::clone(&store),
-    event_id.clone(),
-    seat_index,
-    sale_account.clone(),
-    ticket_nft.clone(),
-  ).await?;
+  let (store, sell_listing_account, ticket_nft) = params.secondary();
+  let (query, db_query_params) = read_sell_listing(sell_listing_account.clone());
+  let sell_listing: SellListing = send_read(Arc::clone(&store.neo4j), query, db_query_params)
+  .await
+  .map(TryInto::<SellListing>::try_into)??;
+
+  // Make sure user has send the correct ticket_nft in the request. The provided ticket nft must much the one
+  // store in the sell_listing in the db
+  if sell_listing.ticket_nft != ticket_nft {
+    return Err(Report::msg("Invalid ticket_nft"))?
+  }
 
   // We need to check if the sell listing account exists. If it doesn't then it means that someone has already
   // filled that sell listing. The program closes sell listing accounts upon successefull completion.
@@ -188,12 +166,6 @@ pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> R
   if sell_listing_exists {
     return Err(Report::msg("Sell listing unavailable"))?
   }
-
-  // Load sell listing from the db
-  let (query, db_query_params) = read_sell_listing(sell_listing_account);
-  let sell_listing: SellListing = send_read(Arc::clone(&store.neo4j), query, db_query_params)
-  .await
-  .map(TryInto::<SellListing>::try_into)??;
 
   calculate_price_and_fees(
     Arc::clone(&store),
