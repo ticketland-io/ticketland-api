@@ -1,4 +1,4 @@
-pub mod metadata;
+pub mod event;
 pub mod new_event_queue;
 pub mod ticket_design_upload_queue;
 pub mod ticket_purchase_queue;
