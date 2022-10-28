@@ -47,14 +47,39 @@ pub async fn calculate_price_and_fees(
   Ok((ticket_price as i64, total_fees as i64))
 }
 
-pub async fn pre_purchase_checks(
-  store: Arc<Store>,
-  event_id: &str,
-  ticket_nft_program_state: &Pubkey,
-  seat_index: u32,
-  sale_account: &str,
-  ticket_nft: &str
-) -> Result<(i64, i64)> {
+
+pub enum PrePurchaseChecksParams {
+  Primary {
+    store: Arc<Store>,
+    event_id: String,
+    seat_index: u32,
+    sale_account: String,
+    ticket_nft: String
+  },
+  Secondary {
+    store: Arc<Store>,
+    event_id: String,
+  }
+}
+
+impl PrePurchaseChecksParams {
+  fn primary(self) -> (Arc<Store>, String, u32, String, String) {
+    match self {
+      PrePurchaseChecksParams::Primary {
+        store,
+        event_id,
+        seat_index,
+        sale_account,
+        ticket_nft,
+      } => (store, event_id, seat_index, sale_account, ticket_nft),
+      _ => panic!("should never call primary")
+    }
+  }
+}
+
+pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
+  let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
+  let ticket_nft_program_state = &store.config.ticket_nft_program_state;
   let (query, db_query_params) = read_event_sale(sale_account.to_string());
   let sale: Sale = send_read(Arc::clone(&store.neo4j), query, db_query_params)
   .await
@@ -63,7 +88,7 @@ pub async fn pre_purchase_checks(
   let (ticket_nft_pda, _) = pda::ticket_nft(
     ticket_nft_program_state,
     seat_index,
-    event_id,
+    &event_id,
     sale.ticket_type_index,
   );
 

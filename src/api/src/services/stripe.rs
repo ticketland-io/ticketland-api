@@ -1,6 +1,8 @@
 use std::{
   sync::Arc,
   str::FromStr,
+  future::Future,
+  pin::Pin,
 };
 use chrono::{Utc, Duration};
 use eyre::{Result, Report};
@@ -34,7 +36,8 @@ use ticketland_event_handler::{
 };
 use crate::utils::store::Store;
 use super::ticket_purchase::{
-  pre_purchase_checks,
+  PrePurchaseChecksParams,
+  pre_primary_purchase_checks,
 };
 
 #[derive(Serialize)]
@@ -155,6 +158,41 @@ pub async fn create_stripe_account_link(
   .map_err(Into::<_>::into)
 }
 
+pub async fn create_primary_sale_checkout(
+  store: Arc<Store>,
+  buyer_uid: String,
+  sale_account: String,
+  event_id: String,
+  ticket_nft: String,
+  recipient: String,
+  seat_index: u32,
+  seat_name: String,
+) -> Result<String> {
+  let pre_purchase_check_params = PrePurchaseChecksParams::Primary {
+    store: Arc::clone(&store),
+    event_id: event_id.clone(),
+    seat_index: seat_index,
+    sale_account: sale_account.clone(),
+    ticket_nft: ticket_nft.clone(),
+  };
+
+  let pre_purchase_checks = Box::pin(async { 
+    pre_primary_purchase_checks(pre_purchase_check_params).await
+  });
+
+  create_checkout_session(
+    store,
+    buyer_uid,
+    sale_account,
+    event_id,
+    ticket_nft,
+    recipient,
+    seat_index,
+    seat_name,
+    pre_purchase_checks,
+  ).await
+}
+
 pub async fn create_checkout_session(
   store: Arc<Store>,
   buyer_uid: String,
@@ -164,6 +202,7 @@ pub async fn create_checkout_session(
   recipient: String,
   seat_index: u32,
   seat_name: String,
+  pre_purchase_checks: Pin<Box<dyn Future<Output = Result<(i64, i64)>>>>,
 ) -> Result<String> {
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
@@ -182,14 +221,15 @@ pub async fn create_checkout_session(
 
   let (price, fee) = timeout(
     Duration::seconds(5).num_milliseconds() as u64,
-    pre_purchase_checks(
-      Arc::clone(&store),
-      &event_id,
-      &store.config.ticket_nft_program_state,
-      seat_index,
-      &sale_account,
-      &ticket_nft,
-    ),
+    pre_purchase_checks,
+    // pre_purchase_checks(
+    //   Arc::clone(&store),
+    //   &event_id,
+    //   &store.config.ticket_nft_program_state,
+    //   seat_index,
+    //   &sale_account,
+    //   &ticket_nft,
+    // ),
   ).await??;
 
   let client = Client::new(store.config.stripe_key.clone());
