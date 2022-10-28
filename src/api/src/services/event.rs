@@ -5,7 +5,6 @@ use std::{
 use eyre::{Result, Report};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
-use ticketland_core::error::Error;
 use ticketland_event_handler::services::path;
 use common_data::{
   models::metadata::{Attribute, Metadata},
@@ -48,13 +47,12 @@ pub async fn store_event(
   let mut event_capacity= String::new();
 
   while let Some(item) = payload.next().await {
-    let mut field = item
-    .map_err(Into::<Error>::into)?;
+    let mut field = item?;
 
     let mut content = vec![];
     // Field in turn is stream of *Bytes* object
     while let Some(chunk) = field.next().await {
-      let chunk = chunk.map_err(Into::<Error>::into)?;
+      let chunk = chunk?;
       content.push(chunk);
     }
 
@@ -92,8 +90,7 @@ pub async fn store_event(
         },
         "trait_type" => {
           metadata.attributes.push(
-            serde_json::from_str::<Attribute>(&value)
-            .map_err(Into::<Error>::into)?
+            serde_json::from_str::<Attribute>(&value)?
           );
         },
         _ => todo!(), // Simply ignore
