@@ -16,6 +16,7 @@ use common_data::{
   repositories::{
     ticket::upsert_user_ticket,
     stripe::update_stripe_account_status,
+    listing::{fill_sell_listing},
   },
 };
 use ticketland_event_handler::{
@@ -121,8 +122,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
     redis.set(&redis_key, &"1"),
   ).await??;
 
-
-  let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
+  let buyer_uid = metadata.get("buyer_uid").unwrap().to_string();
   let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
 
@@ -151,5 +151,37 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
 }
 
 async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
-  todo!()
+  let metadata = session.metadata;
+  let ticket_nft = metadata.get("ticket_nft").unwrap().to_string();
+  let event_id = metadata.get("event_id").unwrap();
+  let redis_key = pending_ticket_key(&event_id, &ticket_nft);
+
+  // Acquire a lock again so we update the state in Redis and Neo4j before someone else
+  // tries to purchase the same ticket which the current user has already purchased via Stripe
+  let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
+  let mut redis = store.redis.lock().unwrap();
+
+  timeout(
+    Duration::seconds(10).num_milliseconds() as u64,
+    redis.set(&redis_key, &"1"),
+  ).await??;
+
+  let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
+  let sell_listing = metadata.get("sell_listing_account").unwrap().to_string();
+
+  let (query, db_query_params) = fill_sell_listing(
+    buyer_uid.clone(),
+    sell_listing.clone(),
+    ticket_nft.clone(),
+  );
+  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+
+  store.fill_sell_listing_queue.new_sell_listing(
+    buyer_uid,
+    event_id.clone(),
+    metadata.get("sale_account").unwrap().to_string(),
+    ticket_nft,
+    metadata.get("recipient").unwrap().to_string(),
+    sell_listing,
+  ).await
 }

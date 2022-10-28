@@ -3831,10 +3831,11 @@ dependencies = [
 
 [[package]]
 name = "program-artifacts"
-version = "0.1.22"
-source = "git+https://github.com/ticketland-io/program-artifacts#139a3ee95c31f37027d1a17a3a7911de3f42b500"
+version = "0.1.24"
+source = "git+https://github.com/ticketland-io/program-artifacts#4d357de23d7d0d4235dd187d43f87197c9792dcc"
 dependencies = [
  "borsh",
+ "eyre",
  "solana-sdk",
  "solana-web3-rust",
 ]
@@ -5677,8 +5678,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.6"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#43c20a5fb6214b98b6c5437af28a6900b7d91e94"
+version = "0.1.8"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#5ba6299c923d9d8479e36631d80fa0d0df0f24c6"
 dependencies = [
  "actix",
  "actix-rt",
