@@ -29,7 +29,7 @@ async fn inspect_moderation_labels(store: Arc<Store>, image_content: Vec<u8>) ->
   // Inspect labels https://docs.aws.amazon.com/rekognition/latest/dg/moderation.html
   // At the moment we dissalow any of the labels to be present. In the future we might relax this
   // and inspect each label and decide accordingly..
-  if labels.is_some() {
+  if labels.is_some() && labels.unwrap().len() > 0 {
     return Err(Report::msg("Inappropriate image".to_string()))
   }
 

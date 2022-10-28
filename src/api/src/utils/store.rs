@@ -57,6 +57,7 @@ impl Store {
     let aws_rekognition = Arc::new(AwsRekognition::new(
       &config.aws_rekognition_access_key,
       &config.aws_rekognition_secret_key,
+      config.aws_rekognition_region.clone(),
     ).await);
 
     let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
