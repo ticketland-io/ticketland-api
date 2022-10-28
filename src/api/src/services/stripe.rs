@@ -273,9 +273,7 @@ pub async fn create_checkout_session(
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
 
-  // TODO: we need to add name and email as well
-  // let (query, db_query_params) = read_account(buyer_uid.clone());
-  // let buyer_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
+  // TODO: we need to add name and email as well. We can read these values from the DB
   let customer = Customer::create(
     &client,
     CreateCustomer {
