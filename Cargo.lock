@@ -5595,8 +5595,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-ai"
-version = "0.1.1"
-source = "git+https://github.com/ticketland-io/ticketland-ai#3b8493065f88815d675a043b9d991af0892e67aa"
+version = "0.1.2"
+source = "git+https://github.com/ticketland-io/ticketland-ai#1a44dba2c221be6a94ca1e2177476a1c6a2c1b90"
 dependencies = [
  "aws-config",
  "aws-sdk-rekognition",

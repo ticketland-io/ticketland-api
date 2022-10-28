@@ -34,6 +34,7 @@ pub struct Config {
   pub ticket_purchae_protocol_fee: i64,
   pub ticket_verifier_priv_key: String,
   pub max_image_size: usize,
+  pub image_recognition_confidence: f32,
 }
 
 impl Config {
@@ -70,6 +71,7 @@ impl Config {
         ticket_purchae_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
         ticket_verifier_priv_key: env::var("TICKET_VERIFIER_PRIV_KEY").unwrap(),
         max_image_size: env::var("MAX_IMAGE_SIZE").unwrap().parse::<usize>().unwrap(),
+        image_recognition_confidence: env::var("IMAGE_RECOGNITION_CONFIDENCE").unwrap().parse::<f32>().unwrap(),
       }
     )
   }
