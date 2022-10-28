@@ -27,6 +27,7 @@ ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-
 program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.21" }
 solana-web3-rust = { git = "https://github.com/ticketland-io/solana-web3-rust", version = "0.1.9" }
 price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.1" }
+ticketland-ai = { git = "https://github.com/ticketland-io/ticketland-ai", version = "0.1.0" }
 chrono = "0.4.21"
 serde = "1.0"
 serde_json = "1.0"
