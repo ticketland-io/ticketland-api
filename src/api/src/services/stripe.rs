@@ -15,7 +15,7 @@ use stripe::{
   TransferScheduleInterval, Customer, CreateCustomer, CreateProduct,
   Product, CreatePrice, Currency, IdOrCreate, Price, CreateCheckoutSession, CheckoutSession,
   CreateCheckoutSessionLineItems, CheckoutSessionMode, CreateCheckoutSessionPaymentIntentData,
-  CreateCheckoutSessionPaymentIntentDataTransferData,
+  CreateCheckoutSessionPaymentIntentDataTransferData, Metadata,
 };
 use common_data::{
   helpers::{send_read, send_write},
@@ -178,29 +178,33 @@ pub async fn create_primary_sale_checkout(
     ticket_nft: ticket_nft.clone(),
   };
 
+  let checkout_metadata = Some([
+    ("buyer_uid".to_string(), buyer_uid.clone()),
+    ("sale_account".to_string(), sale_account.clone()),
+    ("event_id".to_string(), event_id.clone()),
+    ("ticket_nft".to_string(), ticket_nft.clone()),
+    ("recipient".to_string(), recipient.clone()),
+    ("seat_index".to_string(), seat_index.to_string()),
+    ("seat_name".to_string(), seat_name.clone()),
+  ].iter().cloned().collect());
+
   create_checkout_session(
     store,
     buyer_uid,
-    sale_account,
     event_id,
     ticket_nft,
-    recipient,
-    seat_index,
-    seat_name,
     Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
+    checkout_metadata,
   ).await
 }
 
 pub async fn create_checkout_session(
   store: Arc<Store>,
   buyer_uid: String,
-  sale_account: String,
   event_id: String,
   ticket_nft: String,
-  recipient: String,
-  seat_index: u32,
-  seat_name: String,
   pre_purchase_checks: PrePurchaseCheck,
+  checkout_metadata: Option<Metadata>,
 ) -> Result<String> {
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
@@ -292,15 +296,7 @@ pub async fn create_checkout_session(
 
     // We will use this values in the webhook so we can construct the correct TicketPurchase message that will
     // be further processed by another service.
-    params.metadata = Some([
-      ("buyer_uid".to_string(), buyer_uid),
-      ("sale_account".to_string(), sale_account),
-      ("event_id".to_string(), event_id),
-      ("ticket_nft".to_string(), ticket_nft),
-      ("recipient".to_string(), recipient),
-      ("seat_index".to_string(), seat_index.to_string()),
-      ("seat_name".to_string(), seat_name),
-    ].iter().cloned().collect());
+    params.metadata = checkout_metadata;
 
     timeout(
       Duration::seconds(2).num_milliseconds() as u64,
