@@ -125,6 +125,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   let buyer_uid = metadata.get("buyer_uid").unwrap().to_string();
   let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
+  let ticket_type_index: u8 = metadata.get("ticket_type_index").unwrap().parse()?;
 
   // Store the ticket nft in the db
   let (query, db_query_params) = upsert_user_ticket(
@@ -134,6 +135,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
     ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),
     seat_index.parse::<u32>().unwrap(),
     seat_name.clone(),
+    ticket_type_index,
   );
 
   send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
