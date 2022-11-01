@@ -430,7 +430,7 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 [[package]]
 name = "api-helpers"
 version = "0.3.10"
-source = "git+https://github.com/ticketland-io/common-rust#02376e2725e5b2fa561b51d5682e9fbe55bc5c52"
+source = "git+https://github.com/ticketland-io/common-rust#2f6f237dc23577b7f29e8382d601c5503453e153"
 dependencies = [
  "actix",
  "actix-http",
@@ -1559,8 +1559,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.3.28"
-source = "git+https://github.com/ticketland-io/common-rust#02376e2725e5b2fa561b51d5682e9fbe55bc5c52"
+version = "0.3.29"
+source = "git+https://github.com/ticketland-io/common-rust#2f6f237dc23577b7f29e8382d601c5503453e153"
 dependencies = [
  "actix",
  "bolt-client",
@@ -5648,7 +5648,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.13"
-source = "git+https://github.com/ticketland-io/common-rust#02376e2725e5b2fa561b51d5682e9fbe55bc5c52"
+source = "git+https://github.com/ticketland-io/common-rust#2f6f237dc23577b7f29e8382d601c5503453e153"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5679,7 +5679,7 @@ dependencies = [
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.11"
-source = "git+https://github.com/ticketland-io/common-rust#02376e2725e5b2fa561b51d5682e9fbe55bc5c52"
+source = "git+https://github.com/ticketland-io/common-rust#2f6f237dc23577b7f29e8382d601c5503453e153"
 dependencies = [
  "base64 0.13.0",
  "bs58",
@@ -5727,7 +5727,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#02376e2725e5b2fa561b51d5682e9fbe55bc5c52"
+source = "git+https://github.com/ticketland-io/common-rust#2f6f237dc23577b7f29e8382d601c5503453e153"
 dependencies = [
  "lazy_static",
 ]
