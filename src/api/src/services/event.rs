@@ -56,22 +56,22 @@ pub async fn store_event(
       content.push(chunk);
     }
 
-    if content[0].len() > store.config.max_image_size {
-      return Err(Report::msg("Image limit".to_string()))
-    }
-
-    inspect_moderation_labels(Arc::clone(&store), content[0].to_vec()).await?;
-
     let field_name = field.name();
     let mime_type = field.content_type().type_();
-    let content =  content.concat();
+    let content = content.concat();
     
     if is_supported_media_type(mime_type) {
+      if content.len() > store.config.max_image_size {
+        return Err(Report::msg("Image limit".to_string()))
+      }
+
+      inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
+
       let content_type = field.content_type().subtype();
       media_content_type = Some(content_type.to_string().clone());
 
       store.minio.upload(
-        &path::get_event_file_path(&event_id, &content_type.to_string()),
+        &path::get_event_file_path(&event_id, &field_name, &content_type.to_string()),
         content.as_ref()
       )
       .await?;
@@ -118,7 +118,7 @@ pub async fn store_event(
     media_content_type.unwrap(),
     event_map.remove("location").unwrap(),
     event_map.remove("venue").unwrap(),
-    event_map.remove("eventType").unwrap(),
+    event_map.remove("type").unwrap(),
     event_map.remove("startDate").unwrap(),
     event_map.remove("endDate").unwrap(),
     event_map.remove("category").unwrap(),
