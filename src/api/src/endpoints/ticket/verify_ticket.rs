@@ -32,6 +32,7 @@ pub async fn exec(
 ) -> HttpResponse {
   verify_ticket(
     Arc::clone(&store.rpc_client),
+    Arc::clone(&store.neo4j),
     store.config.ticket_verifier_priv_key.clone(),
     &body.event_id,
     &body.code_challenge,
