@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize};
 use api_helpers::services::http::bad_request_error;
 use actix_web::{
   web::{Data, Json, Path},
@@ -8,7 +8,9 @@ use actix_web::{
 use crate::{
   utils::store::Store,
 };
-use ticket_verification::verifier::verify_ticket;
+use ticket_verification::verifier::{
+  verify_ticket
+};
 
 #[derive(Deserialize)]
 pub struct Body {
@@ -21,15 +23,6 @@ pub struct Body {
 #[derive(Deserialize)]
 pub struct Params {
   pub ticket_metadata: String,
-}
-
-#[derive(Serialize)]
-pub struct Response {
-  pub event_id: String,
-  pub code_challenge: String,
-  pub ticket_owner_pubkey: String,
-  pub ticket_metadata: String,
-  pub server_sig: String,
 }
 
 pub async fn exec(
@@ -46,15 +39,8 @@ pub async fn exec(
     &body.ticket_owner_pubkey,
     &body.sig,
   ).await
-  .map(|server_sig| {
-    HttpResponse::Ok()
-    .json(Response {
-      event_id: body.event_id.clone(),
-      code_challenge: body.code_challenge.clone(),
-      ticket_owner_pubkey: body.ticket_owner_pubkey.clone(),
-      ticket_metadata: params.ticket_metadata.clone(),
-      server_sig,
-    })
+  .map(|response| {
+    HttpResponse::Ok().json(response)
   })
   .unwrap_or_else(|_| bad_request_error())
 }
