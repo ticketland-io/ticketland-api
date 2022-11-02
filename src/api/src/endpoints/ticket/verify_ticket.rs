@@ -39,8 +39,6 @@ pub async fn exec(
     &body.ticket_owner_pubkey,
     &body.sig,
   ).await
-  .map(|response| {
-    HttpResponse::Ok().json(response)
-  })
+  .map(|response| HttpResponse::Ok().json(response))
   .unwrap_or_else(|_| bad_request_error())
 }
