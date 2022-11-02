@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use serde::{Serialize, Deserialize};
 use api_helpers::services::http::bad_request_error;
 use actix_web::{
@@ -6,8 +7,8 @@ use actix_web::{
 };
 use crate::{
   utils::store::Store,
-  services::ticket::verify_ticket,
 };
+use ticket_verification::verifier::verify_ticket;
 
 #[derive(Deserialize)]
 pub struct Body {
@@ -37,7 +38,8 @@ pub async fn exec(
   params: Path<Params>,
 ) -> HttpResponse {
   verify_ticket(
-    &store,
+    Arc::clone(&store.rpc_client),
+    store.config.ticket_verifier_priv_key.clone(),
     &body.event_id,
     &body.code_challenge,
     &params.ticket_metadata,

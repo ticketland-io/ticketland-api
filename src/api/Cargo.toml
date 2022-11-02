@@ -22,6 +22,7 @@ futures = "0.3.12"
 ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.13" }
 api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.10" }
 common-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.30" }
+ticket-verification = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.0" }
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.1.6" }
 ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.9" }
 program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.22" }
@@ -36,7 +37,4 @@ tokio-util = { version = "0.7.1" }
 mime = "0.3.16"
 solana-sdk = "1.11.10"
 solana-client = "1.11.10"
-keccak-hash = "0.9.0"
-bs58 = "0.4.0"
-thiserror = "1.0.33"
 async-stripe = { version = "0.15.0", features = ["runtime-tokio-hyper", "checkout", "connect"] }
