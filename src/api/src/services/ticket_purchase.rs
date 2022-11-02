@@ -49,7 +49,7 @@ pub async fn calculate_price_and_fees(
   // Thus we need to remove 6 decimals from the DB value. This would need
   // to be more dynamic in the future. The decimals will be stored in the DB
   // record as well
-  let ticket_price = ticket_price / 10000;
+  let ticket_price = ticket_price / 1000000;
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
   let sol_price = to_stripe_unit(get_sol_price(store).await?);
   let mint_cost = (mint_cost * sol_price) / 1000;
