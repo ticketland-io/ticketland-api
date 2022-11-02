@@ -393,9 +393,11 @@ dependencies = [
 
 [[package]]
 name = "amqp-helpers"
-version = "0.1.6"
-source = "git+https://github.com/ticketland-io/amqp-helpers#d111d179889afdf4719f1f77bb244420fdf09843"
+version = "0.1.7"
+source = "git+https://github.com/ticketland-io/amqp-helpers#e61d23c4977af5cf2e2c365b6bab486e55aa9064"
 dependencies = [
+ "async-trait",
+ "borsh",
  "eyre",
  "futures-lite",
  "lapin",
