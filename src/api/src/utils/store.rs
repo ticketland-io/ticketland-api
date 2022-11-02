@@ -16,6 +16,7 @@ use crate::{
     new_event_queue::NewEventQueue,
     ticket_design_upload_queue::TicketDesignUploadQueue,
     ticket_purchase_queue::TicketPurchaseQueue,
+    set_attended_queue::SetAttendedQueue,
     fill_sell_listing_queue::FillSellListingQueue,
   },
 };
