@@ -26,6 +26,7 @@ pub struct Body {
   ticket_metadata: String,
   seat_index: u32,
   seat_name: String,
+  ticket_type_index: u8,
 }
 
 pub async fn exec(
@@ -41,6 +42,7 @@ pub async fn exec(
     body.ticket_metadata.clone(),
     body.seat_index,
     body.seat_name.clone(),
+    body.ticket_type_index,
   );
 
   send_write(

@@ -429,25 +429,23 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 
 [[package]]
 name = "api-helpers"
-version = "0.3.1"
-source = "git+https://github.com/ticketland-io/common-rust#3d9069402d2688ad4be8af78dae08bc4e230a2c5"
+version = "0.3.10"
+source = "git+https://github.com/ticketland-io/common-rust#4cfcf5f72dc79747a80b465cc36aa82e4baf83c1"
 dependencies = [
  "actix",
  "actix-http",
  "actix-web",
  "async-trait",
- "base64 0.13.0",
  "bolt-client",
  "chrono",
  "common-data",
+ "eyre",
  "fireauth",
  "futures-util",
- "hex",
- "hmac 0.12.1",
  "qstring",
  "serde",
- "sha2 0.10.5",
  "ticketland-core",
+ "ticketland-crypto",
 ]
 
 [[package]]
@@ -1439,7 +1437,7 @@ checksum = "d38f2da7a0a2c4ccf0065be06397cc26a81f4e528be095826eee9d4adbb8c60f"
 dependencies = [
  "byteorder",
  "fnv",
- "uuid 1.1.2",
+ "uuid 1.2.1",
 ]
 
 [[package]]
@@ -1561,8 +1559,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.3.25"
-source = "git+https://github.com/ticketland-io/common-rust#3d9069402d2688ad4be8af78dae08bc4e230a2c5"
+version = "0.3.30"
+source = "git+https://github.com/ticketland-io/common-rust#4cfcf5f72dc79747a80b465cc36aa82e4baf83c1"
 dependencies = [
  "actix",
  "bolt-client",
@@ -2017,6 +2015,7 @@ version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e9c280362032ea4203659fc489832d0204ef09f247a0506f170dafcac08c369"
 dependencies = [
+ "serde",
  "signature",
 ]
 
@@ -2030,6 +2029,7 @@ dependencies = [
  "ed25519",
  "rand 0.7.3",
  "serde",
+ "serde_bytes",
  "sha2 0.9.9",
  "zeroize",
 ]
@@ -5648,7 +5648,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.13"
-source = "git+https://github.com/ticketland-io/common-rust#3d9069402d2688ad4be8af78dae08bc4e230a2c5"
+source = "git+https://github.com/ticketland-io/common-rust#4cfcf5f72dc79747a80b465cc36aa82e4baf83c1"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5677,9 +5677,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "ticketland-crypto"
+version = "0.1.11"
+source = "git+https://github.com/ticketland-io/common-rust#4cfcf5f72dc79747a80b465cc36aa82e4baf83c1"
+dependencies = [
+ "base64 0.13.0",
+ "bs58",
+ "ed25519-dalek",
+ "eyre",
+ "hex",
+ "rand 0.7.3",
+ "ring",
+ "serde",
+ "serde_json",
+ "uuid 1.2.1",
+]
+
+[[package]]
 name = "ticketland-event-handler"
-version = "0.1.8"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#5ba6299c923d9d8479e36631d80fa0d0df0f24c6"
+version = "0.1.9"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#896af7f2fb00583dee0fd979633e72ba90c7811d"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5710,7 +5727,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#3d9069402d2688ad4be8af78dae08bc4e230a2c5"
+source = "git+https://github.com/ticketland-io/common-rust#4cfcf5f72dc79747a80b465cc36aa82e4baf83c1"
 dependencies = [
  "lazy_static",
 ]
@@ -6213,9 +6230,13 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.1.2"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
+checksum = "feb41e78f93363bb2df8b0e86a2ca30eed7806ea16ea0c790d757cf93f79be83"
+dependencies = [
+ "getrandom 0.2.7",
+ "rand 0.8.5",
+]
 
 [[package]]
 name = "value-bag"

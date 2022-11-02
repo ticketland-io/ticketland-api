@@ -22,6 +22,7 @@ use crate::{
 pub struct Body {
   event_id: String,
   ticket_nft: String,
+  ticket_type_index: u8,
   sale_account: String,
   recipient: String,
   seat_index: u32,
@@ -39,6 +40,7 @@ pub async fn exec(
     body.sale_account.clone(),
     body.event_id.clone(),
     body.ticket_nft.clone(),
+    body.ticket_type_index,
     body.recipient.clone(),
     body.seat_index,
     body.seat_name.clone(),

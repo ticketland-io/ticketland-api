@@ -44,7 +44,7 @@ pub async fn exec(
   }
   
   let event = event.unwrap();
-  let file_path = path::get_event_file_path(&event.event_id, &event.file_type);
+  let file_path = path::get_event_file_path(&event.event_id, "ticket_image", &event.file_type);
 
   let ipfs_read_stream = S3Stream::new(
     file_path.clone(),

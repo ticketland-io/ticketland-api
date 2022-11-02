@@ -170,6 +170,7 @@ pub async fn create_primary_sale_checkout(
   sale_account: String,
   event_id: String,
   ticket_nft: String,
+  ticket_type_index: u8,
   recipient: String,
   seat_index: u32,
   seat_name: String,
@@ -188,6 +189,7 @@ pub async fn create_primary_sale_checkout(
     ("sale_account".to_string(), sale_account.clone()),
     ("event_id".to_string(), event_id.clone()),
     ("ticket_nft".to_string(), ticket_nft.clone()),
+    ("ticket_type_index".to_string(), ticket_type_index.to_string()),
     ("recipient".to_string(), recipient.clone()),
     ("seat_index".to_string(), seat_index.to_string()),
     ("seat_name".to_string(), seat_name.clone()),
@@ -209,6 +211,7 @@ pub async fn create_secondary_sale_checkout(
   sale_account: String,
   event_id: String,
   ticket_nft: String,
+  ticket_type_index: u8,
   recipient: String,
 ) -> Result<String> {
   let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0;
@@ -230,6 +233,7 @@ pub async fn create_secondary_sale_checkout(
     ("sale_account".to_string(), sale_account.clone()),
     ("event_id".to_string(), event_id.clone()),
     ("ticket_nft".to_string(), ticket_nft.clone()),
+    ("ticket_type_index".to_string(), ticket_type_index.to_string()),
     ("recipient".to_string(), recipient.clone()),
     ("sell_listing_account".to_string(), sell_listing_account.to_string()),
   ].iter().cloned().collect());

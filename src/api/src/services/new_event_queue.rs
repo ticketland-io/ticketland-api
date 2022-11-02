@@ -29,9 +29,9 @@ impl NewEventQueue {
   }
 
   pub async fn new_event(&self, event_id: String, content_type: String) -> Result<()> {
-    let img_msg = UploadImageFile { 
+    let img_msg = UploadImageFile {
       event_id: event_id.clone(),
-      source_path: path::get_event_file_path(&event_id, &content_type),
+      source_path: path::get_event_file_path(&event_id, "ticket_image", &content_type),
       content_type: content_type.clone(),
     };
 
