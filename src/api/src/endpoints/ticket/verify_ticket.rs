@@ -7,7 +7,12 @@ use actix_web::{
 };
 use common_data::{repositories::ticket::update_attended, helpers::send_write};
 use ticketland_core::error::Error;
-use crate::{utils::store::Store, services::ticket::verify_ticket};
+use crate::{
+  utils::store::Store,
+};
+use ticket_verification::verifier::{
+  verify_ticket
+};
 
 #[derive(Deserialize)]
 pub struct Body {
@@ -23,22 +28,15 @@ pub struct Params {
   pub ticket_metadata: String,
 }
 
-#[derive(Serialize)]
-pub struct Response {
-  pub event_id: String,
-  pub code_challenge: String,
-  pub ticket_owner_pubkey: String,
-  pub ticket_metadata: String,
-  pub server_sig: String,
-}
-
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
   params: Path<Params>,
 ) -> Result<HttpResponse, Error> {
   let server_sig = match verify_ticket(
-    &store,
+    Arc::clone(&store.rpc_client),
+    Arc::clone(&store.neo4j),
+    store.config.ticket_verifier_priv_key.clone(),
     &body.event_id,
     &body.code_challenge,
     &params.ticket_metadata,
