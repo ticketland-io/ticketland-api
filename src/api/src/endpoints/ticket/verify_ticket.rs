@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use serde::{Serialize, Deserialize};
-use api_helpers::services::http::bad_request_error;
+use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json, Path},
   HttpResponse,
@@ -10,9 +9,7 @@ use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,
 };
-use ticket_verification::verifier::{
-  verify_ticket
-};
+use ticket_verification::verifier::verify_ticket;
 
 #[derive(Deserialize)]
 pub struct Body {
@@ -33,9 +30,11 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<Params>,
 ) -> Result<HttpResponse, Error> {
-  let server_sig = match verify_ticket(
+  let server_sig = verify_ticket(
     Arc::clone(&store.rpc_client),
     Arc::clone(&store.neo4j),
+    Arc::clone(&store.redis),
+    Arc::clone(&store.redlock),
     store.config.ticket_verifier_priv_key.clone(),
     &body.event_id,
     &body.code_challenge,
@@ -43,21 +42,15 @@ pub async fn exec(
     &body.ticket_nft,
     &body.ticket_owner_pubkey,
     &body.sig,
-  ).await {
-    Ok(server_sig) => server_sig,
-    Err(_) => return Ok(bad_request_error()),
-  };
+  ).await?;
 
-  // Update the db
+  store.set_attended_queue
+    .on_set_attended(body.event_id.to_owned(), body.ticket_nft.to_owned())
+    .await?;
+
   let (query, db_query_params) = update_attended(body.ticket_nft.to_owned());
 
   send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
 
-  Ok(HttpResponse::Ok().json(Response {
-    event_id: body.event_id.clone(),
-    code_challenge: body.code_challenge.clone(),
-    ticket_owner_pubkey: body.ticket_owner_pubkey.clone(),
-    ticket_metadata: params.ticket_metadata.clone(),
-    server_sig,
-  }))
+  Ok(HttpResponse::Ok().json(server_sig))
 }
