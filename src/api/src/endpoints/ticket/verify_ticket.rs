@@ -39,7 +39,6 @@ pub async fn exec(
     &body.event_id,
     &body.code_challenge,
     &params.ticket_metadata,
-    &body.ticket_nft,
     &body.ticket_owner_pubkey,
     &body.sig,
   ).await?;
