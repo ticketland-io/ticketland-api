@@ -3,6 +3,7 @@ use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
+use solana_web3_rust::utils::pubkey_from_str;
 use stripe::{EventObject, EventType, Webhook};
 use chrono::{Duration};
 use eyre::{Result, Report};
@@ -132,7 +133,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
     buyer_uid.clone(),
     event_id.clone(),
     ticket_nft.clone(),
-    ticket_metadata(&store.config.ticket_nft_program_state, &ticket_nft).0.to_string(),
+    ticket_metadata(&store.config.ticket_nft_program_state, &pubkey_from_str(&ticket_nft)?).0.to_string(),
     seat_index.parse::<u32>().unwrap(),
     seat_name.clone(),
     ticket_type_index,
