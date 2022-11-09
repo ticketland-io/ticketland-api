@@ -37,9 +37,9 @@ pub struct Body {
 
 fn has_all_optional_fields(body: &Json<Body>) -> bool {
   body.ticket_nft.is_some()
-    && body.ticket_metadata.is_some()
-    && body.seat_index.is_some()
-    && body.seat_name.is_some()
+  && body.ticket_metadata.is_some()
+  && body.seat_index.is_some()
+  && body.seat_name.is_some()
 }
 
 pub async fn exec(
