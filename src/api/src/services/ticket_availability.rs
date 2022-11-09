@@ -28,9 +28,9 @@ async fn get_pending_tickets(store: Arc<Store>, event_id: &String) -> Result<Vec
   .await
   .map(|values| {
     values
-      .iter()
-      .map(|x| x.parse::<u32>().unwrap())
-      .collect::<Vec<u32>>()
+    .iter()
+    .map(|x| x.parse::<u32>().unwrap())
+    .collect::<Vec<u32>>()
   })?;
 
   Ok(pending_tickets)
