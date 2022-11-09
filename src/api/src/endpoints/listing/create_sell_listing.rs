@@ -2,15 +2,16 @@ use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Path, Json},
-  HttpResponse, http::StatusCode,
+  HttpResponse,
 };
 use api_helpers::{
-  services::data::exec_basic_db_write_endpoint,
+  services::http::internal_server_error,
   middleware::auth::AuthData,
 };
 use common_data::{
-  repositories::listing::{create_sell_listing},
+  repositories::listing::{create_sell_listing}, helpers::send_write,
 };
+use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,
 };
@@ -28,21 +29,18 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  let result = exec_basic_db_write_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(move || {
-      create_sell_listing(
-        auth.user.local_id.clone(),
-        body.ticket_nft.clone(),
-        params.listing_account.clone(),
-        body.ask_price.clone(),
-      )
-    })
-  ).await;
+  let (query, db_query_params) = create_sell_listing(
+    auth.user.local_id.clone(),
+    body.ticket_nft.clone(),
+    params.listing_account.clone(),
+    body.ask_price.clone(),
+  );
 
-  if result.status() == StatusCode::OK {
-    HttpResponse::Created().finish()
-  } else {
-    result
-  }
+  send_write(
+    Arc::clone(&store.neo4j),
+    query,
+    db_query_params,
+  ).await
+  .map(|_| HttpResponse::Created().finish())
+  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
 }
