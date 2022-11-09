@@ -122,7 +122,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
 
   timeout(
     Duration::seconds(10).num_milliseconds() as u64,
-    redis.set(&redis_key, &seat_index),
+    redis.set_ex(&redis_key, &seat_index, Duration::days(1).num_milliseconds() as usize),
   ).await??;
 
   let buyer_uid = metadata.get("buyer_uid").unwrap().to_string();
@@ -169,7 +169,7 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
 
   timeout(
     Duration::seconds(10).num_milliseconds() as u64,
-    redis.set(&redis_key, &seat_index),
+    redis.set_ex(&redis_key, &seat_index, Duration::days(1).num_milliseconds() as usize),
   ).await??;
 
   let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
