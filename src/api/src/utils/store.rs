@@ -16,6 +16,7 @@ use crate::{
     new_event_queue::NewEventQueue,
     ticket_design_upload_queue::TicketDesignUploadQueue,
     ticket_purchase_queue::TicketPurchaseQueue,
+    set_attended_queue::SetAttendedQueue,
     fill_sell_listing_queue::FillSellListingQueue,
   },
 };
@@ -32,6 +33,7 @@ pub struct Store {
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
   pub ticket_purchase_queue: TicketPurchaseQueue,
   pub fill_sell_listing_queue: FillSellListingQueue,
+  pub set_attended_queue: SetAttendedQueue,
 }
 
 impl Store {
@@ -87,6 +89,10 @@ impl Store {
       config.retry_ttl,
     ).await;
 
+    let set_attended_queue = SetAttendedQueue::new(
+      config.rabbitmq_uri.clone(),
+      config.retry_ttl,
+    ).await;
 
     let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
 
@@ -102,6 +108,7 @@ impl Store {
       ticket_design_upload_queue,
       ticket_purchase_queue,
       fill_sell_listing_queue,
+      set_attended_queue,
     }
   }
 }

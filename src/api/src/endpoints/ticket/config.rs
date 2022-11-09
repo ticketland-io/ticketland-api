@@ -23,6 +23,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
 
     cfg.service(
       web::resource("pre-commit")
+      .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(purchase_pre_commit::exec))
     );
 

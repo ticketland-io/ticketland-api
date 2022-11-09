@@ -3728,7 +3728,7 @@ checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 [[package]]
 name = "price-feed"
 version = "0.1.1"
-source = "git+https://github.com/ticketland-io/price-feed#70d09eec1539c534d2b1d268e437329f76bf9599"
+source = "git+https://github.com/ticketland-io/price-feed#6f476502a7e156d07e27d3d9ee2f4857c710bb87"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5622,6 +5622,7 @@ dependencies = [
  "mime",
  "price-feed",
  "program-artifacts",
+ "rand 0.8.5",
  "serde",
  "serde_json",
  "solana-client",
