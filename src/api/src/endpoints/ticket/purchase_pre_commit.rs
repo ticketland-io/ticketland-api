@@ -1,83 +1,109 @@
 use std::sync::Arc;
-use serde::{Deserialize};
+use serde::{Serialize, Deserialize};
+use eyre::Result;
 use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use futures_util::TryFutureExt;
-use chrono::{Duration};
-use api_helpers::{
-  middleware::auth::AuthData,
-  services::http::internal_server_error,
-};
-use common_data::{
-  helpers::{send_write},
-  repositories::ticket::{upsert_user_ticket},
-};
-use ticketland_event_handler::{
-  services::ticket_purchase::pending_ticket_key,
-};
+use solana_web3_rust::utils::pubkey_from_str;
+use ticketland_core::error::Error;
+use api_helpers::{middleware::auth::AuthData, services::http::internal_server_error};
+use program_artifacts::{ticket_nft::pda as ticket_nft_pda, event_registry::account_data::EventId};
 use crate::{
   utils::store::Store,
+  services::{
+    ticket_purchase_pre_commit::store_ticket_purchase_pre_commit,
+    ticket_availability::get_next_seat_index,
+  },
 };
+
+#[derive(Serialize)]
+pub struct Response {
+  pub seat_index: u32,
+  pub ticket_nft: String,
+  pub ticket_metadata: String,
+  pub seat_name: String,
+}
 
 #[derive(Deserialize)]
 pub struct Body {
   event_id: String,
-  ticket_nft: String,
-  ticket_metadata: String,
-  seat_index: u32,
-  seat_name: String,
+  ticket_nft: Option<String>,
+  ticket_metadata: Option<String>,
+  seat_index: Option<u32>,
+  seat_name: Option<String>,
   ticket_type_index: u8,
+}
+
+fn has_all_optional_fields(body: &Json<Body>) -> bool {
+  body.ticket_nft.is_some()
+    && body.ticket_metadata.is_some()
+    && body.seat_index.is_some()
+    && body.seat_name.is_some()
 }
 
 pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
   body: Json<Body>,
-) -> HttpResponse {
-  let lock = store.redlock.lock(body.ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await;
+) -> Result<HttpResponse, Error> {
+  let event_id = EventId(body.event_id.clone());
+  let ticket_nft;
+  let ticket_metadata;
+  let seat_index;
+  let seat_name;
 
-  if let Err(error) = lock {
-    return internal_server_error(Some(error.root_cause()))
+  match has_all_optional_fields(&body) {
+    false => {
+      seat_index = get_next_seat_index(
+        Arc::clone(&store),
+        &event_id,
+        body.ticket_type_index,
+      )
+      .await?;
+
+      seat_name = seat_index.to_string();
+
+      ticket_nft = ticket_nft_pda::ticket_nft(
+        &store.config.ticket_nft_program_state,
+        seat_index,
+        &event_id.val().clone(),
+        body.ticket_type_index,
+      )
+      .0
+      .to_string();
+
+      ticket_metadata = ticket_nft_pda::ticket_metadata(
+        &store.config.ticket_nft_program_state,
+        &pubkey_from_str(&ticket_nft)?,
+      )
+      .0
+      .to_string();
+    }
+    true => {
+      seat_index = body.seat_index.unwrap();
+      seat_name = body.seat_name.as_ref().unwrap().clone();
+      ticket_nft = body.ticket_nft.as_ref().unwrap().clone();
+      ticket_metadata = body.ticket_metadata.as_ref().unwrap().clone();
+    }
   }
 
-  // store the record in Redis so this ticket is considered unavailable
-  let mut redis = store.redis.lock().unwrap();
-  let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
-  let store = Arc::clone(&store);
-  let store_copy = Arc::clone(&store);
-
-  redis.set_ex(&redis_key, &"1", Duration::minutes(5).num_milliseconds() as usize)
-  .and_then(|_| {
-    let store = Arc::clone(&store);
-
-    async move {
-      let (query, db_query_params) = upsert_user_ticket(
-        auth.user.local_id.clone(),
-        body.event_id.clone(),
-        body.ticket_nft.clone(),
-        body.ticket_metadata.clone(),
-        body.seat_index,
-        body.seat_name.clone(),
-        body.ticket_type_index,
-      );
-
-      send_write(
-        Arc::clone(&store.neo4j),
-        query,
-        db_query_params,
-      ).await
-      .map_err(Into::<_>::into)
-    }
-  })
-  .and_then(|_| {
-    async move { 
-      store_copy.redlock.unlock(lock.unwrap()).await;
-      Ok(())
-    }
-  })
+  store_ticket_purchase_pre_commit(
+    Arc::clone(&store),
+    auth.user.local_id.clone(),
+    event_id.db_val(),
+    ticket_nft.clone(),
+    ticket_metadata.clone(),
+    seat_index,
+    seat_name.clone(),
+    body.ticket_type_index
+  )
   .await
-  .map(|_| HttpResponse::Created().finish())
-  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
+  .map(|_| Ok(HttpResponse::Created().json(Response {
+    seat_index,
+    seat_name,
+    ticket_nft,
+    ticket_metadata,
+  })))
+  .unwrap_or_else(|error| Ok(internal_server_error(Some(error.root_cause()))))
 }

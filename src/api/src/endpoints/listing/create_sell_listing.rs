@@ -2,12 +2,10 @@ use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Path, Json},
-  HttpResponse,
+  HttpResponse, http::StatusCode,
 };
 use api_helpers::{
-  services::{
-    data::{exec_basic_db_write_endpoint},
-  },
+  services::data::exec_basic_db_write_endpoint,
   middleware::auth::AuthData,
 };
 use common_data::{
@@ -30,7 +28,7 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  exec_basic_db_write_endpoint(
+  let result = exec_basic_db_write_endpoint(
     Arc::clone(&store.neo4j),
     Box::new(move || {
       create_sell_listing(
@@ -42,5 +40,9 @@ pub async fn exec(
     })
   ).await;
 
-  HttpResponse::Created().finish()
+  if result.status() == StatusCode::OK {
+    HttpResponse::Created().finish()
+  } else {
+    result
+  }
 }

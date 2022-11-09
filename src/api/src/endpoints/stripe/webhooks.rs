@@ -118,13 +118,14 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
   let mut redis = store.redis.lock().unwrap();
 
+  let seat_index = metadata.get("seat_index").unwrap().to_string();
+
   timeout(
     Duration::seconds(10).num_milliseconds() as u64,
-    redis.set(&redis_key, &"1"),
+    redis.set(&redis_key, &seat_index),
   ).await??;
 
   let buyer_uid = metadata.get("buyer_uid").unwrap().to_string();
-  let seat_index = metadata.get("seat_index").unwrap().to_string();
   let seat_name = metadata.get("seat_name").unwrap().to_string();
   let ticket_type_index: u8 = metadata.get("ticket_type_index").unwrap().parse()?;
 
@@ -164,9 +165,11 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
   let mut redis = store.redis.lock().unwrap();
 
+  let seat_index = metadata.get("seat_index").unwrap().to_string();
+
   timeout(
     Duration::seconds(10).num_milliseconds() as u64,
-    redis.set(&redis_key, &"1"),
+    redis.set(&redis_key, &seat_index),
   ).await??;
 
   let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
