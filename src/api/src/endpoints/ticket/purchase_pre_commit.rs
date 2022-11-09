@@ -53,39 +53,36 @@ pub async fn exec(
   let seat_index;
   let seat_name;
 
-  match has_all_optional_fields(&body) {
-    false => {
-      seat_index = get_next_seat_index(
-        Arc::clone(&store),
-        &event_id,
-        body.ticket_type_index,
-      )
-      .await?;
+  if has_all_optional_fields(&body) {
+    seat_index = body.seat_index.unwrap();
+    seat_name = body.seat_name.as_ref().unwrap().clone();
+    ticket_nft = body.ticket_nft.as_ref().unwrap().clone();
+    ticket_metadata = body.ticket_metadata.as_ref().unwrap().clone();
+  } else {
+    seat_index = get_next_seat_index(
+      Arc::clone(&store),
+      &event_id,
+      body.ticket_type_index,
+    )
+    .await?;
 
-      seat_name = seat_index.to_string();
+    seat_name = seat_index.to_string();
 
-      ticket_nft = ticket_nft_pda::ticket_nft(
-        &store.config.ticket_nft_program_state,
-        seat_index,
-        &event_id.val().clone(),
-        body.ticket_type_index,
-      )
-      .0
-      .to_string();
+    ticket_nft = ticket_nft_pda::ticket_nft(
+      &store.config.ticket_nft_program_state,
+      seat_index,
+      &event_id.val(),
+      body.ticket_type_index,
+    )
+    .0
+    .to_string();
 
-      ticket_metadata = ticket_nft_pda::ticket_metadata(
-        &store.config.ticket_nft_program_state,
-        &pubkey_from_str(&ticket_nft)?,
-      )
-      .0
-      .to_string();
-    }
-    true => {
-      seat_index = body.seat_index.unwrap();
-      seat_name = body.seat_name.as_ref().unwrap().clone();
-      ticket_nft = body.ticket_nft.as_ref().unwrap().clone();
-      ticket_metadata = body.ticket_metadata.as_ref().unwrap().clone();
-    }
+    ticket_metadata = ticket_nft_pda::ticket_metadata(
+      &store.config.ticket_nft_program_state,
+      &pubkey_from_str(&ticket_nft)?,
+    )
+    .0
+    .to_string();
   }
 
   store_ticket_purchase_pre_commit(
