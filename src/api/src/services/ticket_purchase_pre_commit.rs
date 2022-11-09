@@ -20,51 +20,37 @@ pub async fn store_ticket_purchase_pre_commit(
   ticket_type_index: u8
 ) -> Result<()> {
   let lock = store
-    .redlock
-    .lock(
-      ticket_nft.as_bytes(),
-      Duration::seconds(50).num_milliseconds() as usize,
-    )
-    .await;
+  .redlock
+  .lock(
+    ticket_nft.as_bytes(),
+    Duration::seconds(50).num_milliseconds() as usize,
+  )
+  .await?;
 
-  if let Err(error) = lock {
-    return Err(error);
-  }
-
-  // store the record in Redis so this ticket is considered unavailable
+  // stre the record in Redis so this ticket is considered unavailable
   let mut redis = store.redis.lock().unwrap();
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   let store = Arc::clone(&store);
-  let store_copy = Arc::clone(&store);
 
-  redis
-    .set_ex(
-      &redis_key,
-      &seat_index.to_string(),
-      Duration::minutes(5).num_milliseconds() as usize,
-    )
-    .and_then(|_| {
-      let store = Arc::clone(&store);
+  redis.set_ex(
+    &redis_key,
+    &seat_index.to_string(),
+    Duration::minutes(5).num_milliseconds() as usize,
+  ).await?;
 
-      async move {
-        let (query, db_query_params) = upsert_user_ticket(
-          uid.clone(),
-          event_id.clone(),
-          ticket_nft.clone(),
-          ticket_metadata.clone(),
-          seat_index,
-          seat_name.clone(),
-          ticket_type_index.clone(),
-        );
+  let store = Arc::clone(&store);
+  let (query, db_query_params) = upsert_user_ticket(
+    uid.clone(),
+    event_id.clone(),
+    ticket_nft.clone(),
+    ticket_metadata.clone(),
+    seat_index,
+    seat_name.clone(),
+    ticket_type_index.clone(),
+  );
 
-        send_write(Arc::clone(&store.neo4j), query, db_query_params)
-          .await
-          .map_err(Into::<_>::into)
-      }
-    })
-    .and_then(|_| async move {
-      store_copy.redlock.unlock(lock.unwrap()).await;
-      Ok(())
-    })
-    .await
+  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+  store.redlock.unlock(lock).await;
+  
+  Ok(())
 }
