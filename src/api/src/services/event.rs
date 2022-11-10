@@ -122,6 +122,8 @@ pub async fn store_event(
     event_map.remove("startDate").unwrap(),
     event_map.remove("endDate").unwrap(),
     event_map.remove("category").unwrap(),
+    event_map.remove("publicity").unwrap(),
+    event_map.remove("paymentType").unwrap(),
     event_map.remove("name").unwrap(),
     event_map.remove("description").unwrap()
   );
