@@ -46,7 +46,7 @@ fn create_seats_bitmap(
 
   (l..r)
   .filter_map(|i| {
-    if !bitmap::is_set(i, &seats) && pending_seats.contains_key(&i) {
+    if !bitmap::is_set(i, &seats) && !pending_seats.contains_key(&i) {
       Some(i)
     } else {
       None
