@@ -8,7 +8,7 @@ use api_helpers::{
   middleware::auth::AuthData,
 };
 use ticketland_core::error::Error;
-use common_data::{
+use ticketland_data::{
   helpers::{send_write},
   repositories::ticket::{upsert_user_ticket},
 };

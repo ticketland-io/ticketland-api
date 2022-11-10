@@ -10,7 +10,7 @@ use api_helpers::{
   services::http::internal_server_error,
   middleware::auth::AuthData,
 };
-use common_data::{
+use ticketland_data::{
   helpers::{send_read},
   models::event::Event,
   repositories::event::{read_event},

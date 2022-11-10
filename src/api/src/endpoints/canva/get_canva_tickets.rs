@@ -4,7 +4,7 @@ use api_helpers::{
   services::data::{QueryString, exec_basic_db_read_endpoint},
   middleware::auth::AuthData,
 };
-use common_data::{
+use ticketland_data::{
   repositories::design::read_ticket_designs,
 };
 use crate::{

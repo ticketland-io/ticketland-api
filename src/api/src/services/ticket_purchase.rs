@@ -3,7 +3,7 @@ use std::{
   str::FromStr,
 };
 use eyre::{Result, Report};
-use common_data::{
+use ticketland_data::{
   helpers::{send_read},
   models::{
     sale::{Sale, SaleType},

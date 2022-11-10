@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use actix_web::{web, HttpResponse};
-use common_data::{
+use ticketland_data::{
   repositories::sale::upsert_event_sale,
   models::sale::Sale,
 };

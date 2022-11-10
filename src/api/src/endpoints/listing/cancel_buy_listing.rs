@@ -9,7 +9,7 @@ use api_helpers::{
   },
   middleware::auth::AuthData,
 };
-use common_data::{
+use ticketland_data::{
   repositories::listing::{cancel_buy_listing},
 };
 use crate::{

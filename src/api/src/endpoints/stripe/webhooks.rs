@@ -12,7 +12,7 @@ use api_helpers::services::http::{
   internal_server_error
 };
 use ticketland_core::async_helpers::timeout;
-use common_data::{
+use ticketland_data::{
   helpers::send_write,
   repositories::{
     ticket::upsert_user_ticket,

@@ -4,7 +4,7 @@ use actix_web::{
   web::{Data, Json, Path},
   HttpResponse,
 };
-use common_data::{repositories::ticket::update_attended, helpers::send_write};
+use ticketland_data::{repositories::ticket::update_attended, helpers::send_write};
 use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,

@@ -18,7 +18,7 @@ use stripe::{
   CreateCheckoutSessionLineItems, CheckoutSessionMode, CreateCheckoutSessionPaymentIntentData,
   CreateCheckoutSessionPaymentIntentDataTransferData, Metadata,
 };
-use common_data::{
+use ticketland_data::{
   helpers::{send_read, send_write},
   models::stripe_account::{StripeAccount},
   repositories::{

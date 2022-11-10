@@ -8,7 +8,7 @@ use api_helpers::{
   QueryString,
   services::data::{QueryStringTrait, exec_basic_db_read_endpoint},
 };
-use common_data::{
+use ticketland_data::{
   repositories::event::read_events_by_category
 };
 use crate::{

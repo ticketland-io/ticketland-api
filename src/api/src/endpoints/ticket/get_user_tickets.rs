@@ -9,7 +9,7 @@ use api_helpers::{
   services::data::{QueryStringTrait, exec_basic_db_read_endpoint},
   middleware::auth::AuthData,
 };
-use common_data::{
+use ticketland_data::{
   repositories::ticket::read_user_tickets_for_event,
 };
 use crate::{

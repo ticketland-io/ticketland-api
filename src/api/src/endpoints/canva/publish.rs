@@ -4,7 +4,7 @@ use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use common_data::{
+use ticketland_data::{
   models::ticket_design::{TicketDesign},
   helpers::{send_write},
   repositories::design::{upsert_ticket_design},

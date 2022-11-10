@@ -4,7 +4,7 @@ use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use common_data::{
+use ticketland_data::{
   helpers::{send_read},
   models::account::{Account},
   repositories::account::{read_account_by_canva_id},

@@ -4,19 +4,13 @@ use actix_web::{
   HttpResponse,
   http::header::{ContentDisposition, DispositionType, DispositionParam},
 };
-
+use eyre::{Result, ContextCompat};
 use ticketland_core::{
   error::Error,
   streams::s3_stream::S3Stream,
 };
 use api_helpers::{
-  services::http::internal_server_error,
   middleware::auth::AuthData,
-};
-use common_data::{
-  helpers::{send_read},
-  models::event::Event,
-  repositories::event::{read_event},
 };
 use ticketland_event_handler::{
   services::path,
@@ -32,19 +26,9 @@ pub async fn exec(
   params: web::Path<EventParams>,
 ) -> Result<HttpResponse, Error> {
   // TODO: make sure this event id belongs to the current user. Or even better use a custom authz middleware
-  let event_id = params.event_id.clone();
-  let (query, db_query_params) = read_event(event_id);
-  let event = send_read(Arc::clone(&store.neo4j), query, db_query_params)
-  .await
-  .map(TryInto::<Event>::try_into)
-  .unwrap_or_else(|error: Error| Err(error));
-
-  if let Err(error) = event {
-    return Ok(internal_server_error(Some(error)))
-  }
-  
-  let event = event.unwrap();
-  let file_path = path::get_event_file_path(&event.event_id, "ticket_image", &event.file_type);
+  let mut postgres = store.postgres.lock().unwrap();
+  let event = postgres.read_event(params.event_id.clone()).await?;
+  let file_path = path::get_event_file_path(&event.event_id, "ticket_image", &event.file_type.context("file_type missing")?);
 
   let ipfs_read_stream = S3Stream::new(
     file_path.clone(),

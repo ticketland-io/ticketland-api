@@ -6,7 +6,7 @@ use eyre::{Result, Report};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
 use ticketland_event_handler::services::path;
-use common_data::{
+use ticketland_data::{
   models::metadata::{Attribute, Metadata},
   helpers::{send_write},
   repositories::event::upsert_event,

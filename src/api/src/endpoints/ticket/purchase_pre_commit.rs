@@ -10,7 +10,7 @@ use api_helpers::{
   middleware::auth::AuthData,
   services::http::internal_server_error,
 };
-use common_data::{
+use ticketland_data::{
   helpers::{send_write},
   repositories::ticket::{upsert_user_ticket},
 };

@@ -12,7 +12,7 @@ use api_helpers::{
     http::internal_server_error,
   },
 };
-use common_data::{
+use ticketland_data::{
   helpers::{send_read},
   models::stripe_account::{StripeAccount},
   repositories::stripe::{
