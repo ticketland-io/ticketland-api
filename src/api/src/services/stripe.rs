@@ -201,6 +201,7 @@ pub async fn create_primary_sale_checkout(
     buyer_uid,
     event_id,
     ticket_nft,
+    seat_index,
     Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
     checkout_metadata,
   ).await
@@ -214,6 +215,7 @@ pub async fn create_secondary_sale_checkout(
   ticket_nft: String,
   ticket_type_index: u8,
   recipient: String,
+  seat_index: u32,
 ) -> Result<String> {
   let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_program_state, &pubkey_from_str(&ticket_nft)?).0;
   let sell_listing_account = pda::sell_listing(
@@ -236,6 +238,7 @@ pub async fn create_secondary_sale_checkout(
     ("ticket_nft".to_string(), ticket_nft.clone()),
     ("ticket_type_index".to_string(), ticket_type_index.to_string()),
     ("recipient".to_string(), recipient.clone()),
+    ("seat_index".to_string(), seat_index.to_string()),
     ("sell_listing_account".to_string(), sell_listing_account.to_string()),
   ].iter().cloned().collect());
 
@@ -244,6 +247,7 @@ pub async fn create_secondary_sale_checkout(
     buyer_uid,
     event_id,
     ticket_nft,
+    seat_index,
     Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
     checkout_metadata,
   ).await
@@ -254,6 +258,7 @@ pub async fn create_checkout_session(
   buyer_uid: String,
   event_id: String,
   ticket_nft: String,
+  seat_index: u32,
   pre_purchase_checks: PrePurchaseCheck,
   checkout_metadata: Option<Metadata>,
 ) -> Result<String> {
@@ -362,7 +367,7 @@ pub async fn create_checkout_session(
   let mut redis = store.redis.lock().unwrap();
   timeout(
     Duration::seconds(2).num_milliseconds() as u64,
-    redis.set_ex(&redis_key, &"1", Duration::minutes(31).num_milliseconds() as usize),
+    redis.set_ex(&redis_key, &seat_index.to_string(), Duration::minutes(31).num_milliseconds() as usize),
   ).await??;
 
   store.redlock.unlock(lock).await;

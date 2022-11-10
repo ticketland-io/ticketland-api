@@ -7,3 +7,5 @@ pub mod price_feed;
 pub mod ticket_purchase;
 pub mod fill_sell_listing_queue;
 pub mod set_attended_queue;
+pub mod ticket_availability;
+pub mod ticket_purchase_pre_commit;
