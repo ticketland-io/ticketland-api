@@ -6,7 +6,7 @@ use actix_web::{
 use solana_web3_rust::utils::pubkey_from_str;
 use stripe::{EventObject, EventType, Webhook};
 use chrono::{Duration};
-use eyre::{Result, Report};
+use eyre::{Result, Report, ContextCompat};
 use api_helpers::services::http::{
   get_header_value,
   internal_server_error
@@ -98,7 +98,7 @@ async fn handle_account_updated(
 
 async fn handle_checkout_session(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
   let metadata = &session.metadata;
-  let sale_type = metadata.get("sale_type").unwrap();
+  let sale_type = metadata.get("sale_type").context("seat_index unavailable")?;
 
   match sale_type.as_str() {
     "primary" => handle_new_ticket_purchase(&store, session).await,
@@ -109,8 +109,8 @@ async fn handle_checkout_session(store: &Data<Store>, session: stripe::CheckoutS
 
 async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
   let metadata = session.metadata;
-  let ticket_nft = metadata.get("ticket_nft").unwrap().to_string();
-  let event_id = metadata.get("event_id").unwrap();
+  let ticket_nft = metadata.get("ticket_nft").context("ticket_nft unavailable")?.to_string();
+  let event_id = metadata.get("event_id").context("event_id unavailable")?;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
@@ -118,16 +118,16 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
   let mut redis = store.redis.lock().unwrap();
 
-  let seat_index = metadata.get("seat_index").unwrap().to_string();
+  let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
 
   timeout(
     Duration::seconds(10).num_milliseconds() as u64,
     redis.set_ex(&redis_key, &seat_index, Duration::days(1).num_milliseconds() as usize),
   ).await??;
 
-  let buyer_uid = metadata.get("buyer_uid").unwrap().to_string();
-  let seat_name = metadata.get("seat_name").unwrap().to_string();
-  let ticket_type_index: u8 = metadata.get("ticket_type_index").unwrap().parse()?;
+  let buyer_uid = metadata.get("buyer_uid").context("buyer_uid unavailable")?.to_string();
+  let seat_name = metadata.get("seat_name").context("seat_name unavailable")?.to_string();
+  let ticket_type_index: u8 = metadata.get("ticket_type_index").context("ticket_type_index unavailable")?.parse()?;
 
   // Store the ticket nft in the db
   let (query, db_query_params) = upsert_user_ticket(
@@ -146,9 +146,9 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   store.ticket_purchase_queue.new_ticket_purchase(
     buyer_uid,
     event_id.clone(),
-    metadata.get("sale_account").unwrap().to_string(),
+    metadata.get("sale_account").context("sale_account unavailable")?.to_string(),
     ticket_nft,
-    metadata.get("recipient").unwrap().to_string(),
+    metadata.get("recipient").context("recipient unavailable")?.to_string(),
     seat_index,
     seat_name,
   ).await
@@ -156,8 +156,8 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
 
 async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
   let metadata = session.metadata;
-  let ticket_nft = metadata.get("ticket_nft").unwrap().to_string();
-  let event_id = metadata.get("event_id").unwrap();
+  let ticket_nft = metadata.get("ticket_nft").context("ticket_nft unavailable")?.to_string();
+  let event_id = metadata.get("event_id").context("event_id unavailable")?;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
@@ -165,15 +165,15 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
   let mut redis = store.redis.lock().unwrap();
 
-  let seat_index = metadata.get("seat_index").unwrap().to_string();
+  let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
 
   timeout(
     Duration::seconds(10).num_milliseconds() as u64,
     redis.set_ex(&redis_key, &seat_index, Duration::days(1).num_milliseconds() as usize),
   ).await??;
 
-  let buyer_uid = metadata.get("buyer_id").unwrap().to_string();
-  let sell_listing = metadata.get("sell_listing_account").unwrap().to_string();
+  let buyer_uid = metadata.get("buyer_id").context("buyer_id unavailable")?.to_string();
+  let sell_listing = metadata.get("sell_listing_account").context("sell_listing_account unavailable")?.to_string();
 
   let (query, db_query_params) = fill_sell_listing(
     buyer_uid.clone(),
@@ -185,9 +185,9 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
   store.fill_sell_listing_queue.new_sell_listing(
     buyer_uid,
     event_id.clone(),
-    metadata.get("sale_account").unwrap().to_string(),
+    metadata.get("sale_account").context("sale_account unavailable")?.to_string(),
     ticket_nft,
-    metadata.get("recipient").unwrap().to_string(),
+    metadata.get("recipient").context("recipient unavailable")?.to_string(),
     sell_listing,
   ).await
 }
