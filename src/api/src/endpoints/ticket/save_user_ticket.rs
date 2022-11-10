@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json},
@@ -9,7 +8,7 @@ use api_helpers::{
 };
 use ticketland_core::error::Error;
 use ticketland_data::{
-  modles::ticket::Ticket,
+  models::ticket::Ticket,
 };
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
@@ -35,7 +34,7 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   // 1. Update DB
   let mut postgres = store.postgres.lock().unwrap();
-  let result = postgres.upsert_user_ticket(body.0).await;
+  let result = postgres.upsert_user_ticket(body.0.clone()).await;
 
   // 2. Remove ending key from Redis
   let mut redis = store.redis.lock().unwrap();

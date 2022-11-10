@@ -31,5 +31,4 @@ pub async fn exec(
   let result = postgres.read_events_by_category(qs.category, skip, limit).await;
 
   create_read_response(result, skip, limit)
-
 }
