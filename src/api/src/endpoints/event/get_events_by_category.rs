@@ -6,10 +6,10 @@ use actix_web::{
 };
 use api_helpers::{
   QueryString,
-  services::data::{QueryStringTrait, exec_basic_db_read_endpoint},
-};
-use ticketland_data::{
-  repositories::event::read_events_by_category
+  services::{
+    http::create_read_response,
+    data::QueryStringTrait,
+  }
 };
 use crate::{
   utils::store::Store,
@@ -17,7 +17,7 @@ use crate::{
 
 QueryString! {
   pub struct QueryString {
-    pub category: String,
+    pub category: i32,
   }
 }
 
@@ -27,12 +27,9 @@ pub async fn exec(
 ) -> HttpResponse {
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.read_events_by_category(qs.category, skip, limit).await;
 
-  exec_basic_db_read_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(qs.clone().into_inner()),
-    Box::new(move || {
-      read_events_by_category(qs.category.clone(), skip, limit)
-    })
-  ).await
+  create_read_response(result, skip, limit)
+
 }
