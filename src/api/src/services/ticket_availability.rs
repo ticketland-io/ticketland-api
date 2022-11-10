@@ -17,7 +17,7 @@ use common_data::{
 use ticketland_core::error::Error;
 use ticketland_event_handler::services::ticket_purchase::pending_ticket_key;
 use program_artifacts::{ticket_sale::pda as ticket_sale_pda};
-use ticketland_utils::bitmap;
+use program_artifacts::common::bitmap;
 use crate::utils::store::Store;
 
 async fn get_pending_tickets(store: Arc<Store>, event_id: &String) -> Result<Vec<u32>> {
