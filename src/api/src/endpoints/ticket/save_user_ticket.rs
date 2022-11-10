@@ -9,8 +9,7 @@ use api_helpers::{
 };
 use ticketland_core::error::Error;
 use ticketland_data::{
-  helpers::{send_write},
-  repositories::ticket::{upsert_user_ticket},
+  modles::ticket::Ticket,
 };
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
@@ -32,24 +31,11 @@ pub struct Body {
 pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
-  body: Json<Body>,
+  body: Json<Ticket>,
 ) -> Result<HttpResponse, Error> {
   // 1. Update DB
-  let (query, db_query_params) = upsert_user_ticket(
-    auth.user.local_id.clone(),
-    body.event_id.clone(),
-    body.ticket_nft.clone(),
-    body.ticket_metadata.clone(),
-    body.seat_index,
-    body.seat_name.clone(),
-    body.ticket_type_index,
-  );
-
-  send_write(
-    Arc::clone(&store.neo4j),
-    query,
-    db_query_params,
-  ).await?;
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.upsert_user_ticket(body.0).await;
 
   // 2. Remove ending key from Redis
   let mut redis = store.redis.lock().unwrap();
