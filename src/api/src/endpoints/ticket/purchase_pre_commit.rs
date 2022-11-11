@@ -30,9 +30,9 @@ pub struct Body {
   event_id: String,
   ticket_nft: Option<String>,
   ticket_metadata: Option<String>,
-  seat_index: Option<i32>,
+  seat_index: Option<u32>,
   seat_name: Option<String>,
-  ticket_type_index: i16,
+  ticket_type_index: u8,
 }
 
 fn has_all_optional_fields(body: &Json<Body>) -> bool {

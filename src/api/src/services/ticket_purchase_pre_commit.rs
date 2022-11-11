@@ -14,9 +14,9 @@ pub async fn store_ticket_purchase_pre_commit(
   event_id: String,
   ticket_nft: String,
   ticket_metadata: String,
-  seat_index: i32,
+  seat_index: u32,
   seat_name: String,
-  ticket_type_index: i16
+  ticket_type_index: u8
 ) -> Result<()> {
   let lock = store
   .redlock
@@ -48,9 +48,9 @@ pub async fn store_ticket_purchase_pre_commit(
     event_id: event_id.clone(),
     account_id: uid.clone(),
     created_at: None,
-    ticket_type_index,
+    ticket_type_index: ticket_type_index as i16,
     seat_name: seat_name.clone(),
-    seat_index,
+    seat_index: seat_index as i32,
     attended: false,
   }).await?;
 

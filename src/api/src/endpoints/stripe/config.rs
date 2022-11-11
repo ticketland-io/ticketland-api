@@ -9,8 +9,6 @@ use super::{
   create_account_link,
   refresh_link,
   webhooks,
-  create_checkout_session,
-  create_fill_listing_checkout_session,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
