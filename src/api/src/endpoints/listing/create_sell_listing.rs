@@ -1,14 +1,13 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
 use api_helpers::{
-  services::http::internal_server_error,
+  services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_core::error::Error;
+use ticketland_data::models::sell_listing::NewSellListing;
 use crate::{
   utils::store::Store,
 };
@@ -16,6 +15,7 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
+  event_id: String,
   ticket_nft: String,
   ask_price: i64,
 }
@@ -26,18 +26,15 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  let (query, db_query_params) = create_sell_listing(
-    auth.user.local_id.clone(),
-    body.ticket_nft.clone(),
-    params.listing_account.clone(),
-    body.ask_price.clone(),
-  );
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.create_sell_listing(NewSellListing {
+    account_id: &auth.user.local_id,
+    ticket_nft: &body.ticket_nft,
+    event_id: &body.event_id,
+    sol_account: &params.listing_account,
+    ask_price: body.ask_price,
+    is_open: true,
+  }).await;
 
-  send_write(
-    Arc::clone(&store.neo4j),
-    query,
-    db_query_params,
-  ).await
-  .map(|_| HttpResponse::Created().finish())
-  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+  create_write_response(result)
 }
