@@ -1,8 +1,8 @@
 use serde::Deserialize;
 use actix_web::{web, HttpResponse};
 use ticketland_data::models::{
-  sale::Sale,
-  seat_range::SeatRange,
+  sale::NewSale,
+  seat_range::NewSeatRange,
 };
 use api_helpers::{
   middleware::auth::AuthData,
@@ -15,8 +15,8 @@ use super::common::EventParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  sales: Vec<Sale>,
-  seat_ranges: Vec<SeatRange>,
+  sales: Vec<NewSale>,
+  seat_ranges: Vec<NewSeatRange>,
 }
 
 pub async fn exec(
