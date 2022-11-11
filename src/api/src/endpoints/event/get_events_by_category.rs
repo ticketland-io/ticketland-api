@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Query},
@@ -17,7 +16,7 @@ use crate::{
 
 QueryString! {
   pub struct QueryString {
-    pub category: i32,
+    pub category: i16,
   }
 }
 
@@ -30,5 +29,5 @@ pub async fn exec(
   let mut postgres = store.postgres.lock().unwrap();
   let result = postgres.read_events_by_category(qs.category, skip, limit).await;
 
-  create_read_response(result, skip, limit)
+  create_read_response(result, qs.skip, qs.limit)
 }
