@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use eyre::{Result};
 use chrono::{Duration};
-use common_data::{
-  helpers::{send_write},
-  repositories::ticket::{upsert_user_ticket},
+use ticketland_data::models::{
+  ticket::Ticket,
+  ticket_onchain_account::TicketOnchainAccount,
 };
 use ticketland_event_handler::{services::ticket_purchase::pending_ticket_key};
 use crate::{utils::store::Store};
@@ -14,9 +14,9 @@ pub async fn store_ticket_purchase_pre_commit(
   event_id: String,
   ticket_nft: String,
   ticket_metadata: String,
-  seat_index: u32,
+  seat_index: i32,
   seat_name: String,
-  ticket_type_index: u8
+  ticket_type_index: i16
 ) -> Result<()> {
   let lock = store
   .redlock
@@ -37,18 +37,23 @@ pub async fn store_ticket_purchase_pre_commit(
     Duration::minutes(5).num_milliseconds() as usize,
   ).await?;
 
-  let store = Arc::clone(&store);
-  let (query, db_query_params) = upsert_user_ticket(
-    uid.clone(),
-    event_id.clone(),
-    ticket_nft.clone(),
-    ticket_metadata.clone(),
-    seat_index,
-    seat_name.clone(),
-    ticket_type_index.clone(),
-  );
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.create_ticket_nft(TicketOnchainAccount {
+    ticket_nft: ticket_nft.clone(),
+    ticket_metadata: ticket_metadata.clone(),
+  }).await?;
 
-  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+  postgres.upsert_user_ticket(Ticket {
+    ticket_nft: ticket_nft.clone(),
+    event_id: event_id.clone(),
+    account_id: uid.clone(),
+    created_at: None,
+    ticket_type_index,
+    seat_name: seat_name.clone(),
+    seat_index,
+    attended: false,
+  }).await?;
+
   store.redlock.unlock(lock).await;
   
   Ok(())
