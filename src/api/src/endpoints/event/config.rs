@@ -9,9 +9,10 @@ use super::{
   get_all_events,
   create_event,
   get_event_image,
-  commit_event, 
+  commit_event,
   get_events_by_category,
   create_event_sales,
+  get_event,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -36,6 +37,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("{event_id}")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(create_event::exec))
+      .route(web::get().to(get_event::exec))
     );
 
     cfg.service(

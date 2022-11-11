@@ -5,14 +5,10 @@ use actix_web::{
   HttpResponse,
 };
 use api_helpers::{
-  services::{
-    data::{exec_basic_db_write_endpoint},
-  },
+  services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_data::{
-  repositories::listing::{create_buy_listing},
-};
+use ticketland_data::models::buy_listing::BuyListing;
 use crate::{
   utils::store::Store,
 };
@@ -30,6 +26,9 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.create_buy_listing().await;
+
   exec_basic_db_write_endpoint(
     Arc::clone(&store.neo4j),
     Box::new(move || {

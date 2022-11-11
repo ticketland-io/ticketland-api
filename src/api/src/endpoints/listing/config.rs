@@ -37,7 +37,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
 
     cfg.service(
       web::resource("/buys")
-      .route(web::post().to(get_buy_listings::exec))
+      .route(web::get().to(get_buy_listings::exec))
     );
 
     cfg.service(

@@ -8,9 +8,6 @@ use api_helpers::{
   QueryString,
   services::data::{QueryStringTrait, exec_basic_db_read_endpoint},
 };
-use ticketland_data::{
-  repositories::listing::read_sell_listings_for_event,
-};
 use crate::{
   utils::store::Store,
 };
