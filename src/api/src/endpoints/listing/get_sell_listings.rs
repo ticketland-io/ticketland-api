@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Query},
@@ -6,7 +5,10 @@ use actix_web::{
 };
 use api_helpers::{
   QueryString,
-  services::data::{QueryStringTrait, exec_basic_db_read_endpoint},
+  services::{
+    data::QueryStringTrait,
+    http::create_read_response,
+  }
 };
 use crate::{
   utils::store::Store,
@@ -24,12 +26,8 @@ pub async fn exec(
 ) -> HttpResponse {
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
-  
-  exec_basic_db_read_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(qs.clone().into_inner()),
-    Box::new(move || {
-      read_sell_listings_for_event(qs.event_id.clone(), skip, limit)
-    })
-  ).await
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.read_sell_listings_for_event(qs.event_id.clone(), skip, limit).await;
+
+  create_read_response(result, qs.skip, qs.limit)
 }
