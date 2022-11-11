@@ -1,29 +1,20 @@
-use std::{borrow::Borrow, sync::Arc};
+use std::borrow::Borrow;
 use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
-use solana_web3_rust::utils::pubkey_from_str;
 use stripe::{EventObject, EventType, Webhook};
 use chrono::{Duration};
 use eyre::{Result, Report, ContextCompat};
+use ticketland_data::models::ticket::Ticket;
 use api_helpers::services::http::{
   get_header_value,
   internal_server_error
 };
 use ticketland_core::async_helpers::timeout;
-use ticketland_data::{
-  helpers::send_write,
-  repositories::{
-    ticket::upsert_user_ticket,
-    stripe::update_stripe_account_status,
-    listing::{fill_sell_listing},
-  },
-};
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
 };
-use program_artifacts::ticket_nft::pda::ticket_metadata;
 use crate::{
   utils::store::Store,
 };
@@ -85,9 +76,8 @@ async fn handle_account_updated(
 
   // If there are no pending info to be added by the conect use then `eventually_due` will be empty
   if eventually_due.len() == 0 {
-    let (query, db_query_params) = update_stripe_account_status(account.id.to_string());
-
-    return send_write(Arc::clone(&store.neo4j), query, db_query_params).await.map(|_| ()).map_err(Into::<_>::into)
+    let mut postgres = store.postgres.lock().unwrap();
+    let stripe_account = postgres.update_stripe_account_status(account.id.to_string()).await?;
   }
 
   // return OK if the on boarding process for the connect account has not finished; that is there are
@@ -127,20 +117,20 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
 
   let buyer_uid = metadata.get("buyer_uid").context("buyer_uid unavailable")?.to_string();
   let seat_name = metadata.get("seat_name").context("seat_name unavailable")?.to_string();
-  let ticket_type_index: u8 = metadata.get("ticket_type_index").context("ticket_type_index unavailable")?.parse()?;
+  let ticket_type_index: i16 = metadata.get("ticket_type_index").context("ticket_type_index unavailable")?.parse()?;
 
   // Store the ticket nft in the db
-  let (query, db_query_params) = upsert_user_ticket(
-    buyer_uid.clone(),
-    event_id.clone(),
-    ticket_nft.clone(),
-    ticket_metadata(&store.config.ticket_nft_program_state, &pubkey_from_str(&ticket_nft)?).0.to_string(),
-    seat_index.parse::<u32>().unwrap(),
-    seat_name.clone(),
+  let mut postgres = store.postgres.lock().unwrap();
+  let stripe_account = postgres.upsert_user_ticket(Ticket {
+    ticket_nft: ticket_nft.clone(),
+    event_id: event_id.clone(),
+    account_id: buyer_uid.clone(),
+    created_at: None,
     ticket_type_index,
-  );
-
-  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+    seat_name: seat_name.clone(),
+    seat_index: seat_index.parse::<i32>().unwrap(),
+    attended: false,
+  }).await?;
 
   // the ticket will ultimately be minted by another service that is handling these message
   store.ticket_purchase_queue.new_ticket_purchase(
@@ -174,13 +164,13 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
 
   let buyer_uid = metadata.get("buyer_id").context("buyer_id unavailable")?.to_string();
   let sell_listing = metadata.get("sell_listing_account").context("sell_listing_account unavailable")?.to_string();
-
-  let (query, db_query_params) = fill_sell_listing(
-    buyer_uid.clone(),
+  
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.fill_sell_listing(
     sell_listing.clone(),
     ticket_nft.clone(),
-  );
-  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
+    buyer_uid.clone()
+  ).await?;
 
   store.fill_sell_listing_queue.new_sell_listing(
     buyer_uid,
