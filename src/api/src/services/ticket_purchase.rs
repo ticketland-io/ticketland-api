@@ -5,8 +5,7 @@ use std::{
 use eyre::{Result, Report};
 use ticketland_data::{
   models::{
-    sale::{Sale, SaleType},
-    sell_listing::SellListing,
+    sale::SaleType,
   },
 };
 use program_artifacts::{

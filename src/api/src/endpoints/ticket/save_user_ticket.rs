@@ -1,4 +1,3 @@
-use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json},
   HttpResponse,
@@ -17,24 +16,14 @@ use crate::{
   utils::store::Store,
 };
 
-#[derive(Deserialize)]
-pub struct Body {
-  event_id: String,
-  ticket_nft: String,
-  ticket_metadata: String,
-  seat_index: u32,
-  seat_name: String,
-  ticket_type_index: u8,
-}
-
 pub async fn exec(
   store: Data<Store>,
-  auth: AuthData,
+  _auth: AuthData,
   body: Json<Ticket>,
 ) -> Result<HttpResponse, Error> {
   // 1. Update DB
   let mut postgres = store.postgres.lock().unwrap();
-  let result = postgres.upsert_user_ticket(body.0.clone()).await;
+  postgres.upsert_user_ticket(body.0.clone()).await?;
 
   // 2. Remove ending key from Redis
   let mut redis = store.redis.lock().unwrap();

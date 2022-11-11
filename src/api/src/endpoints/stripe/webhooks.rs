@@ -77,7 +77,7 @@ async fn handle_account_updated(
   // If there are no pending info to be added by the conect use then `eventually_due` will be empty
   if eventually_due.len() == 0 {
     let mut postgres = store.postgres.lock().unwrap();
-    let stripe_account = postgres.update_stripe_account_status(account.id.to_string()).await?;
+    postgres.update_stripe_account_status(account.id.to_string()).await?;
   }
 
   // return OK if the on boarding process for the connect account has not finished; that is there are
@@ -121,7 +121,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
 
   // Store the ticket nft in the db
   let mut postgres = store.postgres.lock().unwrap();
-  let stripe_account = postgres.upsert_user_ticket(Ticket {
+  postgres.upsert_user_ticket(Ticket {
     ticket_nft: ticket_nft.clone(),
     event_id: event_id.clone(),
     account_id: buyer_uid.clone(),

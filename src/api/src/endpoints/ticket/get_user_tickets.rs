@@ -23,7 +23,7 @@ QueryString! {
 
 pub async fn exec(
   store: Data<Store>,
-  auth: AuthData,
+  _auth: AuthData,
   qs: Query<QueryString>,
 ) -> HttpResponse {
   // TODO: we want to return user events for all events if this is none

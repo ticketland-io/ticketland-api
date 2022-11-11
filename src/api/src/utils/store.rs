@@ -1,8 +1,6 @@
 use std::sync::{Arc, Mutex};
-use actix::prelude::*;
 use ticketland_data::connection::PostgresConnection;
 use ticketland_core::{
-  actor::neo4j::Neo4jActor,
   services::{
     minio::Minio,
     redis::Redis,

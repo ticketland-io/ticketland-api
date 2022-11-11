@@ -134,7 +134,7 @@ pub async fn store_event(
     metadata_uploaded: false,
     image_uploaded: false,
     draft: false,
-  });
+  }).await?;
   
   Ok(metadata)
 }

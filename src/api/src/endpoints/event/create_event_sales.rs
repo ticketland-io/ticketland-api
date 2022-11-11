@@ -22,7 +22,7 @@ pub struct Body {
 pub async fn exec(
   store: web::Data<Store>,
   _auth: AuthData,
-  params: web::Path<EventParams>,
+  _params: web::Path<EventParams>,
   body: web::Json<Body>
 ) -> HttpResponse {
   let mut postgres = store.postgres.lock().unwrap();

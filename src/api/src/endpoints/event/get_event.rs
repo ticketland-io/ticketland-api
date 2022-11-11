@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use actix_web::{web, HttpResponse};
 use api_helpers::{
   middleware::auth::AuthData,

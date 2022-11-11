@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Path, Json},
