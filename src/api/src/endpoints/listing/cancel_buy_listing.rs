@@ -1,16 +1,11 @@
-use std::sync::Arc;
+
 use actix_web::{
   web::{Data, Path},
   HttpResponse,
 };
 use api_helpers::{
-  services::{
-    data::{exec_basic_db_write_endpoint},
-  },
+  services::http::create_write_response,
   middleware::auth::AuthData,
-};
-use ticketland_data::{
-  repositories::listing::{cancel_buy_listing},
 };
 use crate::{
   utils::store::Store,
@@ -22,15 +17,11 @@ pub async fn exec(
   auth: AuthData,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  exec_basic_db_write_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(move || {
-      cancel_buy_listing(
-        auth.user.local_id.clone(),
-        params.listing_account.clone(),
-      )
-    })
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.cancel_buy_listing(
+    auth.user.local_id.clone(),
+    params.listing_account.clone()
   ).await;
 
-  HttpResponse::Created().finish()
+  create_write_response(result)
 }
