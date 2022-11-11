@@ -80,7 +80,7 @@ pub async fn get_next_seat_index(
   .0;
 
   let sale = postgres.read_sale_by_account(sale.to_string()).await?;
-  let seat_ranges = postgres.read_event_seat_ranges(sale.id).await?;
+  let seat_ranges = postgres.read_sale_seat_ranges(sale.account).await?;
 
   let pending_tickets = get_pending_tickets(Arc::clone(&store), &event_id.db_val()).await?;
   // TODO: atm we assume that each sale has a single seat_range. However, the db schema allows for multiple
