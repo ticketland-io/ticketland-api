@@ -1,16 +1,12 @@
-use std::sync::Arc;
 use serde::{Serialize, Deserialize};
 use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
+use eyre::Result;
+use ticketland_core::error::Error;
 use ticketland_data::{
-  models::ticket_design::{TicketDesign},
-  helpers::{send_write},
-  repositories::design::{upsert_ticket_design},
-};
-use api_helpers::{
-  services::http::internal_server_error,
+  models::canva_design::CanvaDesign,
 };
 use crate::{
   utils::store::Store,
@@ -49,50 +45,29 @@ pub struct ErrorResponse {
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
-) -> HttpResponse {
+) -> Result<HttpResponse, Error> {
   let asset = body.assets.get(0).unwrap().clone();
   
-  let result = store.ticket_design_upload_queue.new_design(
+  store.ticket_design_upload_queue.new_design(
     body.design_id.clone(),
     asset.file_type.clone(),
     asset.url.clone(),
-  )
-  .await
-  .map(|_| HttpResponse::Ok().finish());
+  ).await?;
 
-  if let Err(error) = result {
-    return internal_server_error(Some(error.root_cause()))
-  }
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.upsert_ticket_design(CanvaDesign {
+    design_id: body.design_id.clone(),
+    canva_uid: body.user.clone(),
+    created_at: None,
+    url: asset.url.clone(),
+    name: asset.name.clone(),
+    file_type: asset.file_type.clone(),
+  })
+  .await?;
 
-  let (query, db_query_params) = upsert_ticket_design(
-    body.user.clone(),
-    body.design_id.clone(),
-    asset.url.clone(),
-    asset.file_type.clone(),
-    asset.name.clone(),
-  );
-
-  send_write(
-    Arc::clone(&store.neo4j),
-    query,
-    db_query_params,
-  ).await
-  .map(|result| {
-    if let Err(_) = TryInto::<TicketDesign>::try_into(result) {
-      return HttpResponse::Ok().json(ErrorResponse {
-        result_type: "ERROR".to_owned(),
-        error_code: "CONFIGURATION_REQUIRED".to_owned(),
-      })
-    }
-      
+  Ok(
     HttpResponse::Ok().json(SuccessResponse {
-      result_type: "SUCCESS".to_owned()
+      result_type: "SUCCESS".to_string()
     })
-  })
-  .unwrap_or_else(|_| {
-    return HttpResponse::Ok().json(ErrorResponse {
-      result_type: "ERROR".to_owned(),
-      error_code: "CONFIGURATION_REQUIRED".to_owned(),
-    })
-  })
+  )
 }
