@@ -19,15 +19,7 @@ use stripe::{
   CreateCheckoutSessionPaymentIntentDataTransferData, Metadata,
 };
 use ticketland_data::{
-  helpers::{send_read, send_write},
-  models::stripe_account::{StripeAccount},
-  repositories::{
-    stripe::{
-      read_stripe_user,
-      upsert_account_link,
-      read_event_organizer_stripe_account,
-    },
-  }
+  models::stripe_account::StripeAccount,
 };
 use ticketland_core::{
   async_helpers::timeout,
@@ -57,7 +49,6 @@ pub struct CheckoutSessionResponse {
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String> {
-  let neo4j = Arc::clone(&store.neo4j);
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
 
@@ -70,21 +61,24 @@ pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String> {
     ticketland_dapp,
   ).await?;
 
-  let (query, db_query_params) = upsert_account_link(uid.clone(), stripe_uid.to_string(), account_link.url.clone());
-  send_write(Arc::clone(&neo4j), query, db_query_params)
-  .await
-  .map(|_| account_link.url)
-  .map_err(Into::<_>::into)
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.upsert_stripe_account(StripeAccount {
+    stripe_uid: stripe_uid.to_string(),
+    account_id: uid,
+    created_at: None,
+    account_link: Some(account_link.url.clone()),
+    status: 0,
+  }).await?;
+
+  Ok(account_link.url)
 }
 
 pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String> {
-  let neo4j = Arc::clone(&store.neo4j);
-  let (query, db_query_params) = read_stripe_user(uid.clone());
+  let mut postgres = store.postgres.lock().unwrap();
+  let stripe_account = postgres.read_stripe_account(uid.clone()).await?;
+  
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let uid_copy = uid.clone();
-
-  let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
-  let stripe_account = TryInto::<StripeAccount>::try_into(stripe_account).unwrap();
   let stripe_uid = stripe_account.stripe_uid.clone();
 
   let account_link = create_stripe_account_link(
@@ -94,12 +88,15 @@ pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String> {
     ticketland_dapp,
   ).await?;
 
-  let (query, db_query_params) = upsert_account_link(uid.clone(), stripe_uid, account_link.url.clone());
-      
-  send_write(Arc::clone(&neo4j), query, db_query_params)
-  .await
-  .map(|_| account_link.url.clone())
-  .map_err(Into::<_>::into)
+  postgres.upsert_stripe_account(StripeAccount {
+    stripe_uid: stripe_uid.to_string(),
+    account_id: uid,
+    created_at: None,
+    account_link: Some(account_link.url.clone()),
+    status: 0,
+  }).await?;
+
+  Ok(account_link.url)
 }
 
 pub async fn create_stripe_account(secret_key: String,) -> Result<Account>  {
@@ -283,7 +280,6 @@ pub async fn create_checkout_session(
   ).await??;
 
   let client = Client::new(store.config.stripe_key.clone());
-  let neo4j = Arc::clone(&store.neo4j);
 
   // TODO: we need to add name and email as well. We can read these values from the DB
   let customer = Customer::create(
@@ -318,9 +314,8 @@ pub async fn create_checkout_session(
     ).await??
   };
 
-  let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
-  let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
-  let stripe_account = TryInto::<StripeAccount>::try_into(stripe_account).unwrap();
+  let mut postgres = store.postgres.lock().unwrap();
+  let stripe_account = postgres.read_event_organizer_stripe_account(event_id.clone()).await?;
 
   let checkout_session = {
     let ticketland_dapp = store.config.ticketland_dapp.clone();
