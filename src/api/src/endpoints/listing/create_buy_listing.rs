@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Path, Json},
@@ -8,7 +7,7 @@ use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_data::models::buy_listing::BuyListing;
+use ticketland_data::models::buy_listing::NewBuyListing;
 use crate::{
   utils::store::Store,
 };
@@ -27,19 +26,13 @@ pub async fn exec(
   params: Path<ListingParams>,
 ) -> HttpResponse {
   let mut postgres = store.postgres.lock().unwrap();
-  let result = postgres.create_buy_listing().await;
+  let result = postgres.create_buy_listing(NewBuyListing {
+    account_id: &auth.user.local_id,
+    event_id: &body.event_id,
+    sol_account: &params.listing_account,
+    bid_price: body.bid_price,
+    is_open: true,
+  }).await;
 
-  exec_basic_db_write_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(move || {
-      create_buy_listing(
-        auth.user.local_id.clone(),
-        body.event_id.clone(),
-        params.listing_account.clone(),
-        body.bid_price.clone(),
-      )
-    })
-  ).await;
-
-  HttpResponse::Created().finish()
+  create_write_response(result)
 }
