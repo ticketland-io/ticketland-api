@@ -133,7 +133,6 @@ pub async fn store_event(
     event_capacity,
     file_type: Some(media_content_type.context("file_type missing")?),
     arweave_tx_id: None,
-    metadata_uploaded: false,
     image_uploaded: false,
     draft: false,
   }).await?;
