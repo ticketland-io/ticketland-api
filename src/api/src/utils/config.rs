@@ -4,11 +4,7 @@ use solana_web3_rust::utils::pubkey_from_str;
 
 pub struct Config {
   pub port: u64,
-  pub neo4j_host: String,
-  pub neo4j_domain: Option<String>,
-  pub neo4j_username: String,
-  pub neo4j_password: String,
-  pub neo4j_database: Option<String>,
+  pub postgres_uri: String,
   pub redis_host: String,
   pub redis_password: String,
   pub firebase_auth_key: String,
@@ -46,11 +42,7 @@ impl Config {
     Result::Ok(
       Self {
         port: env::var("PORT").unwrap().parse::<u64>().unwrap(),
-        neo4j_host: env::var("NEO4J_HOST").unwrap(),
-        neo4j_domain: None,
-        neo4j_username: env::var("NEO4J_USERNAME").unwrap(),
-        neo4j_password: env::var("NEO4J_PASSWORD").unwrap(),
-        neo4j_database: env::var("NEO4J_DATABASE").ok(),
+        postgres_uri: env::var("POSTGRES_URI").unwrap(),
         redis_host: env::var("REDIS_HOST").unwrap(),
         redis_password: env::var("REDIS_PASSWORD").unwrap(),
         firebase_auth_key: env::var("FIREBASE_API_KEY").unwrap(),

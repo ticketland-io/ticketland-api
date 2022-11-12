@@ -1,34 +1,32 @@
-use std::sync::Arc;
+use serde::Deserialize;
 use actix_web::{web, HttpResponse};
-use common_data::{
-  repositories::sale::upsert_event_sale,
-  models::sale::Sale,
+use ticketland_data::models::{
+  sale::NewSale,
+  seat_range::SeatRange,
 };
 use api_helpers::{
   middleware::auth::AuthData,
-  services::{
-    data::{exec_basic_db_write_endpoint},
-  },
+  services::http::create_write_response
 };
 use crate::{
   utils::store::Store,
 };
 use super::common::EventParams;
 
+#[derive(Deserialize)]
+pub struct Body {
+  sales: Vec<NewSale>,
+  seat_ranges: Vec<SeatRange>,
+}
+
 pub async fn exec(
   store: web::Data<Store>,
   _auth: AuthData,
-  params: web::Path<EventParams>,
-  body: web::Json<Vec<Sale>>
+  _params: web::Path<EventParams>,
+  body: web::Json<Body>
 ) -> HttpResponse {
-  let event_id = params.event_id.clone();
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.upsert_sales(body.sales.clone(), body.seat_ranges.clone()).await;
 
-  exec_basic_db_write_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(move || {
-      upsert_event_sale(event_id, body.0)
-    })
-  ).await;
-
-  HttpResponse::Created().finish()
+  create_write_response(result)
 }

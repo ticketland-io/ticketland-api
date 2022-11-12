@@ -2,14 +2,16 @@ use std::{
   sync::Arc,
   str::from_utf8,
 };
-use eyre::{Result, Report};
+use chrono::NaiveDateTime;
+use eyre::{Result, Report, ContextCompat};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
 use ticketland_event_handler::services::path;
-use common_data::{
-  models::metadata::{Attribute, Metadata},
-  helpers::{send_write},
-  repositories::event::upsert_event,
+use ticketland_data::{
+  models::{
+    metadata::{Attribute, Metadata},
+    event::Event,
+  },
 };
 use crate::{
   utils::store::Store,
@@ -110,29 +112,30 @@ pub async fn store_event(
   .await?;
 
   let mut event_map = metadata.to_map();
-  // Update the db
-  let (query, db_query_params) = upsert_event(
+
+  let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
+  let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
+
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.upsert_event(Event {
     event_id,
-    uid,
+    account_id: uid,
+    created_at: None,
+    name: event_map.remove("name").unwrap(),
+    description: event_map.remove("description").unwrap(),
+    location: Some(event_map.remove("location").unwrap()),
+    venue: Some(event_map.remove("venue").unwrap()),
+    event_type: event_map.remove("type").unwrap().parse()?,
+    visibility: event_map.remove("visibility").unwrap().parse()?,
+    start_date,
+    end_date,
+    category: event_map.remove("category").unwrap().parse()?,
     event_capacity,
-    media_content_type.unwrap(),
-    event_map.remove("location").unwrap(),
-    event_map.remove("venue").unwrap(),
-    event_map.remove("type").unwrap(),
-    event_map.remove("startDate").unwrap(),
-    event_map.remove("endDate").unwrap(),
-    event_map.remove("category").unwrap(),
-    event_map.remove("publicity").unwrap(),
-    event_map.remove("paymentType").unwrap(),
-    event_map.remove("name").unwrap(),
-    event_map.remove("description").unwrap()
-  );
-
-  send_write(
-    Arc::clone(&store.neo4j),
-    query,
-    db_query_params,
-  ).await?;
-
+    file_type: Some(media_content_type.context("file_type missing")?),
+    arweave_tx_id: None,
+    image_uploaded: false,
+    draft: false,
+  }).await?;
+  
   Ok(metadata)
 }

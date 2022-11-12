@@ -1,17 +1,11 @@
-use std::sync::Arc;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
 use api_helpers::{
-  services::{
-    data::{exec_basic_db_write_endpoint},
-  },
+  services::http::create_write_response,
   middleware::auth::AuthData,
-};
-use common_data::{
-  repositories::listing::{fill_sell_listing},
 };
 use crate::{
   utils::store::Store,
@@ -29,16 +23,13 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  exec_basic_db_write_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(move || {
-      fill_sell_listing(
-        auth.user.local_id.clone(),
-        params.listing_account.clone(),
-        body.ticket_nft.clone(),
-      )
-    })
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.fill_sell_listing(
+    params.listing_account.clone(),
+    body.ticket_nft.clone(),
+    auth.user.local_id.clone()
   ).await;
 
-  HttpResponse::Created().finish()
+
+  create_write_response(result)
 }

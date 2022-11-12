@@ -3,15 +3,9 @@ use std::{
   str::FromStr,
 };
 use eyre::{Result, Report};
-use common_data::{
-  helpers::{send_read},
+use ticketland_data::{
   models::{
-    sale::{Sale, SaleType},
-    listing::SellListing,
-  },
-  repositories::{
-    sale::read_event_sale,
-    listing::read_sell_listing,
+    sale::SaleType,
   },
 };
 use program_artifacts::{
@@ -105,16 +99,14 @@ impl PrePurchaseChecksParams {
 pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
   let ticket_nft_program_state = &store.config.ticket_nft_program_state;
-  let (query, db_query_params) = read_event_sale(sale_account.to_string());
-  let sale: Sale = send_read(Arc::clone(&store.neo4j), query, db_query_params)
-  .await
-  .map(TryInto::<Sale>::try_into)??;
-
+  let mut postgres = store.postgres.lock().unwrap();
+  let sale = postgres.read_sale_by_account(sale_account.to_string()).await?;
+  
   let (ticket_nft_pda, _) = pda::ticket_nft(
     ticket_nft_program_state,
     seat_index,
     &event_id,
-    sale.ticket_type_index,
+    sale.ticket_type_index as u8,
   );
 
   // Using PDA seeds allows us to impose some constraints and do some validation.
@@ -150,10 +142,8 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
 
 pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, sell_listing_account, ticket_nft) = params.secondary();
-  let (query, db_query_params) = read_sell_listing(sell_listing_account.clone());
-  let sell_listing: SellListing = send_read(Arc::clone(&store.neo4j), query, db_query_params)
-  .await
-  .map(TryInto::<SellListing>::try_into)??;
+  let mut postgres = store.postgres.lock().unwrap();
+  let sell_listing = postgres.read_sell_listing(sell_listing_account.clone()).await?;
 
   // Make sure user has send the correct ticket_nft in the request. The provided ticket nft must much the one
   // store in the sell_listing in the db

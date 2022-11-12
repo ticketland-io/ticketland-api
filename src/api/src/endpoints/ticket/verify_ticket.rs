@@ -4,7 +4,6 @@ use actix_web::{
   web::{Data, Json, Path},
   HttpResponse,
 };
-use common_data::{repositories::ticket::update_attended, helpers::send_write};
 use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,
@@ -32,7 +31,7 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let server_sig = verify_ticket(
     Arc::clone(&store.rpc_client),
-    Arc::clone(&store.neo4j),
+    Arc::clone(&store.postgres),
     Arc::clone(&store.redis),
     Arc::clone(&store.redlock),
     store.config.ticket_verifier_priv_key.clone(),
@@ -44,12 +43,11 @@ pub async fn exec(
   ).await?;
 
   store.set_attended_queue
-    .on_set_attended(body.event_id.to_owned(), body.ticket_nft.to_owned())
-    .await?;
+  .on_set_attended(body.event_id.to_owned(), body.ticket_nft.to_owned())
+  .await?;
 
-  let (query, db_query_params) = update_attended(body.ticket_nft.to_owned());
-
-  send_write(Arc::clone(&store.neo4j), query, db_query_params).await?;
-
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.update_attended(body.ticket_nft.to_owned()).await?;
+  
   Ok(HttpResponse::Ok().json(server_sig))
 }

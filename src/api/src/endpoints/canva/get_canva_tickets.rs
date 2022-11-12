@@ -1,11 +1,9 @@
-use std::sync::Arc;
 use actix_web::{web, HttpResponse};
 use api_helpers::{
-  services::data::{QueryString, exec_basic_db_read_endpoint},
+  services::{
+    http::create_read_response,
+  },
   middleware::auth::AuthData,
-};
-use common_data::{
-  repositories::design::read_ticket_designs,
 };
 use crate::{
   utils::store::Store,
@@ -13,15 +11,10 @@ use crate::{
 
 pub async fn exec(
   store: web::Data<Store>,
-  qs: web::Query<QueryString>,
   auth: AuthData,
 ) -> HttpResponse {
-  
-  exec_basic_db_read_endpoint(
-    Arc::clone(&store.neo4j),
-    Box::new(qs.into_inner()),
-    Box::new(move || {
-      read_ticket_designs(auth.user.local_id.clone())
-    })
-  ).await
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.read_canva_designs(auth.user.local_id.clone()).await;
+
+  create_read_response(result, None, None)
 }

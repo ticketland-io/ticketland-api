@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
-use actix::prelude::*;
+use ticketland_data::connection::PostgresConnection;
 use ticketland_core::{
-  actor::neo4j::Neo4jActor,
   services::{
     minio::Minio,
     redis::Redis,
@@ -23,7 +22,7 @@ use crate::{
 
 pub struct Store {
   pub config: Config,
-  pub neo4j: Arc<Addr<Neo4jActor>>,
+  pub postgres: Arc<Mutex<PostgresConnection>>,
   pub minio: Arc<Minio>,
   pub aws_rekognition: Arc<AwsRekognition>,
   pub redis: Arc<Mutex<Redis>>,
@@ -40,18 +39,7 @@ impl Store {
   pub async fn new() -> Self {
     let config = Config::new().unwrap();
 
-    let neo4j = Arc::new(
-      Neo4jActor::new(
-        config.neo4j_host.clone(),
-        config.neo4j_domain.clone(),
-        config.neo4j_username.clone(),
-        config.neo4j_password.clone(),
-        config.neo4j_database.clone(),
-      )
-      .await
-      .start(),
-    );
-
+    let postgres = Arc::new(Mutex::new(PostgresConnection::new(&config.postgres_uri).await));
     let minio = Arc::new(Minio::new(
       None,
       &config.minio_region,
@@ -98,7 +86,7 @@ impl Store {
 
     Self {
       config,
-      neo4j,
+      postgres,
       redis,
       redlock,
       minio,

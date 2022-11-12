@@ -1,8 +1,7 @@
-use std::sync::Arc;
 use actix_web::{web, HttpResponse};
-use api_helpers::{middleware::auth::AuthData, services::data::exec_basic_db_read_endpoint_no_qs};
-use common_data::{
-  repositories::event::read_event_with_sales,
+use api_helpers::{
+  middleware::auth::AuthData,
+  services::http::create_read_response,
 };
 use crate::{
   utils::store::Store,
@@ -16,11 +15,8 @@ pub async fn exec(
   params: web::Path<EventParams>,
 ) -> HttpResponse {
   let event_id = params.event_id.clone();
+  let mut postgres = store.postgres.lock().unwrap();
+  let result = postgres.read_event_with_sales(event_id).await;
 
-  exec_basic_db_read_endpoint_no_qs(
-    Arc::clone(&store.neo4j),
-    Box::new(move || {
-      read_event_with_sales(event_id)
-    })
-  ).await
+  create_read_response(result, None, None)
 }

@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use serde::{Deserialize};
+use eyre::Result;
 use actix_web::{
   web::{Data, Json},
   HttpResponse,
@@ -8,15 +8,10 @@ use ticketland_core::{
   error::Error,
 };
 use api_helpers::{
-  services::{
-    http::internal_server_error,
-  },
   middleware::auth::AuthData,
 };
-use common_data::{
-  helpers::{send_write},
+use ticketland_data::{
   models::{canva_account::CanvaAccount},
-  repositories::account::{create_canva_user},
 };
 use crate::{
   utils::store::Store,
@@ -31,20 +26,14 @@ pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
   body: Json<Body>,
-) -> HttpResponse {
-  let (query, db_query_params) = create_canva_user(auth.user.local_id.clone(), body.canva_uid.clone());
-  
-  send_write(
-    Arc::clone(&store.neo4j),
-    query,
-    db_query_params,
-  ).await
-  .map(|result| {
-    if let Err(error) = TryInto::<CanvaAccount>::try_into(result) {
-      return internal_server_error(Some(error))
-    }
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.upsert_canva_account(CanvaAccount {
+    canva_uid: body.canva_uid.clone(),
+    account_id: auth.user.local_id.clone(),
+    created_at: None,
+  }).await?;
 
-    HttpResponse::Created().finish()
-  })
-  .unwrap_or_else(|error: Error| internal_server_error(Some(error)))
+
+  Ok(HttpResponse::Created().finish())
 }

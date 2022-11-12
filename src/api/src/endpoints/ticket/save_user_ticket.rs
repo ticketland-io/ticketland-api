@@ -1,16 +1,14 @@
-use std::sync::Arc;
-use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
+use serde::Deserialize;
 use api_helpers::{
   middleware::auth::AuthData,
 };
 use ticketland_core::error::Error;
-use common_data::{
-  helpers::{send_write},
-  repositories::ticket::{upsert_user_ticket},
+use ticketland_data::{
+  models::ticket::Ticket,
 };
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
@@ -21,12 +19,11 @@ use crate::{
 
 #[derive(Deserialize)]
 pub struct Body {
-  event_id: String,
-  ticket_nft: String,
-  ticket_metadata: String,
-  seat_index: u32,
-  seat_name: String,
-  ticket_type_index: u8,
+  pub ticket_nft: String,
+  pub event_id: String,
+  pub ticket_type_index: i16,
+  pub seat_name: String,
+  pub seat_index: i32,
 }
 
 pub async fn exec(
@@ -35,22 +32,18 @@ pub async fn exec(
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
   // 1. Update DB
-  let (query, db_query_params) = upsert_user_ticket(
-    auth.user.local_id.clone(),
-    body.event_id.clone(),
-    body.ticket_nft.clone(),
-    body.ticket_metadata.clone(),
-    body.seat_index,
-    body.seat_name.clone(),
-    body.ticket_type_index,
-  );
-
-  send_write(
-    Arc::clone(&store.neo4j),
-    query,
-    db_query_params,
-  ).await?;
-
+  let mut postgres = store.postgres.lock().unwrap();
+  postgres.upsert_user_ticket(Ticket {
+    ticket_nft: body.ticket_nft.clone(),
+    event_id: body.event_id.clone(),
+    account_id: auth.user.local_id.clone(),
+    created_at: None,
+    ticket_type_index: body.ticket_type_index as i16,
+    seat_name: body.seat_name.clone(),
+    seat_index: body.seat_index as i32,
+    attended: false,
+  }).await?;
+  
   // 2. Remove ending key from Redis
   let mut redis = store.redis.lock().unwrap();
   let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
