@@ -1,6 +1,6 @@
 use std::{
   sync::Arc,
-  str::{from_utf8, FromStr},
+  str::from_utf8,
 };
 use chrono::NaiveDateTime;
 use eyre::{Result, Report, ContextCompat};
@@ -113,6 +113,9 @@ pub async fn store_event(
 
   let mut event_map = metadata.to_map();
 
+  let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
+  let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
+
   let mut postgres = store.postgres.lock().unwrap();
   postgres.upsert_event(Event {
     event_id,
@@ -124,9 +127,8 @@ pub async fn store_event(
     venue: Some(event_map.remove("venue").unwrap()),
     event_type: event_map.remove("type").unwrap().parse()?,
     visibility: event_map.remove("visibility").unwrap().parse()?,
-    payment_type: event_map.remove("payment_type").unwrap().parse()?,
-    start_date: NaiveDateTime::from_str(&event_map.remove("startDate").unwrap())?,
-    end_date:  NaiveDateTime::from_str(&event_map.remove("endDate").unwrap())?,
+    start_date,
+    end_date,
     category: event_map.remove("category").unwrap().parse()?,
     event_capacity,
     file_type: Some(media_content_type.context("file_type missing")?),

@@ -14,6 +14,7 @@ use crate::{
 use super::common::EventParams;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Body {
   sales: Vec<NewSale>,
   seat_ranges: Vec<SeatRange>,
