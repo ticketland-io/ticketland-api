@@ -29,5 +29,5 @@ pub async fn exec(
   let mut postgres = store.postgres.lock().unwrap();
   let result = postgres.read_buy_listings_for_event(qs.event_id.clone(), skip, limit).await;
 
-  create_read_response(result, qs.skip, qs.limit)
+  create_read_response(result, skip, limit)
 }

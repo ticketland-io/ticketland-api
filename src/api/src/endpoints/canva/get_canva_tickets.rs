@@ -16,5 +16,5 @@ pub async fn exec(
   let mut postgres = store.postgres.lock().unwrap();
   let result = postgres.read_canva_designs(auth.user.local_id.clone()).await;
 
-  create_read_response(result, None, None)
+  create_read_response(result, 0, 1)
 }

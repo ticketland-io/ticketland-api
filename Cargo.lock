@@ -431,8 +431,8 @@ checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 
 [[package]]
 name = "api-helpers"
-version = "0.3.19"
-source = "git+https://github.com/ticketland-io/common-rust#75884ac0486651e499b09c70e62acaa72bd44079"
+version = "0.3.20"
+source = "git+https://github.com/ticketland-io/common-rust#9a058291857ad8db1419bf635570b2aa3f3412cd"
 dependencies = [
  "actix",
  "actix-http",
@@ -5711,8 +5711,8 @@ dependencies = [
 
 [[package]]
 name = "ticket-verification"
-version = "0.1.11"
-source = "git+https://github.com/ticketland-io/common-rust#75884ac0486651e499b09c70e62acaa72bd44079"
+version = "0.1.13"
+source = "git+https://github.com/ticketland-io/common-rust#9a058291857ad8db1419bf635570b2aa3f3412cd"
 dependencies = [
  "borsh",
  "bs58",
@@ -5781,7 +5781,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.15"
-source = "git+https://github.com/ticketland-io/common-rust#75884ac0486651e499b09c70e62acaa72bd44079"
+source = "git+https://github.com/ticketland-io/common-rust#9a058291857ad8db1419bf635570b2aa3f3412cd"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5812,7 +5812,7 @@ dependencies = [
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#75884ac0486651e499b09c70e62acaa72bd44079"
+source = "git+https://github.com/ticketland-io/common-rust#9a058291857ad8db1419bf635570b2aa3f3412cd"
 dependencies = [
  "base64 0.13.0",
  "bs58",
@@ -5829,8 +5829,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.25"
-source = "git+https://github.com/ticketland-io/common-rust#75884ac0486651e499b09c70e62acaa72bd44079"
+version = "0.1.26"
+source = "git+https://github.com/ticketland-io/common-rust#9a058291857ad8db1419bf635570b2aa3f3412cd"
 dependencies = [
  "chrono",
  "diesel",
@@ -5878,7 +5878,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#75884ac0486651e499b09c70e62acaa72bd44079"
+source = "git+https://github.com/ticketland-io/common-rust#9a058291857ad8db1419bf635570b2aa3f3412cd"
 dependencies = [
  "lazy_static",
 ]
