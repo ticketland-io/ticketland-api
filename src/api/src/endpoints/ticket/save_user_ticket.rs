@@ -8,7 +8,10 @@ use api_helpers::{
 };
 use ticketland_core::error::Error;
 use ticketland_data::{
-  models::ticket::Ticket,
+  models::{
+    ticket::Ticket,
+    ticket_onchain_account::TicketOnchainAccount,
+  }
 };
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
@@ -20,6 +23,7 @@ use crate::{
 #[derive(Deserialize)]
 pub struct Body {
   pub ticket_nft: String,
+  pub ticket_metadata: String,
   pub event_id: String,
   pub ticket_type_index: i16,
   pub seat_name: String,
@@ -33,7 +37,12 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   // 1. Update DB
   let mut postgres = store.postgres.lock().unwrap();
-  postgres.upsert_user_ticket(Ticket {
+  
+  let ticket_onchain_account = TicketOnchainAccount {
+    ticket_nft: body.ticket_nft.clone(),
+    ticket_metadata: body.ticket_metadata.clone(),
+  };
+  let ticket = Ticket {
     ticket_nft: body.ticket_nft.clone(),
     event_id: body.event_id.clone(),
     account_id: auth.user.local_id.clone(),
@@ -42,7 +51,9 @@ pub async fn exec(
     seat_name: body.seat_name.clone(),
     seat_index: body.seat_index as i32,
     attended: false,
-  }).await?;
+  };
+
+  postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
   
   // 2. Remove ending key from Redis
   let mut redis = store.redis.lock().unwrap();

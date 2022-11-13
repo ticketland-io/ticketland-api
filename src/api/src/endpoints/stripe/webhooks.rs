@@ -1,4 +1,7 @@
-use std::borrow::Borrow;
+use std::{
+  borrow::Borrow,
+  str::FromStr,
+};
 use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
@@ -6,11 +9,18 @@ use actix_web::{
 use stripe::{EventObject, EventType, Webhook};
 use chrono::{Duration};
 use eyre::{Result, Report, ContextCompat};
-use ticketland_data::models::ticket::Ticket;
+use solana_sdk::{
+  pubkey::Pubkey,
+};
+use ticketland_data::models::{
+  ticket::Ticket,
+  ticket_onchain_account::TicketOnchainAccount,
+};
 use api_helpers::services::http::{
   get_header_value,
   internal_server_error
 };
+use program_artifacts::ticket_nft::pda as ticket_nft_pda;
 use ticketland_core::async_helpers::timeout;
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
@@ -100,6 +110,10 @@ async fn handle_checkout_session(store: &Data<Store>, session: stripe::CheckoutS
 async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
   let metadata = session.metadata;
   let ticket_nft = metadata.get("ticket_nft").context("ticket_nft unavailable")?.to_string();
+  let ticket_matadata = ticket_nft_pda::ticket_metadata(
+    &store.config.ticket_nft_program_state,
+    &Pubkey::from_str(&ticket_nft)?,
+  ).0;
   let event_id = metadata.get("event_id").context("event_id unavailable")?;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
@@ -121,7 +135,12 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
 
   // Store the ticket nft in the db
   let mut postgres = store.postgres.lock().unwrap();
-  postgres.upsert_user_ticket(Ticket {
+
+  let ticket_onchain_account = TicketOnchainAccount {
+    ticket_nft: ticket_nft.clone(),
+    ticket_metadata: ticket_matadata.to_string().clone(),
+  };
+  let ticket = Ticket {
     ticket_nft: ticket_nft.clone(),
     event_id: event_id.clone(),
     account_id: buyer_uid.clone(),
@@ -130,7 +149,9 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
     seat_name: seat_name.clone(),
     seat_index: seat_index.parse::<i32>().unwrap(),
     attended: false,
-  }).await?;
+  };
+
+  postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
 
   // the ticket will ultimately be minted by another service that is handling these message
   store.ticket_purchase_queue.new_ticket_purchase(

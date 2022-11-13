@@ -38,12 +38,11 @@ pub async fn store_ticket_purchase_pre_commit(
   ).await?;
 
   let mut postgres = store.postgres.lock().unwrap();
-  postgres.create_ticket_nft(TicketOnchainAccount {
+  let ticket_onchain_account = TicketOnchainAccount {
     ticket_nft: ticket_nft.clone(),
     ticket_metadata: ticket_metadata.clone(),
-  }).await?;
-
-  postgres.upsert_user_ticket(Ticket {
+  };
+  let ticket = Ticket {
     ticket_nft: ticket_nft.clone(),
     event_id: event_id.clone(),
     account_id: uid.clone(),
@@ -52,7 +51,9 @@ pub async fn store_ticket_purchase_pre_commit(
     seat_name: seat_name.clone(),
     seat_index: seat_index as i32,
     attended: false,
-  }).await?;
+  };
+
+  postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
 
   store.redlock.unlock(lock).await;
   
