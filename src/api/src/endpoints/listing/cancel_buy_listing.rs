@@ -17,7 +17,7 @@ pub async fn exec(
   auth: AuthData,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.cancel_buy_listing(
     auth.user.local_id.clone(),
     params.listing_account.clone()

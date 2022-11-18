@@ -25,7 +25,7 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.create_buy_listing(NewBuyListing {
     account_id: &auth.user.local_id,
     event_id: &body.event_id,

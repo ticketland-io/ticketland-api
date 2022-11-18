@@ -24,7 +24,7 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
 
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.read_events(skip, limit).await;
 
   create_read_response(result, skip, limit)

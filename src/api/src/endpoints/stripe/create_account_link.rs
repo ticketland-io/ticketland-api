@@ -26,7 +26,7 @@ pub async fn exec(
   auth: AuthData,
 ) -> Result<HttpResponse, Error> {
   let uid = auth.user.local_id.clone();
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
 
   let Ok(stripe_account) = postgres.read_stripe_account(uid.clone()).await else {
     // If value is None this means that there is no Stripe account in the db at the moment

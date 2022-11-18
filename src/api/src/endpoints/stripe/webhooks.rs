@@ -86,7 +86,7 @@ async fn handle_account_updated(
 
   // If there are no pending info to be added by the conect use then `eventually_due` will be empty
   if eventually_due.len() == 0 {
-    let mut postgres = store.postgres.lock().unwrap();
+    let mut postgres = store.postgres.lock().await;
     postgres.update_stripe_account_status(account.id.to_string()).await?;
   }
 
@@ -120,7 +120,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
   // tries to purchase the same ticket which the current user has already purchased via Stripe
   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
-  let mut redis = store.redis.lock().unwrap();
+  let mut redis = store.redis.lock().await;
 
   let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
 
@@ -134,7 +134,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   let ticket_type_index: i16 = metadata.get("ticket_type_index").context("ticket_type_index unavailable")?.parse()?;
 
   // Store the ticket nft in the db
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
 
   let ticket_onchain_account = TicketOnchainAccount {
     ticket_nft: ticket_nft.clone(),
@@ -174,7 +174,7 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
   // tries to purchase the same ticket which the current user has already purchased via Stripe
   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
-  let mut redis = store.redis.lock().unwrap();
+  let mut redis = store.redis.lock().await;
 
   let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
 
@@ -186,7 +186,7 @@ async fn handle_fill_sell_listing(store: &Data<Store>, session: stripe::Checkout
   let buyer_uid = metadata.get("buyer_id").context("buyer_id unavailable")?.to_string();
   let sell_listing = metadata.get("sell_listing_account").context("sell_listing_account unavailable")?.to_string();
   
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   postgres.fill_sell_listing(
     sell_listing.clone(),
     ticket_nft.clone(),

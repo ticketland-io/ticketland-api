@@ -15,7 +15,7 @@ pub async fn exec(
   params: web::Path<EventParams>,
 ) -> HttpResponse {
   let event_id = params.event_id.clone();
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.read_event_with_sales(event_id).await;
 
   create_read_response(result, 0, 1)

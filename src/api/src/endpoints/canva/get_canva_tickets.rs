@@ -13,7 +13,7 @@ pub async fn exec(
   store: web::Data<Store>,
   auth: AuthData,
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.read_canva_designs(auth.user.local_id.clone()).await;
 
   create_read_response(result, 0, 1)

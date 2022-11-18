@@ -36,8 +36,8 @@ pub async fn exec(
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
   // 1. Update DB
-  let mut postgres = store.postgres.lock().unwrap();
-  
+  let mut postgres = store.postgres.lock().await;
+
   let ticket_onchain_account = TicketOnchainAccount {
     ticket_nft: body.ticket_nft.clone(),
     ticket_metadata: body.ticket_metadata.clone(),
@@ -56,7 +56,7 @@ pub async fn exec(
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
   
   // 2. Remove ending key from Redis
-  let mut redis = store.redis.lock().unwrap();
+  let mut redis = store.redis.lock().await;
   let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
   
   redis.delete(&redis_key).await?;
