@@ -2,7 +2,7 @@ pub mod config;
 pub mod common;
 pub mod create_event;
 pub mod get_all_events;
-pub mod get_events_by_category;
+pub mod get_filtered_events;
 pub mod get_event_image;
 pub mod commit_event;
 pub mod create_event_sales;
