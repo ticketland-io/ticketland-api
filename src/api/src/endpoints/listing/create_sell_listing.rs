@@ -26,7 +26,7 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.create_sell_listing(NewSellListing {
     account_id: &auth.user.local_id,
     ticket_nft: &body.ticket_nft,

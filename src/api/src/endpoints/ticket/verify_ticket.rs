@@ -46,7 +46,7 @@ pub async fn exec(
   .on_set_attended(body.event_id.to_owned(), params.ticket_nft.to_owned())
   .await?;
 
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   postgres.update_attended(params.ticket_nft.to_owned()).await?;
   
   Ok(HttpResponse::Ok().json(server_sig))

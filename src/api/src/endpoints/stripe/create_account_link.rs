@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use actix_web::{
   web::{Data},
   HttpResponse,
@@ -26,12 +25,19 @@ pub async fn exec(
   auth: AuthData,
 ) -> Result<HttpResponse, Error> {
   let uid = auth.user.local_id.clone();
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
+  let ticketland_dapp = store.config.ticketland_dapp.clone();
+  let stripe_key = store.config.stripe_key.clone();
 
   let Ok(stripe_account) = postgres.read_stripe_account(uid.clone()).await else {
     // If value is None this means that there is no Stripe account in the db at the moment
     return Ok(
-      create_link(Arc::clone(&store), uid.clone())
+      create_link(
+        &mut postgres, 
+        ticketland_dapp,
+        stripe_key,
+        uid.clone()
+      )
       .await
       .map(|link| HttpResponse::Ok().json(Response {link: Some(link)}))
       .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))

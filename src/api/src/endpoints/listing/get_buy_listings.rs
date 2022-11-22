@@ -26,7 +26,7 @@ pub async fn exec(
 ) -> HttpResponse {
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.read_buy_listings_for_event(qs.event_id.clone(), skip, limit).await;
 
   create_read_response(result, skip, limit)

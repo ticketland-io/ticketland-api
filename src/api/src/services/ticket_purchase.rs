@@ -9,7 +9,7 @@ use ticketland_data::{
   },
 };
 use program_artifacts::{
-  ticket_nft::pda,
+  ticket_nft::pda, event_registry::account_data::EventId,
 };
 use solana_sdk::{
   pubkey::Pubkey,
@@ -43,7 +43,7 @@ pub async fn calculate_price_and_fees(
   // Thus we need to remove 6 decimals from the DB value. This would need
   // to be more dynamic in the future. The decimals will be stored in the DB
   // record as well
-  let ticket_price = ticket_price / 1000000;
+  let ticket_price = to_stripe_unit(ticket_price / 1000000);
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
   let sol_price = to_stripe_unit(get_sol_price(store).await?);
   let mint_cost = (mint_cost * sol_price) / 1000;
@@ -99,19 +99,20 @@ impl PrePurchaseChecksParams {
 pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
   let ticket_nft_program_state = &store.config.ticket_nft_program_state;
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let sale = postgres.read_sale_by_account(sale_account.to_string()).await?;
-  
+  let event_id = EventId(event_id.clone());
+
   let (ticket_nft_pda, _) = pda::ticket_nft(
     ticket_nft_program_state,
     seat_index,
-    &event_id,
+    &event_id.val(),
     sale.ticket_type_index as u8,
   );
 
   // Using PDA seeds allows us to impose some constraints and do some validation.
   // Ticket nfts are PDAs and part of the seed list is the ticket type index. This allows
-  // us to validatate that user does not pass a ticket type which has has lower price but 
+  // us to validatate that user does not pass a ticket type which has has lower price but
   // use a ticket nft that is of a higher, more expensive type.
   if ticket_nft_pda.to_string() != ticket_nft {
     return Err(Report::msg("Invalid ticket_nft"))?
@@ -142,7 +143,7 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
 
 pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, sell_listing_account, ticket_nft) = params.secondary();
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let sell_listing = postgres.read_sell_listing(sell_listing_account.clone()).await?;
 
   // Make sure user has send the correct ticket_nft in the request. The provided ticket nft must much the one

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use eyre::{Result};
+use eyre::{Result, Report};
 use chrono::{Duration};
 use ticketland_data::models::{
   ticket::Ticket,
@@ -27,17 +27,23 @@ pub async fn store_ticket_purchase_pre_commit(
   .await?;
 
   // stre the record in Redis so this ticket is considered unavailable
-  let mut redis = store.redis.lock().unwrap();
+  let mut redis = store.redis.lock().await;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   let store = Arc::clone(&store);
 
+  // Check if the ticket_nft key is in Redis; If so, then the ticket is not available
+  if let Ok(_) = redis.get(&redis_key).await {
+    return Err(Report::msg("Ticket not available"))
+  }
+
+  // store the record in Redis so this ticket is considered unavailable
   redis.set_ex(
     &redis_key,
     &seat_index.to_string(),
     Duration::minutes(5).num_milliseconds() as usize,
   ).await?;
 
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let ticket_onchain_account = TicketOnchainAccount {
     ticket_nft: ticket_nft.clone(),
     ticket_metadata: ticket_metadata.clone(),
@@ -51,6 +57,7 @@ pub async fn store_ticket_purchase_pre_commit(
     seat_name: seat_name.clone(),
     seat_index: seat_index as i32,
     attended: false,
+    draft: true,
   };
 
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;

@@ -1,4 +1,5 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use ticketland_data::connection::PostgresConnection;
 use ticketland_core::{
   services::{

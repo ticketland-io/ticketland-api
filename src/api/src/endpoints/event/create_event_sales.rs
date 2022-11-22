@@ -25,7 +25,7 @@ pub async fn exec(
   _params: web::Path<EventParams>,
   body: web::Json<Body>
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.upsert_sales(body.sales.clone(), body.seat_ranges.clone()).await;
 
   create_write_response(result)
