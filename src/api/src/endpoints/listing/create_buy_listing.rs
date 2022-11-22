@@ -17,6 +17,7 @@ use super::common::ListingParams;
 pub struct Body {
   bid_price: i64,
   event_id: String,
+  n_listing: i64
 }
 
 pub async fn exec(
@@ -31,6 +32,7 @@ pub async fn exec(
     event_id: &body.event_id,
     sol_account: &params.listing_account,
     bid_price: body.bid_price,
+    n_listing: body.n_listing,
     is_open: true,
   }).await;
 
