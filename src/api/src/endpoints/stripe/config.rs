@@ -9,6 +9,7 @@ use super::{
   create_account_link,
   refresh_link,
   webhooks,
+  get_stripe_account,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -28,6 +29,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("/webhooks")
       .route(web::post().to(webhooks::exec))
+    );
+
+    cfg.service(
+      web::resource("/account")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_stripe_account::exec))
     );
   }
 }
