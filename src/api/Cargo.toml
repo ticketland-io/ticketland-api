@@ -1,6 +1,6 @@
 [package]
 name = "ticketland-api"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "BUSL-1.1"
 
@@ -21,11 +21,11 @@ futures-util = "0.3.15"
 futures = "0.3.12"
 ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.15" }
 api-helpers = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.20" }
-ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.27" }
-ticket-verification = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.13" }
+ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.29" }
+ticket-verification = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.14" }
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.1.9" }
-ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.16" }
-program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.29" }
+ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.17" }
+program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.35" }
 solana-web3-rust = { git = "https://github.com/ticketland-io/solana-web3-rust", version = "0.1.10" }
 price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.1" }
 ticketland-ai = { git = "https://github.com/ticketland-io/ticketland-ai", version = "0.1.3" }
