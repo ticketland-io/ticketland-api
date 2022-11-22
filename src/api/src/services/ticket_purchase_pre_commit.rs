@@ -51,6 +51,7 @@ pub async fn store_ticket_purchase_pre_commit(
     seat_name: seat_name.clone(),
     seat_index: seat_index as i32,
     attended: false,
+    draft: true,
   };
 
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;

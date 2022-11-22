@@ -51,6 +51,7 @@ pub async fn exec(
     seat_name: body.seat_name.clone(),
     seat_index: body.seat_index as i32,
     attended: false,
+    draft: false
   };
 
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;

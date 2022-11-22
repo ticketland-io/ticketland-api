@@ -149,6 +149,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
     seat_name: seat_name.clone(),
     seat_index: seat_index.parse::<i32>().unwrap(),
     attended: false,
+    draft: false,
   };
 
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
