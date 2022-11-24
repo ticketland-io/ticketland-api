@@ -10,7 +10,7 @@ use ticketland_event_handler::services::path;
 use ticketland_data::{
   models::{
     metadata::{Attribute, Metadata},
-    event::Event,
+    event::{Event, Location},
   },
 };
 use crate::{
@@ -115,7 +115,10 @@ pub async fn store_event(
 
   let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
   let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
-
+  let location = serde_json::from_str::<Location>(&event_map.remove("location").unwrap()).map_err(|error|{
+    println!("{}", error);
+    error
+  })?;
   let mut postgres = store.postgres.lock().await;
   postgres.upsert_event(Event {
     event_id,
@@ -123,7 +126,7 @@ pub async fn store_event(
     created_at: None,
     name: event_map.remove("name").unwrap(),
     description: event_map.remove("description").unwrap(),
-    location: Some(event_map.remove("location").unwrap()),
+    location: Some(location),
     venue: Some(event_map.remove("venue").unwrap()),
     event_type: event_map.remove("type").unwrap().parse()?,
     visibility: event_map.remove("visibility").unwrap().parse()?,
