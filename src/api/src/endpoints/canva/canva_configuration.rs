@@ -34,7 +34,7 @@ pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   
   postgres.read_account_by_canva_id(body.user.clone())
   .await

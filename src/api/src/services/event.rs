@@ -116,7 +116,7 @@ pub async fn store_event(
   let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
   let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
 
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   postgres.upsert_event(Event {
     event_id,
     account_id: uid,
@@ -134,6 +134,7 @@ pub async fn store_event(
     file_type: Some(media_content_type.context("file_type missing")?),
     arweave_tx_id: None,
     image_uploaded: false,
+    webbundle_arweave_tx_id: None,
     draft: false,
   }).await?;
   

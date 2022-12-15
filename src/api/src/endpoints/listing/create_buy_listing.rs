@@ -17,6 +17,7 @@ use super::common::ListingParams;
 pub struct Body {
   bid_price: i64,
   event_id: String,
+  n_listing: i64
 }
 
 pub async fn exec(
@@ -25,12 +26,13 @@ pub async fn exec(
   body: Json<Body>,
   params: Path<ListingParams>,
 ) -> HttpResponse {
-  let mut postgres = store.postgres.lock().unwrap();
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.create_buy_listing(NewBuyListing {
     account_id: &auth.user.local_id,
     event_id: &body.event_id,
     sol_account: &params.listing_account,
     bid_price: body.bid_price,
+    n_listing: body.n_listing,
     is_open: true,
   }).await;
 

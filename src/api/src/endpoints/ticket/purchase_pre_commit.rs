@@ -60,7 +60,10 @@ pub async fn exec(
     ticket_metadata = body.ticket_metadata.as_ref().unwrap().clone();
   } else {
     seat_index = get_next_seat_index(
-      Arc::clone(&store),
+      Arc::clone(&store.postgres),
+      Arc::clone(&store.redis),
+      Arc::clone(&store.rpc_client),
+      store.config.ticket_sale_program_state,
       &event_id,
       body.ticket_type_index,
     )

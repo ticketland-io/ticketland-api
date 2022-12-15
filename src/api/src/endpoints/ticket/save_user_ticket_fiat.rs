@@ -1,8 +1,9 @@
+use chrono::Duration;
+use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
-use serde::Deserialize;
 use api_helpers::{
   middleware::auth::AuthData,
 };
@@ -22,12 +23,13 @@ use crate::{
 
 #[derive(Deserialize)]
 pub struct Body {
-  pub ticket_nft: String,
-  pub ticket_metadata: String,
-  pub event_id: String,
-  pub ticket_type_index: i16,
-  pub seat_name: String,
-  pub seat_index: i32,
+  event_id: String,
+  ticket_nft: String,
+  ticket_metadata: String,
+  sale_account: String,
+  seat_index: u32,
+  seat_name: String,
+  ticket_type_index: u8,
 }
 
 pub async fn exec(
@@ -35,9 +37,10 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
-  // 1. Update DB
   let mut postgres = store.postgres.lock().await;
+  let account = postgres.read_account_by_id(auth.user.local_id.clone()).await?;
 
+  // 1. Update DB
   let ticket_onchain_account = TicketOnchainAccount {
     ticket_nft: body.ticket_nft.clone(),
     ticket_metadata: body.ticket_metadata.clone(),
@@ -55,12 +58,27 @@ pub async fn exec(
   };
 
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
-  
-  // 2. Remove ending key from Redis
+
+  // 2. store the record in Redis so this ticket is considered unavailable
   let mut redis = store.redis.lock().await;
   let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
-  
-  redis.delete(&redis_key).await?;
+
+  redis.set_ex(
+    &redis_key,
+    &body.seat_index.to_string(),
+    Duration::days(1).num_milliseconds() as usize,
+  ).await?;
+
+  // 3. Send new ticket purchase message to rabbitmq to execute operator purchase tx
+  store.ticket_purchase_queue.new_ticket_purchase(
+    auth.user.local_id.clone(),
+    body.event_id.clone(),
+    body.sale_account.clone(),
+    body.ticket_nft.clone(),
+    account.pubkey,
+    body.seat_index.to_string(),
+    body.seat_name.clone(),
+  ).await?;
 
   Ok(HttpResponse::Created().finish())
 }
