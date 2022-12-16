@@ -21,7 +21,7 @@ QueryString! {
     pub category: Option<i16>,
     pub priceRange: Option<[u32; 2]>,
     pub date: Option<NaiveDateTime>,
-    pub name: Option<String>,
+    pub search: Option<String>,
   }
 }
 
@@ -40,11 +40,12 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   // TODO: add the correct default prop
-  let category = qs.category.unwrap_or(0); 
-  let priceRange = qs.priceRange.unwrap_or([0,2500]);
-  let date = qs.date.unwrap_or(NaiveDateTime::parse_from_str("2020-04-12 22:10:57", "%Y-%m-%d %H:%M:%S").unwrap());
-  let name = qs.name.clone().unwrap_or("".to_string());
-  let mut postgres = store.postgres.lock().unwrap();
+  let category = qs.category;
+  let priceRange = qs.priceRange.unwrap_or([0,2000]);
+  let date = qs.date;
+  let name = qs.search.clone();
+
+  let mut postgres = store.postgres.lock().await;
   let result = postgres.read_filtered_events(category, priceRange, date, name, skip, limit).await;
 
   create_read_response(result, skip, limit)
