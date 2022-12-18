@@ -19,7 +19,7 @@ use crate::{
 QueryString! {
   pub struct QueryString {
     pub category: Option<i16>,
-    pub price_range: Option<[u32; 2]>,
+    pub price_range: Option<(u32, u32)>,
     pub start_date: Option<i64>,
     pub end_date: Option<i64>,
     pub search: Option<String>,
@@ -41,7 +41,7 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let category = qs.category;
-  let price_range = qs.price_range.unwrap_or([0,2000]);
+  let price_range = qs.price_range;
   let start_date = qs.start_date.map(|date|{
     // TODO: remove unwrap
     return NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date").unwrap();
