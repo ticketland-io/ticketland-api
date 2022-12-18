@@ -26,7 +26,7 @@ QueryString! {
   }
 }
 
-// #[derive(Serialize)]
+#[derive(Serialize)]
 pub struct BaseResponse<T: Serialize> {
   pub count: usize,
   pub skip: Option<u32>,
@@ -41,7 +41,6 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let category = qs.category;
-  // TODO: add the correct default prop
   let price_range = qs.price_range.unwrap_or([0,2000]);
   let start_date = qs.start_date.map(|date|{
     // TODO: remove unwrap
