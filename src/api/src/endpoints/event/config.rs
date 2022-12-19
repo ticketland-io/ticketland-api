@@ -6,7 +6,6 @@ use api_helpers::{
   middleware::auth::AuthnMiddlewareFactory,
 };
 use super::{
-  get_all_events,
   create_event,
   get_event_image,
   commit_event,
