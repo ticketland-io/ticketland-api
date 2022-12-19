@@ -16,6 +16,8 @@ use super::{
   cancel_buy_listing,
   create_sell_listing_pre_commit,
   create_buy_listing_pre_commit,
+  get_sold,
+  get_prices,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -76,6 +78,16 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/{listing_account}/buy-cancellations")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(cancel_buy_listing::exec))
+    );
+
+    cfg.service(
+      web::resource("/total-sold")
+      .route(web::get().to(get_sold::exec))
+    );
+
+    cfg.service(
+      web::resource("/average-prices")
+      .route(web::get().to(get_prices::exec))
     );
   }
 }
