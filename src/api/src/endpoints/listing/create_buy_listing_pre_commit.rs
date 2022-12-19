@@ -7,7 +7,7 @@ use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_data::models::sell_listing::NewSellListing;
+use ticketland_data::models::buy_listing::NewBuyListing;
 use crate::{
   utils::store::Store,
 };
@@ -15,9 +15,9 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
+  bid_price: i64,
   event_id: String,
-  ticket_nft: String,
-  ask_price: i64,
+  n_listing: i64
 }
 
 pub async fn exec(
@@ -27,14 +27,14 @@ pub async fn exec(
   params: Path<ListingParams>,
 ) -> HttpResponse {
   let mut postgres = store.postgres.lock().await;
-  let result = postgres.upsert_sell_listing(NewSellListing {
+  let result = postgres.upsert_buy_listing(NewBuyListing {
     account_id: &auth.user.local_id,
-    ticket_nft: &body.ticket_nft,
     event_id: &body.event_id,
     sol_account: &params.listing_account,
-    ask_price: body.ask_price,
+    bid_price: body.bid_price,
+    n_listing: body.n_listing,
     is_open: true,
-    draft: false,
+    draft: true,
   }).await;
 
   create_write_response(result)

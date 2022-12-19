@@ -30,6 +30,5 @@ pub async fn exec(
     auth.user.local_id.clone()
   ).await;
 
-
   create_write_response(result)
 }

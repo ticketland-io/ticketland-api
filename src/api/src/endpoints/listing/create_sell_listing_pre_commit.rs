@@ -34,7 +34,7 @@ pub async fn exec(
     sol_account: &params.listing_account,
     ask_price: body.ask_price,
     is_open: true,
-    draft: false,
+    draft: true,
   }).await;
 
   create_write_response(result)

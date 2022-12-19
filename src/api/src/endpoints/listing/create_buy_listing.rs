@@ -27,13 +27,14 @@ pub async fn exec(
   params: Path<ListingParams>,
 ) -> HttpResponse {
   let mut postgres = store.postgres.lock().await;
-  let result = postgres.create_buy_listing(NewBuyListing {
+  let result = postgres.upsert_buy_listing(NewBuyListing {
     account_id: &auth.user.local_id,
     event_id: &body.event_id,
     sol_account: &params.listing_account,
     bid_price: body.bid_price,
     n_listing: body.n_listing,
     is_open: true,
+    draft: false,
   }).await;
 
   create_write_response(result)
