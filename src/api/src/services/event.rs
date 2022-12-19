@@ -126,7 +126,6 @@ pub async fn store_event(
     created_at: None,
     name: event_map.remove("name").unwrap(),
     description: event_map.remove("description").unwrap(),
-    location: Some(location),
     venue: Some(event_map.remove("venue").unwrap()),
     event_type: event_map.remove("type").unwrap().parse()?,
     visibility: event_map.remove("visibility").unwrap().parse()?,
@@ -136,8 +135,10 @@ pub async fn store_event(
     event_capacity,
     file_type: Some(media_content_type.context("file_type missing")?),
     arweave_tx_id: None,
+    webbundle_arweave_tx_id: None,
     image_uploaded: false,
     draft: false,
+    location: Some(location),
   }).await?;
   
   Ok(metadata)
