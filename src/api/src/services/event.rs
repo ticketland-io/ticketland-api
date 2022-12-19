@@ -137,6 +137,7 @@ pub async fn store_event(
     arweave_tx_id: None,
     webbundle_arweave_tx_id: None,
     image_uploaded: false,
+    webbundle_arweave_tx_id: None,
     draft: false,
     location: Some(location),
   }).await?;

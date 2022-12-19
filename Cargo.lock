@@ -5867,7 +5867,6 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "solana-client",
  "solana-sdk",
  "solana-web3-rust",
  "ticket-verification",
