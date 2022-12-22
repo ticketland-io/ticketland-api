@@ -27,7 +27,7 @@ pub async fn store_ticket_purchase_pre_commit(
   .await?;
 
   // stre the record in Redis so this ticket is considered unavailable
-  let mut redis = store.redis.lock().await;
+  let mut redis = store.redis_pool.connection().await?;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   let store = Arc::clone(&store);
 
@@ -43,7 +43,7 @@ pub async fn store_ticket_purchase_pre_commit(
     Duration::minutes(5).num_milliseconds() as usize,
   ).await?;
 
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let ticket_onchain_account = TicketOnchainAccount {
     ticket_nft: ticket_nft.clone(),
     ticket_metadata: ticket_metadata.clone(),

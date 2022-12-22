@@ -26,7 +26,7 @@ pub async fn exec(
   params: web::Path<EventParams>,
 ) -> Result<HttpResponse, Error> {
   // TODO: make sure this event id belongs to the current user. Or even better use a custom authz middleware
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let event = postgres.read_event(params.event_id.clone()).await?;
   let file_path = path::get_event_file_path(&event.event_id, "ticket_image", &event.file_type.context("file_type missing")?);
 

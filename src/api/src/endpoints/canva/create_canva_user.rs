@@ -27,7 +27,7 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   postgres.upsert_canva_account(CanvaAccount {
     canva_uid: body.canva_uid.clone(),
     account_id: auth.user.local_id.clone(),
