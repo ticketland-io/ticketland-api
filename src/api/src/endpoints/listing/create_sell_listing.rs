@@ -3,6 +3,8 @@ use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
+use eyre::Result;
+use ticketland_core::error::Error;
 use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
@@ -25,8 +27,8 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
   params: Path<ListingParams>,
-) -> HttpResponse {
-  let mut postgres = store.postgres.lock().await;
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.upsert_sell_listing(NewSellListing {
     account_id: &auth.user.local_id,
     ticket_nft: &body.ticket_nft,
@@ -37,5 +39,5 @@ pub async fn exec(
     draft: false,
   }).await;
 
-  create_write_response(result)
+  Ok(create_write_response(result))
 }

@@ -99,7 +99,7 @@ impl PrePurchaseChecksParams {
 pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
   let ticket_nft_program_state = &store.config.ticket_nft_program_state;
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let sale = postgres.read_sale_by_account(sale_account.to_string()).await?;
   let event_id = EventId(event_id.clone());
 
@@ -143,7 +143,7 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
 
 pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, sell_listing_account, ticket_nft) = params.secondary();
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let sell_listing = postgres.read_sell_listing(sell_listing_account.clone()).await?;
 
   // Make sure user has send the correct ticket_nft in the request. The provided ticket nft must much the one

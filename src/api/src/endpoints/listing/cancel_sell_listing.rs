@@ -2,6 +2,8 @@ use actix_web::{
   web::{Data, Path},
   HttpResponse,
 };
+use eyre::Result;
+use ticketland_core::error::Error;
 use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
@@ -15,12 +17,12 @@ pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
   params: Path<ListingParams>,
-) -> HttpResponse {
-  let mut postgres = store.postgres.lock().await;
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.cancel_sell_listing(
     auth.user.local_id.clone(),
     params.listing_account.clone()
   ).await;
 
-  create_write_response(result)
+  Ok(create_write_response(result))
 }

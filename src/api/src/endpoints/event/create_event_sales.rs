@@ -1,5 +1,7 @@
 use serde::Deserialize;
 use actix_web::{web, HttpResponse};
+use eyre::Result;
+use ticketland_core::error::Error;
 use ticketland_data::models::{
   sale::NewSale,
   seat_range::SeatRange,
@@ -24,9 +26,9 @@ pub async fn exec(
   _auth: AuthData,
   _params: web::Path<EventParams>,
   body: web::Json<Body>
-) -> HttpResponse {
-  let mut postgres = store.postgres.lock().await;
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.upsert_sales(body.sales.clone(), body.seat_ranges.clone()).await;
 
-  create_write_response(result)
+  Ok(create_write_response(result))
 }

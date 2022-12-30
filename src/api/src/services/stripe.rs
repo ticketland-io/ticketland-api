@@ -78,7 +78,7 @@ pub async fn create_link(
 }
 
 pub async fn refresh_link(store: Arc<Store>, uid: String) -> Result<String> {
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let stripe_account = postgres.read_stripe_account(uid.clone()).await?;
 
   let ticketland_dapp = store.config.ticketland_dapp.clone();
@@ -274,7 +274,7 @@ pub async fn create_checkout_session(
   // This can happen when someone tries to create a checkout session straigth after someone else
   // has already purchased or is in the middle of checkout or waiting for the service to send the
   // mint tx to the blockchain.
-  let mut redis = store.redis.lock().await;
+  let mut redis = store.redis_pool.connection().await?;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   if let Ok(_) = redis.get(&redis_key).await {
     return Err(Report::msg("Ticket not available"))
@@ -320,7 +320,7 @@ pub async fn create_checkout_session(
     ).await??
   };
 
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let stripe_account = postgres.read_event_organizer_stripe_account(event_id.clone()).await?;
 
   let checkout_session = {

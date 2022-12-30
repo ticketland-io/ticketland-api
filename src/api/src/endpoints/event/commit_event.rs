@@ -16,7 +16,7 @@ pub async fn exec(
   params: Path<EventParams>,
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let event = postgres.read_event(event_id).await?;
   
   store.new_event_queue
