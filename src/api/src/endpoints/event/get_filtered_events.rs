@@ -5,6 +5,7 @@ use actix_web::{
   HttpResponse,
 };
 use chrono::NaiveDateTime;
+use ticketland_core::error::Error;
 use api_helpers::{
   QueryString,
   services::{
@@ -20,8 +21,8 @@ QueryString! {
   pub struct QueryString {
     pub category: Option<i16>,
     pub price_range: Option<(u32, u32)>,
-    pub start_date: Option<i64>,
-    pub end_date: Option<i64>,
+    pub start_date_from: Option<i64>,
+    pub start_date_to: Option<i64>,
     pub search: Option<String>,
   }
 }
@@ -37,32 +38,30 @@ pub struct BaseResponse<T: Serialize> {
 pub async fn exec(
   store: Data<Store>,
   qs: Query<QueryString>,
-) -> HttpResponse {
+) -> Result<HttpResponse, Error> {
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let category = qs.category;
   let price_range = qs.price_range;
-  let start_date = qs.start_date.map(|date|{
-    // TODO: remove unwrap
-    return NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date").unwrap();
-  });
-  let end_date = qs.end_date.map(|date|{
-    // TODO: remove unwrap
-    return NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date").unwrap();
-  });
-  
+  let start_date_from = if let Some(date) = qs.start_date_from {
+    Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date_from")?)
+  } else { None };
+  let start_date_to = if let Some(date) = qs.start_date_to {
+    Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date_to")?)
+  } else { None };
+
   let name = qs.search.clone();
 
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_filtered_events(
     category,
     price_range,
-    start_date,
-    end_date,
+    start_date_from,
+    start_date_to,
     name,
     skip,
     limit
   ).await;
 
-  create_read_response(result, skip, limit)
+  Ok(create_read_response(result, skip, limit))
 }
