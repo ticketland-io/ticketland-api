@@ -3,6 +3,7 @@ use actix_web::{
   HttpResponse,
 };
 use serde::{Deserialize};
+use ticketland_core::error::Error;
 use api_helpers::{
   QueryString,
   services::{
@@ -23,9 +24,9 @@ QueryString! {
 pub async fn exec(
   store: Data<Store>,
   qs: Query<QueryString>,
-) -> HttpResponse {
-  let mut postgres = store.postgres.lock().await;
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_average_listings_price(qs.interval, qs.start_ts).await;
 
-  create_read_response(result, 0, 1)
+  Ok(create_read_response(result, 0, 1))
 }
