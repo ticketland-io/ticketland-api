@@ -33,7 +33,7 @@ dependencies = [
  "pin-project-lite",
  "smallvec",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -50,7 +50,7 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -393,8 +393,8 @@ dependencies = [
 
 [[package]]
 name = "amqp-helpers"
-version = "0.1.9"
-source = "git+https://github.com/ticketland-io/amqp-helpers#421cc083057772a43e0bd5bdd8dc4f4b34ae7a5c"
+version = "0.1.10"
+source = "git+https://github.com/ticketland-io/amqp-helpers#1a45e2ac562923754e1b3519529ffc573c77479d"
 dependencies = [
  "async-trait",
  "borsh",
@@ -432,7 +432,7 @@ checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 [[package]]
 name = "api-helpers"
 version = "0.3.20"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#b477c44eec8007352a5688b6272ecc1339782ddd"
 dependencies = [
  "actix",
  "actix-http",
@@ -1024,7 +1024,7 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tracing",
 ]
 
@@ -1568,7 +1568,7 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1680,6 +1680,15 @@ name = "core-foundation-sys"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
+
+[[package]]
+name = "core2"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b49ba7ef1ad6107f8824dbe97de947cbaac53c44e7f9756a1fba0d37c1eec505"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "cpufeatures"
@@ -2542,7 +2551,7 @@ dependencies = [
  "indexmap",
  "slab",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tracing",
 ]
 
@@ -2910,10 +2919,11 @@ dependencies = [
 
 [[package]]
 name = "ipfs-api-backend-hyper"
-version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#d2b88b2616c67c187efb98a8ac5b570dc14f6ca4"
+version = "0.6.0"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#33e0149b4f428d49a84298c673a3d6ffbe8c30d3"
 dependencies = [
  "async-trait",
+ "base64 0.13.1",
  "bytes",
  "futures",
  "http",
@@ -2925,8 +2935,8 @@ dependencies = [
 
 [[package]]
 name = "ipfs-api-prelude"
-version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#d2b88b2616c67c187efb98a8ac5b570dc14f6ca4"
+version = "0.6.0"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#33e0149b4f428d49a84298c673a3d6ffbe8c30d3"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2935,14 +2945,14 @@ dependencies = [
  "dirs",
  "futures",
  "http",
+ "multiaddr",
  "multibase",
- "parity-multiaddr",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "thiserror",
  "tokio",
- "tokio-util 0.6.10",
+ "tokio-util",
  "tracing",
  "walkdir",
 ]
@@ -3375,6 +3385,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "multiaddr"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b53e0cc5907a5c216ba6584bf74be8ab47d6d6289f72793b2dddbf15dc3bf8c"
+dependencies = [
+ "arrayref",
+ "byteorder",
+ "data-encoding",
+ "multibase",
+ "multihash",
+ "percent-encoding",
+ "serde",
+ "static_assertions",
+ "unsigned-varint",
+ "url",
+]
+
+[[package]]
 name = "multibase"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3387,22 +3415,22 @@ dependencies = [
 
 [[package]]
 name = "multihash"
-version = "0.13.2"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dac63698b887d2d929306ea48b63760431ff8a24fac40ddb22f9c7f49fb7cab"
+checksum = "835d6ff01d610179fbce3de1694d007e500bf33a7f29689838941d6bf783ae40"
 dependencies = [
- "generic-array",
+ "core2",
  "multihash-derive",
- "unsigned-varint 0.5.1",
+ "unsigned-varint",
 ]
 
 [[package]]
 name = "multihash-derive"
-version = "0.7.2"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "424f6e86263cd5294cbd7f1e95746b95aca0e0d66bff31e5a40d6baa87b4aa99"
+checksum = "1d6d4752e6230d8ef7adf7bd5d8c4b1f6561c1014c5ba9a37445ccefe18aa1db"
 dependencies = [
- "proc-macro-crate 1.2.1",
+ "proc-macro-crate 1.1.3",
  "proc-macro-error",
  "proc-macro2 1.0.49",
  "quote 1.0.23",
@@ -3585,7 +3613,7 @@ version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b0498641e53dd6ac1a4f22547548caa6864cc4933784319cd1775271c5a46ce"
 dependencies = [
- "proc-macro-crate 1.2.1",
+ "proc-macro-crate 1.1.3",
  "proc-macro2 1.0.49",
  "quote 1.0.23",
  "syn 1.0.107",
@@ -3700,24 +3728,6 @@ dependencies = [
  "rc2",
  "sha1 0.10.5",
  "yasna 0.5.1",
-]
-
-[[package]]
-name = "parity-multiaddr"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58341485071825827b7f03cf7efd1cb21e6a709bea778fb50227fd45d2f361b4"
-dependencies = [
- "arrayref",
- "bs58",
- "byteorder",
- "data-encoding",
- "multihash",
- "percent-encoding",
- "serde",
- "static_assertions",
- "unsigned-varint 0.7.1",
- "url",
 ]
 
 [[package]]
@@ -4008,11 +4018,10 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-crate"
-version = "1.2.1"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eda0fc3b0fb7c975631757e14d9049da17374063edb6ebbcbc54d880d4fe94e9"
+checksum = "e17d47ce914bf4de440332250b0edd23ce48c005f59fab39d3335866b114f11a"
 dependencies = [
- "once_cell",
  "thiserror",
  "toml",
 ]
@@ -4301,7 +4310,7 @@ dependencies = [
  "ryu",
  "sha1 0.6.1",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "url",
 ]
 
@@ -4321,7 +4330,7 @@ dependencies = [
  "ryu",
  "sha1_smol",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "url",
 ]
 
@@ -4418,7 +4427,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -4648,9 +4657,9 @@ dependencies = [
 
 [[package]]
 name = "scoped-futures"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "655305227172f0178a34e02386c3b72e9c0d247a3b5087442540dbeb74c95c9a"
+checksum = "b1473e24c637950c9bd38763220bea91ec3e095a89f672bbd7a10d03e77ba467"
 dependencies = [
  "cfg-if",
  "pin-utils",
@@ -5900,7 +5909,7 @@ dependencies = [
 [[package]]
 name = "ticket-verification"
 version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#b477c44eec8007352a5688b6272ecc1339782ddd"
 dependencies = [
  "borsh",
  "bs58",
@@ -5963,13 +5972,13 @@ dependencies = [
  "ticketland-data",
  "ticketland-event-handler",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
 name = "ticketland-core"
 version = "0.2.17"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#b477c44eec8007352a5688b6272ecc1339782ddd"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5994,14 +6003,14 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-retry",
- "tokio-util 0.7.4",
+ "tokio-util",
  "url",
 ]
 
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#b477c44eec8007352a5688b6272ecc1339782ddd"
 dependencies = [
  "base64 0.13.1",
  "bs58",
@@ -6018,8 +6027,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.31"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+version = "0.1.32"
+source = "git+https://github.com/ticketland-io/common-rust#b477c44eec8007352a5688b6272ecc1339782ddd"
 dependencies = [
  "chrono",
  "diesel",
@@ -6033,8 +6042,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.19"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#1ffeb68ff71de445ded275e534655afdd85cd358"
+version = "0.1.20"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#68266aa91d514de10ab714e86bffef8cd885aaab"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6058,7 +6067,7 @@ dependencies = [
  "ticketland-data",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tracing-subscriber",
  "webbundle",
 ]
@@ -6066,7 +6075,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#b477c44eec8007352a5688b6272ecc1339782ddd"
 dependencies = [
  "lazy_static",
 ]
@@ -6216,7 +6225,7 @@ dependencies = [
  "postgres-types",
  "socket2",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -6280,20 +6289,6 @@ dependencies = [
  "tungstenite",
  "webpki",
  "webpki-roots",
-]
-
-[[package]]
-name = "tokio-util"
-version = "0.6.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-sink",
- "log",
- "pin-project-lite",
- "tokio",
 ]
 
 [[package]]
@@ -6540,12 +6535,6 @@ dependencies = [
  "generic-array",
  "subtle",
 ]
-
-[[package]]
-name = "unsigned-varint"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7fdeedbf205afadfe39ae559b75c3240f24e257d0ca27e85f85cb82aa19ac35"
 
 [[package]]
 name = "unsigned-varint"
