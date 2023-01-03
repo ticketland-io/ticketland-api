@@ -5,6 +5,8 @@ use api_helpers::{
   },
   middleware::auth::AuthData,
 };
+use eyre::Result;
+use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,
 };
@@ -12,9 +14,9 @@ use crate::{
 pub async fn exec(
   store: web::Data<Store>,
   auth: AuthData,
-) -> HttpResponse {
-  let mut postgres = store.postgres.lock().await;
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_canva_designs(auth.user.local_id.clone()).await;
 
-  create_read_response(result, 0, 1)
+  Ok(create_read_response(result, 0, 1))
 }

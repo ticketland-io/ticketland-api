@@ -25,7 +25,7 @@ pub async fn exec(
   auth: AuthData,
 ) -> Result<HttpResponse, Error> {
   let uid = auth.user.local_id.clone();
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let ticketland_dapp = store.config.ticketland_dapp.clone();
   let stripe_key = store.config.stripe_key.clone();
 

@@ -31,8 +31,8 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let server_sig = verify_ticket(
     Arc::clone(&store.rpc_client),
-    Arc::clone(&store.postgres),
-    Arc::clone(&store.redis),
+    &store.pg_pool,
+    &store.redis_pool,
     Arc::clone(&store.redlock),
     store.config.ticket_verifier_priv_key.clone(),
     &body.event_id,
@@ -46,7 +46,7 @@ pub async fn exec(
   .on_set_attended(body.event_id.to_owned(), params.ticket_nft.to_owned())
   .await?;
 
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   postgres.update_attended(params.ticket_nft.to_owned()).await?;
   
   Ok(HttpResponse::Ok().json(server_sig))

@@ -37,7 +37,7 @@ pub async fn exec(
   auth: AuthData,
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let account = postgres.read_account_by_id(auth.user.local_id.clone()).await?;
 
   // 1. Update DB
@@ -60,7 +60,7 @@ pub async fn exec(
   postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
 
   // 2. store the record in Redis so this ticket is considered unavailable
-  let mut redis = store.redis.lock().await;
+  let mut redis = store.redis_pool.connection().await?;
   let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
 
   redis.set_ex(

@@ -3,6 +3,8 @@ use actix_web::{
   web::{Data, Json},
   HttpResponse,
 };
+use eyre::Result;
+use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,
 };
@@ -33,21 +35,25 @@ pub struct SuccessResponse {
 pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
-) -> HttpResponse {
-  let mut postgres = store.postgres.lock().await;
+) -> Result<HttpResponse, Error> {
+  let mut postgres = store.pg_pool.connection().await?;
   
   postgres.read_account_by_canva_id(body.user.clone())
   .await
   .map(|_| {
-    HttpResponse::Ok().json(SuccessResponse {
-      result_type: "SUCCESS".to_owned(),
-      labels: vec!["PUBLISH".to_owned()],
-    })
+    Ok(
+      HttpResponse::Ok().json(SuccessResponse {
+        result_type: "SUCCESS".to_owned(),
+        labels: vec!["PUBLISH".to_owned()],
+      })
+    )
   })
   .unwrap_or_else(|_| {
-    HttpResponse::Ok().json(ErrorResponse {
-      result_type: "ERROR".to_owned(),
-      error_code: "CONFIGURATION_REQUIRED".to_owned(),
-    })
+    Ok(
+      HttpResponse::Ok().json(ErrorResponse {
+        result_type: "ERROR".to_owned(),
+        error_code: "CONFIGURATION_REQUIRED".to_owned(),
+      })
+    )
   })
 }
