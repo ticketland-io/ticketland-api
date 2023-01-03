@@ -61,7 +61,7 @@ pub async fn store_event(
     let field_name = field.name();
     let mime_type = field.content_type().type_();
     let content = content.concat();
-    
+
     if is_supported_media_type(mime_type) {
       if content.len() > store.config.max_image_size {
         return Err(Report::msg("Image limit".to_string()))
@@ -115,11 +115,10 @@ pub async fn store_event(
 
   let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
   let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
-  let location = serde_json::from_str::<Location>(&event_map.remove("location").unwrap()).map_err(|error|{
-    println!("{}", error);
-    error
-  })?;
-  let mut postgres = store.postgres.lock().await;
+  let location = serde_json::from_str::<Location>(&event_map.remove("location").unwrap())?;
+
+  let mut postgres = store.pg_pool.connection().await?;
+
   postgres.upsert_event(Event {
     event_id,
     account_id: uid,
@@ -141,6 +140,6 @@ pub async fn store_event(
     draft: false,
     location: Some(location),
   }).await?;
-  
+
   Ok(metadata)
 }
