@@ -69,7 +69,7 @@ async fn check_seat_reservation(
   .get_anchor_account_data::<SeatReservation>(&seat_reservation)
   .await?;
 
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let account = postgres.read_account_by_id(uid).await?;
 
   let latest_slot = store.rpc_client.get_slot().await?;
@@ -112,7 +112,7 @@ pub async fn exec(
   let event_id = EventId(body.event_id.clone());
 
   // 3. Check if the ticket_nft key is in Redis; If so then the ticket is not available
-  let mut redis = store.redis.lock().await;
+  let mut redis = store.redis_pool.connection().await?;
   let redis_key = pending_ticket_key(&event_id.db_val(), &ticket_nft);
   if let Ok(_) = redis.get(&redis_key).await {
     return Ok(internal_server_error(Some(Error::GenericError("Ticket not available".to_owned()))))

@@ -118,7 +118,6 @@ pub async fn store_event(
   let location = serde_json::from_str::<Location>(&event_map.remove("location").unwrap())?;
 
   let mut postgres = store.pg_pool.connection().await?;
-
   postgres.upsert_event(Event {
     event_id,
     account_id: uid,

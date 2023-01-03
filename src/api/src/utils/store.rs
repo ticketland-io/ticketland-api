@@ -1,10 +1,9 @@
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use ticketland_data::connection::PostgresConnection;
+use ticketland_data::connection_pool::ConnectionPool;
 use ticketland_core::{
   services::{
     minio::Minio,
-    redis::Redis,
+    redis,
     redlock::RedLock,
   },
 };
@@ -23,10 +22,10 @@ use crate::{
 
 pub struct Store {
   pub config: Config,
-  pub postgres: Arc<Mutex<PostgresConnection>>,
+  pub pg_pool: ConnectionPool,
   pub minio: Arc<Minio>,
   pub aws_rekognition: Arc<AwsRekognition>,
-  pub redis: Arc<Mutex<Redis>>,
+  pub redis_pool: redis::ConnectionPool,
   pub redlock: Arc<RedLock>,
   pub rpc_client: Arc<RpcClient>,
   pub new_event_queue: NewEventQueue,
@@ -40,7 +39,7 @@ impl Store {
   pub async fn new() -> Self {
     let config = Config::new().unwrap();
 
-    let postgres = Arc::new(Mutex::new(PostgresConnection::new(&config.postgres_uri).await));
+    let pg_pool = ConnectionPool::new(&config.postgres_uri).await;
     let minio = Arc::new(Minio::new(
       None,
       &config.minio_region,
@@ -55,7 +54,7 @@ impl Store {
       config.aws_rekognition_region.clone(),
     ).await);
 
-    let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
+    let redis_pool = redis::ConnectionPool::new(&config.redis_host, &config.redis_password, config.redis_port);
     let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
 
     let new_event_queue = NewEventQueue::new(
@@ -87,8 +86,8 @@ impl Store {
 
     Self {
       config,
-      postgres,
-      redis,
+      pg_pool,
+      redis_pool,
       redlock,
       minio,
       aws_rekognition,

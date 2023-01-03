@@ -54,7 +54,7 @@ pub async fn exec(
     asset.url.clone(),
   ).await?;
 
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   postgres.upsert_ticket_design(CanvaDesign {
     design_id: body.design_id.clone(),
     canva_uid: body.user.clone(),
