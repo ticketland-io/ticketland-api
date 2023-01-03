@@ -6,11 +6,10 @@ use api_helpers::{
   middleware::auth::AuthnMiddlewareFactory,
 };
 use super::{
-  get_all_events,
   create_event,
   get_event_image,
   commit_event,
-  get_events_by_category,
+  get_filtered_events,
   create_event_sales,
   get_event,
   get_events_by_user,
@@ -20,18 +19,13 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
   move |cfg: &mut web::ServiceConfig| {
     cfg.service(
       web::resource("")
-      .route(web::get().to(get_all_events::exec))
+      .route(web::get().to(get_filtered_events::exec))
     );
 
     cfg.service(
       web::resource("/current-user")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_events_by_user::exec))
-    );
-
-    cfg.service(
-      web::resource("/category")
-      .route(web::get().to(get_events_by_category::exec))
     );
 
     cfg.service(
