@@ -10,7 +10,7 @@ use ticketland_event_handler::services::path;
 use ticketland_data::{
   models::{
     metadata::{Attribute, Metadata},
-    event::Event,
+    event::{Event, Location},
   },
 };
 use crate::{
@@ -61,7 +61,7 @@ pub async fn store_event(
     let field_name = field.name();
     let mime_type = field.content_type().type_();
     let content = content.concat();
-    
+
     if is_supported_media_type(mime_type) {
       if content.len() > store.config.max_image_size {
         return Err(Report::msg("Image limit".to_string()))
@@ -115,6 +115,7 @@ pub async fn store_event(
 
   let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
   let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
+  let location = serde_json::from_str::<Location>(&event_map.remove("location").unwrap())?;
 
   let mut postgres = store.pg_pool.connection().await?;
   postgres.upsert_event(Event {
@@ -123,7 +124,7 @@ pub async fn store_event(
     created_at: None,
     name: event_map.remove("name").unwrap(),
     description: event_map.remove("description").unwrap(),
-    location: Some(event_map.remove("location").unwrap()),
+    location: Some(location),
     venue: Some(event_map.remove("venue").unwrap()),
     event_type: event_map.remove("type").unwrap().parse()?,
     visibility: event_map.remove("visibility").unwrap().parse()?,
@@ -133,10 +134,10 @@ pub async fn store_event(
     event_capacity,
     file_type: Some(media_content_type.context("file_type missing")?),
     arweave_tx_id: None,
-    image_uploaded: false,
     webbundle_arweave_tx_id: None,
-    draft: true,
+    image_uploaded: false,
+    draft: false,
   }).await?;
-  
+
   Ok(metadata)
 }
