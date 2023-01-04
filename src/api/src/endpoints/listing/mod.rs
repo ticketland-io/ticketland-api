@@ -8,3 +8,7 @@ pub mod fill_sell_listing;
 pub mod fill_buy_listing;
 pub mod cancel_sell_listing;
 pub mod cancel_buy_listing;
+pub mod create_buy_listing_pre_commit;
+pub mod create_sell_listing_pre_commit;
+pub mod get_sold;
+pub mod get_prices;

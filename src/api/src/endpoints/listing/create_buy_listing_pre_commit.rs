@@ -3,7 +3,6 @@ use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
-use eyre::Result;
 use ticketland_core::error::Error;
 use api_helpers::{
   services::http::create_write_response,
@@ -36,7 +35,7 @@ pub async fn exec(
     bid_price: body.bid_price,
     n_listing: body.n_listing,
     is_open: true,
-    draft: false,
+    draft: true,
   }).await;
 
   Ok(create_write_response(result))

@@ -29,13 +29,14 @@ pub async fn exec(
   params: Path<ListingParams>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.create_sell_listing(NewSellListing {
+  let result = postgres.upsert_sell_listing(NewSellListing {
     account_id: &auth.user.local_id,
     ticket_nft: &body.ticket_nft,
     event_id: &body.event_id,
     sol_account: &params.listing_account,
     ask_price: body.ask_price,
     is_open: true,
+    draft: false,
   }).await;
 
   Ok(create_write_response(result))
