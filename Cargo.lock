@@ -432,7 +432,7 @@ checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 [[package]]
 name = "api-helpers"
 version = "0.3.20"
-source = "git+https://github.com/ticketland-io/common-rust#9e7d02dc1a1d2b1855a0b93f881ed22d4428939a"
+source = "git+https://github.com/ticketland-io/common-rust#3848cdc35300286b44d86fa28f7f3d850d3a4269"
 dependencies = [
  "actix",
  "actix-http",
@@ -1122,6 +1122,18 @@ name = "base64ct"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b645a089122eccb6111b4f81cbc1a49f5900ac4666bb93ac027feaecf15607bf"
+
+[[package]]
+name = "bigdecimal"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aaf33151a6429fe9211d1b276eafdf70cdff28b071e76c0b0e1503221ea3744"
+dependencies = [
+ "num-bigint 0.4.3",
+ "num-integer",
+ "num-traits",
+ "serde",
+]
 
 [[package]]
 name = "bincode"
@@ -1980,11 +1992,15 @@ version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68c186a7418a2aac330bb76cde82f16c36b03a66fb91db32d20214311f9f6545"
 dependencies = [
+ "bigdecimal",
  "bitflags",
  "byteorder",
  "chrono",
  "diesel_derives",
  "itoa",
+ "num-bigint 0.4.3",
+ "num-integer",
+ "num-traits",
  "pq-sys",
 ]
 
@@ -5908,8 +5924,8 @@ dependencies = [
 
 [[package]]
 name = "ticket-verification"
-version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#9e7d02dc1a1d2b1855a0b93f881ed22d4428939a"
+version = "0.1.16"
+source = "git+https://github.com/ticketland-io/common-rust#3848cdc35300286b44d86fa28f7f3d850d3a4269"
 dependencies = [
  "borsh",
  "bs58",
@@ -5978,7 +5994,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.17"
-source = "git+https://github.com/ticketland-io/common-rust#9e7d02dc1a1d2b1855a0b93f881ed22d4428939a"
+source = "git+https://github.com/ticketland-io/common-rust#3848cdc35300286b44d86fa28f7f3d850d3a4269"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -6010,7 +6026,7 @@ dependencies = [
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#9e7d02dc1a1d2b1855a0b93f881ed22d4428939a"
+source = "git+https://github.com/ticketland-io/common-rust#3848cdc35300286b44d86fa28f7f3d850d3a4269"
 dependencies = [
  "base64 0.13.1",
  "bs58",
@@ -6027,9 +6043,10 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.33"
-source = "git+https://github.com/ticketland-io/common-rust#9e7d02dc1a1d2b1855a0b93f881ed22d4428939a"
+version = "0.1.35"
+source = "git+https://github.com/ticketland-io/common-rust#3848cdc35300286b44d86fa28f7f3d850d3a4269"
 dependencies = [
+ "bigdecimal",
  "chrono",
  "diesel",
  "diesel-async",
@@ -6075,7 +6092,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#9e7d02dc1a1d2b1855a0b93f881ed22d4428939a"
+source = "git+https://github.com/ticketland-io/common-rust#3848cdc35300286b44d86fa28f7f3d850d3a4269"
 dependencies = [
  "lazy_static",
 ]
