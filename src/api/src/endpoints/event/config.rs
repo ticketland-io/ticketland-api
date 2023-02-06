@@ -12,7 +12,8 @@ use super::{
   get_filtered_events,
   create_event_sales,
   get_event,
-  get_events_by_user,
+  get_events_by_user, 
+  get_tickets
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -26,6 +27,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/current-user")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_events_by_user::exec))
+    );
+
+    cfg.service(
+      web::resource("tickets")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_tickets::exec))
     );
 
     cfg.service(
