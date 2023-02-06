@@ -1,4 +1,3 @@
-use serde::{Deserialize};
 use eyre::Result;
 use ticketland_core::error::Error;
 use actix_web::{
@@ -6,9 +5,7 @@ use actix_web::{
   HttpResponse,
 };
 use api_helpers::{
-  QueryString,
   services::{
-    data::QueryStringTrait,
     http::create_read_response,
   },
   middleware::auth::AuthData,
@@ -17,12 +14,6 @@ use crate::{
   utils::store::Store,
 };
 use super::common::EventParams;
-
-QueryString! {
-  pub struct QueryString {
-    pub event_id: Option<String>,
-  }
-}
 
 pub async fn exec(
   store: Data<Store>,
