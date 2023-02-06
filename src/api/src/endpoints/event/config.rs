@@ -12,7 +12,8 @@ use super::{
   get_filtered_events,
   create_event_sales,
   get_event,
-  get_events_by_user,
+  get_events_by_user, 
+  get_attended_count,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -33,6 +34,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(create_event::exec))
       .route(web::get().to(get_event::exec))
+    );
+
+    cfg.service(
+      web::resource("{event_id}/attended-count")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_attended_count::exec))
     );
 
     cfg.service(
