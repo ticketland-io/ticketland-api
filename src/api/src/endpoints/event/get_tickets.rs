@@ -2,7 +2,7 @@ use serde::{Deserialize};
 use eyre::Result;
 use ticketland_core::error::Error;
 use actix_web::{
-  web::{Data, Query},
+  web::{Data, Path},
   HttpResponse,
 };
 use api_helpers::{
@@ -16,6 +16,7 @@ use api_helpers::{
 use crate::{
   utils::store::Store,
 };
+use super::common::EventParams;
 
 QueryString! {
   pub struct QueryString {
@@ -26,9 +27,9 @@ QueryString! {
 pub async fn exec(
   store: Data<Store>,
   _auth: AuthData,
-  qs: Query<QueryString>,
+  params: Path<EventParams>,
 ) -> Result<HttpResponse, Error> {
-  let event_id = qs.event_id.clone().unwrap_or("".to_owned());
+  let event_id = params.event_id.clone();
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_attended_tickets(event_id).await;
 

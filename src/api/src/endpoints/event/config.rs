@@ -30,16 +30,16 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("tickets")
-      .wrap(Rc::clone(&authn_middleware))
-      .route(web::get().to(get_tickets::exec))
-    );
-
-    cfg.service(
       web::resource("{event_id}")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(create_event::exec))
       .route(web::get().to(get_event::exec))
+    );
+
+    cfg.service(
+      web::resource("{event_id}/attended-count")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_tickets::exec))
     );
 
     cfg.service(
