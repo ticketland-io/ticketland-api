@@ -18,23 +18,22 @@ use crate::{
 };
 
 QueryString! {
-  pub struct QueryString {}
+  pub struct QueryString {
+    pub event_id: Option<String>,
+  }
 }
 
 pub async fn exec(
   store: Data<Store>,
-  auth: AuthData,
+  _auth: AuthData,
   qs: Query<QueryString>,
 ) -> Result<HttpResponse, Error> {
   // TODO: we want to return user events for all events if this is none
+  let event_id = qs.event_id.clone().unwrap_or("".to_owned());
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_user_tickets(
-    auth.user.local_id.clone(),
-    skip,
-    limit
-  ).await;
+  let result = postgres.read_tickets_for_event(event_id, skip, limit).await;
 
   Ok(create_read_response(result, skip, limit))
 }
