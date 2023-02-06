@@ -22,7 +22,7 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_attended_tickets(event_id).await;
+  let result = postgres.read_attended_tickets_count(event_id).await;
 
   Ok(create_read_response(result, 0, 0))
 }
