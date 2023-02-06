@@ -12,7 +12,7 @@ use super::{
   verify_ticket,
   purchase_pre_commit,
   save_user_ticket_fiat,
-  purchase_pre_commit_fiat
+  purchase_pre_commit_fiat,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
