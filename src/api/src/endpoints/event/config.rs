@@ -13,7 +13,7 @@ use super::{
   create_event_sales,
   get_event,
   get_events_by_user, 
-  get_attended_count
+  get_attended_count,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
