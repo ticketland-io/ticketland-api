@@ -13,6 +13,7 @@ use super::{
   purchase_pre_commit,
   save_user_ticket_fiat,
   purchase_pre_commit_fiat,
+  get_ticket_info
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -50,6 +51,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("{ticket_nft}/verifications")
       .route(web::post().to(verify_ticket::exec))
+    );
+
+    cfg.service(
+      web::resource("{ticket_nft}/ticket-info")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_ticket_info::exec))
     );
   }
 }

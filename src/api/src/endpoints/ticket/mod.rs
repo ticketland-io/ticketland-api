@@ -6,3 +6,4 @@ pub mod verify_ticket;
 pub mod purchase_pre_commit;
 pub mod save_user_ticket_fiat;
 pub mod purchase_pre_commit_fiat;
+pub mod get_ticket_info;
