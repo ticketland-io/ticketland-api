@@ -7,4 +7,5 @@ pub mod commit_event;
 pub mod create_event_sales;
 pub mod get_event;
 pub mod get_events_by_user;
+pub mod get_events_by_ticket_user;
 pub mod get_attended_count;
