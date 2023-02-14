@@ -22,6 +22,7 @@ QueryString! {
   pub struct QueryString {
     pub start_date_from: Option<i64>,
     pub start_date_to: Option<i64>,
+    pub search: Option<String>,
   }
 }
 pub async fn exec(
@@ -37,11 +38,15 @@ pub async fn exec(
   let start_date_to = if let Some(date) = qs.start_date_to {
     Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date_to")?)
   } else { None };
+
+  let name = qs.search.clone();
+
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_account_events(
     auth.user.local_id.clone(),
     start_date_from,
     start_date_to,
+    name,
     skip,
     limit,
   ).await;
