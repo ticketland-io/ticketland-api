@@ -24,7 +24,7 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   println!("test");
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_ticket_info(params.ticket_nft.to_owned()).await;
+  let result = postgres.read_ticket(params.ticket_nft.to_owned()).await;
 
   Ok(create_read_response(result, 0, 0))
 }
