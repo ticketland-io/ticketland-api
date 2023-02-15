@@ -22,7 +22,6 @@ pub async fn exec(
   _auth: AuthData,
   params: Path<Params>,
 ) -> Result<HttpResponse, Error> {
-  println!("test");
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_ticket(params.ticket_nft.to_owned()).await;
 
