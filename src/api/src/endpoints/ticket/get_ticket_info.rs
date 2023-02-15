@@ -7,7 +7,6 @@ use ticketland_core::error::Error;
 use crate::{
   utils::store::Store,
 };
-
 use api_helpers::{
   services::http::create_read_response,
   middleware::auth::AuthData,
