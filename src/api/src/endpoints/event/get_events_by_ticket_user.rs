@@ -25,6 +25,7 @@ QueryString! {
     pub search: Option<String>,
   }
 }
+
 pub async fn exec(
   store: Data<Store>,
   qs: Query<QueryString>,
