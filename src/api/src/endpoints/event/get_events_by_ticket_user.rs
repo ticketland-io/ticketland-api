@@ -25,6 +25,7 @@ QueryString! {
     pub search: Option<String>,
   }
 }
+
 pub async fn exec(
   store: Data<Store>,
   qs: Query<QueryString>,
@@ -42,7 +43,7 @@ pub async fn exec(
   let name = qs.search.clone();
 
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_account_events(
+  let result = postgres.read_account_ticket_events(
     auth.user.local_id.clone(),
     start_date_from,
     start_date_to,
