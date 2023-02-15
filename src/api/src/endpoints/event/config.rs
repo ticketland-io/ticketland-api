@@ -14,7 +14,7 @@ use super::{
   get_event,
   get_events_by_user, 
   get_attended_count,
-  get_events_by_ticket_user
+  get_events_by_ticket_user,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
