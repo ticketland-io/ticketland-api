@@ -54,7 +54,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("{ticket_nft}/ticket-info")
+      web::resource("{ticket_nft}")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_ticket_info::exec))
     );
