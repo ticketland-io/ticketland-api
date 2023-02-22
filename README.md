@@ -11,3 +11,9 @@ docker run -d  \
   -e "MINIO_ROOT_PASSWORD=lM02Cnff9RlfQ9cK+tRg5oP3R27glCnPESJ7siW+" \
   quay.io/minio/minio server /data --console-address ":9001"
 ```
+
+# Build docker image
+
+```bash
+docker build --build-arg GITHUB_TOKEN=<github_token> -t registry.digitalocean.com/ticketland/ticketland-api:<version> -f ./operations/api/Dockerfile ./src/api
+```
