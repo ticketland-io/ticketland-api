@@ -10,8 +10,7 @@ use serde::{Serialize};
 use solana_web3_rust::utils::pubkey_from_str;
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
-  CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
-  CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
+  CreateAccountLink, AccountLinkCollect,
   AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
   TransferScheduleInterval, Customer, CreateCustomer, CreateProduct,
   Product, CreatePrice, Currency, IdOrCreate, Price, CreateCheckoutSession, CheckoutSession,
@@ -117,13 +116,6 @@ pub async fn create_stripe_account(secret_key: String,) -> Result<Account>  {
     &client,
     CreateAccount {
       type_: Some(AccountType::Express),
-      capabilities: Some(CreateAccountCapabilities {
-        card_payments: Some(CreateAccountCapabilitiesCardPayments {
-          requested: Some(true),
-        }),
-        transfers: Some(CreateAccountCapabilitiesTransfers {requested: Some(true)}),
-        ..Default::default()
-      }),
       settings: Some(AccountSettingsParams {
         payouts: Some(PayoutSettingsParams {
           schedule: Some(TransferScheduleParams {
