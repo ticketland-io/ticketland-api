@@ -46,24 +46,24 @@ pub async fn exec(
   store: Data<Store>,
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
-  // let asset = body.assets.get(0).unwrap().clone();
+  let asset = body.assets.get(0).unwrap().clone();
   
-  // store.ticket_design_upload_queue.new_design(
-  //   body.design_id.clone(),
-  //   asset.file_type.clone(),
-  //   asset.url.clone(),
-  // ).await?;
+  store.ticket_design_upload_queue.new_design(
+    body.design_id.clone(),
+    asset.file_type.clone(),
+    asset.url.clone(),
+  ).await?;
 
-  // let mut postgres = store.pg_pool.connection().await?;
-  // postgres.upsert_ticket_design(CanvaDesign {
-  //   design_id: body.design_id.clone(),
-  //   canva_uid: body.user.clone(),
-  //   created_at: None,
-  //   url: asset.url.clone(),
-  //   name: asset.name.clone(),
-  //   file_type: asset.file_type.clone(),
-  // })
-  // .await?;
+  let mut postgres = store.pg_pool.connection().await?;
+  postgres.upsert_ticket_design(CanvaDesign {
+    design_id: body.design_id.clone(),
+    canva_uid: body.user.clone(),
+    created_at: None,
+    url: asset.url.clone(),
+    name: asset.name.clone(),
+    file_type: asset.file_type.clone(),
+  })
+  .await?;
 
   Ok(
     HttpResponse::Ok().json(SuccessResponse {
