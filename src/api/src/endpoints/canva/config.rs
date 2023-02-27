@@ -13,7 +13,7 @@ use super::{
   create_canva_user,
   canva_configuration,
   auth,
-  get_canva_tickets,
+  get_canva_designs,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>, canva_key: String) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -27,9 +27,9 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>, canva_key: String) -
     );
 
     cfg.service(
-      web::resource("tickets")
+      web::resource("designs")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::get().to(get_canva_tickets::exec))
+      .route(web::get().to(get_canva_designs::exec))
     );
 
     // This is the endpoint Canva will use to check if a user is authenticated
