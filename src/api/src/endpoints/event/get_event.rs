@@ -1,10 +1,7 @@
 use actix_web::{web, HttpResponse};
 use eyre::Result;
 use ticketland_core::error::Error;
-use api_helpers::{
-  middleware::auth::AuthData,
-  services::http::create_read_response,
-};
+use api_helpers::services::http::create_read_response;
 use crate::{
   utils::store::Store,
 };
@@ -13,7 +10,6 @@ use super::common::EventParams;
 
 pub async fn exec(
   store: web::Data<Store>,
-  _auth: AuthData,
   params: web::Path<EventParams>,
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();

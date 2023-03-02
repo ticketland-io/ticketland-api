@@ -11,7 +11,6 @@ use api_helpers::{
     data::QueryStringTrait,
     http::create_read_response,
   },
-  middleware::auth::AuthData,
 };
 use crate::{
   utils::store::Store,
@@ -25,7 +24,6 @@ QueryString! {
 
 pub async fn exec(
   store: Data<Store>,
-  _auth: AuthData,
   qs: Query<QueryString>,
 ) -> Result<HttpResponse, Error> {
   // TODO: we want to return user events for all events if this is none

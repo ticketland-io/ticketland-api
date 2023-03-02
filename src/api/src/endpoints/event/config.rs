@@ -37,8 +37,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
 
     cfg.service(
       web::resource("{event_id}")
-      .wrap(Rc::clone(&authn_middleware))
-      .route(web::post().to(create_event::exec))
+      .route(web::post().to(create_event::exec).wrap(Rc::clone(&authn_middleware)))
       .route(web::get().to(get_event::exec))
     );
 

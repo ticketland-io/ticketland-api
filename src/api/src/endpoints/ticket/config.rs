@@ -20,8 +20,8 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
   move |cfg: &mut web::ServiceConfig| {
     cfg.service(
       web::resource("")
-      .wrap(Rc::clone(&authn_middleware))
-      .route(web::post().to(save_user_ticket::exec))
+     
+      .route(web::post().to(save_user_ticket::exec).wrap(Rc::clone(&authn_middleware)))
       .route(web::get().to(get_event_tickets::exec))
     );
     cfg.service(
