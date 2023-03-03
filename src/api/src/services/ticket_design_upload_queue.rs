@@ -21,6 +21,7 @@ impl TicketDesignUploadQueue {
       &"ticket_design_upload",
       &"ticket_design_upload.new",
       retry_ttl,
+      None,
     ).await.unwrap();
 
     Self {

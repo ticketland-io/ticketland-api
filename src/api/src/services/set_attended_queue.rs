@@ -20,6 +20,7 @@ impl SetAttendedQueue {
       &"set_attended",
       &"set_attended.new",
       retry_ttl,
+      None,
     ).await.unwrap();
 
     Self {

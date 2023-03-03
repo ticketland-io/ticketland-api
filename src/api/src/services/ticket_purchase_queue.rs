@@ -20,6 +20,7 @@ impl TicketPurchaseQueue {
       &"ticket_purchase",
       &"ticket_purchase.new",
       retry_ttl,
+      None,
     ).await.unwrap();
 
     Self {

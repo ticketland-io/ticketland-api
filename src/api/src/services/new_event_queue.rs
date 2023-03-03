@@ -21,6 +21,7 @@ impl NewEventQueue {
       &"event_image_file",
       &"event_image_file.new",
       retry_ttl,
+      None,
     ).await.unwrap();
 
     Self {

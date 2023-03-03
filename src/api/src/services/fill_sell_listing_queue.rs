@@ -20,6 +20,7 @@ impl FillSellListingQueue {
       &"fill_sell_listing",
       &"fill_sell_listing.new",
       retry_ttl,
+      None,
     ).await.unwrap();
 
     Self {
