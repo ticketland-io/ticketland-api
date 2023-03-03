@@ -18,7 +18,9 @@ use crate::{
 };
 
 QueryString! {
-  pub struct QueryString {}
+  pub struct QueryString {
+    event_id: Option<String>,
+  }
 }
 
 pub async fn exec(
@@ -32,6 +34,7 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_user_tickets(
     auth.user.local_id.clone(),
+    qs.event_id.clone(),
     skip,
     limit
   ).await;
