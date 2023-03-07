@@ -17,11 +17,8 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
   let mut postgres = store.pg_pool.connection().await?;
-  let event = postgres
-  .read_event_with_sales(event_id)
-  .await?
-  .get(0)
-  .context("event now found")?;
+  let event = postgres.read_event_with_sales(event_id).await?;
+  let event = event.get(0).context("event now found")?;
 
   let ticket_image_types = event
   .ticket_images
