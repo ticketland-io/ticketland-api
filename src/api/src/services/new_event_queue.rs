@@ -29,13 +29,11 @@ impl NewEventQueue {
   pub async fn new_event(
     &self,
     event_id: String,
-    content_type: String,
     ticket_image_types: Vec<i16>,
   ) -> Result<()> {
     let img_msg = UploadImageFile {
       event_id: event_id.clone(),
       ticket_image_types,
-      content_type: content_type.clone(),
     };
 
     self.image_upload_producer.publish(

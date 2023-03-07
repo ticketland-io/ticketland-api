@@ -18,7 +18,7 @@ pub async fn exec(
   let event_id = params.event_id.clone();
   let mut postgres = store.pg_pool.connection().await?;
   let event = postgres.read_event_with_sales(event_id).await?;
-  let event = event.get(0).context("event now found")?;
+  let event = event.get(0).context("event not found")?;
 
   let ticket_image_types = event
   .ticket_images
@@ -27,11 +27,7 @@ pub async fn exec(
   .collect::<Vec<i16>>();
 
   store.new_event_queue
-  .new_event(
-    event.event_id.clone(),
-    event.file_type.clone().context("file_type missing")?,
-    ticket_image_types,
-  )
+  .new_event(event.event_id.clone(),ticket_image_types)
   .await?;
 
   Ok(HttpResponse::Ok().finish())
