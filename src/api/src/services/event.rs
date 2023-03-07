@@ -10,7 +10,7 @@ use ticketland_event_handler::services::path;
 use ticketland_data::{
   models::{
     metadata::{Attribute, Metadata},
-    event::{Event, Location},
+    event::{Event, Location, TicketImage},
   },
 };
 use crate::{
@@ -45,7 +45,8 @@ pub async fn store_event(
   mut payload: Multipart,
 ) -> Result<Metadata> {
   let mut metadata = Metadata::default();
-  let mut media_content_type = None;
+  let mut cover_media_content_type = None;
+  let mut ticket_images = vec![];
   let mut event_capacity= String::new();
 
   while let Some(item) = payload.next().await {
@@ -70,11 +71,26 @@ pub async fn store_event(
       inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
 
       let content_type = field.content_type().subtype();
-      media_content_type = Some(content_type.to_string().clone());
 
-      store.minio.upload(
-        &path::get_event_file_path(&event_id, &field_name, &content_type.to_string()),
-        content.as_ref()
+      if field_name == "cover_image" {
+        cover_media_content_type = Some(content_type.to_string().clone());
+      } else if field_name.contains("ticket_image") {
+        let ticket_image_type = field_name[field_name.len() - 1..].parse()?;
+        ticket_images.push(TicketImage {
+          event_id: event_id.clone(),
+          ticket_image_type,
+          content_type: content_type.to_string().clone(),
+          arweave_tx_id: None,
+          uploaded: false,
+        });
+      } else {
+        return Err(Report::msg("Bad request".to_string()))
+      }
+
+      store.minio.upload_with_content_type(
+        &path::get_event_file_path(&event_id, &field_name),
+        content.as_ref(),
+        &content_type.to_string(),
       )
       .await?;
     } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
@@ -100,7 +116,7 @@ pub async fn store_event(
     }
   };
 
-  if metadata.is_default() && media_content_type.is_none() {
+  if metadata.is_default() && cover_media_content_type.is_none() && ticket_images.len() == 0 {
     return Err(Report::msg("Bad request".to_string()))
   }
 
@@ -132,12 +148,14 @@ pub async fn store_event(
     end_date,
     category: event_map.remove("category").unwrap().parse()?,
     event_capacity,
-    file_type: Some(media_content_type.context("file_type missing")?),
+    file_type: Some(cover_media_content_type.context("file_type missing")?),
     arweave_tx_id: None,
     webbundle_arweave_tx_id: None,
-    image_uploaded: false,
+    // image_uploaded: false,
     draft: false,
-  }).await?;
+  },
+  ticket_images,
+  ).await?;
 
   Ok(metadata)
 }
