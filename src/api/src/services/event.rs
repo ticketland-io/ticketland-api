@@ -148,7 +148,6 @@ pub async fn store_event(
     end_date,
     category: event_map.remove("category").unwrap().parse()?,
     event_capacity,
-    file_type: Some(cover_media_content_type.context("file_type missing")?),
     arweave_tx_id: None,
     webbundle_arweave_tx_id: None,
     // image_uploaded: false,
