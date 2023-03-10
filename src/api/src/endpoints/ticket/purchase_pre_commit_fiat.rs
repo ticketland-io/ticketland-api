@@ -28,11 +28,7 @@ pub struct Response {
 #[derive(Deserialize)]
 pub struct Body {
   event_id: String,
-  // ticket_nft: String,
-  // sale_account: String,
   payment_intent_id: String,
-  // seat_index: u32,
-  // seat_name: String,
 }
 
 async fn retrieve_intent(

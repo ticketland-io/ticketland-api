@@ -4,7 +4,7 @@ use actix_web::{
   HttpResponse,
   http::header::{ContentDisposition, DispositionType, DispositionParam},
 };
-use eyre::{Result, ContextCompat};
+use eyre::Result;
 use ticketland_core::{
   error::Error,
   streams::s3_stream::S3Stream,
@@ -28,7 +28,7 @@ pub async fn exec(
   // TODO: make sure this event id belongs to the current user. Or even better use a custom authz middleware
   let mut postgres = store.pg_pool.connection().await?;
   let event = postgres.read_event(params.event_id.clone()).await?;
-  let file_path = path::get_event_file_path(&event.event_id, "ticket_image", &event.file_type.context("file_type missing")?);
+  let file_path = path::get_event_file_path(&event.event_id, "ticket_image");
 
   let ipfs_read_stream = S3Stream::new(
     file_path.clone(),
