@@ -326,6 +326,7 @@ pub async fn create_checkout_session(
     params.customer = Some(customer.id);
     params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
       application_fee_amount: Some(fee),
+      on_behalf_of: Some(stripe_account.stripe_uid.clone()),
       transfer_data: Some(CreateCheckoutSessionPaymentIntentDataTransferData {
         destination: stripe_account.stripe_uid,
         ..Default::default()
