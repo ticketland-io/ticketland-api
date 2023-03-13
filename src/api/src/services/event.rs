@@ -94,7 +94,7 @@ pub async fn store_event(
       )
       .await?;
     } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
-      let value = from_utf8(content.as_ref()).unwrap().to_string();
+      let value = from_utf8(content.as_ref())?.to_string();
 
       match field_name {
         "name" => {
@@ -123,30 +123,38 @@ pub async fn store_event(
   // Store the metadata as JSON on S3
   store.minio.upload(
     &path::get_event_metadata_path(&event_id),
-    serde_json::to_string(&metadata).unwrap().as_ref(),
+    serde_json::to_string(&metadata)?.as_ref(),
   )
   .await?;
 
   let mut event_map = metadata.to_map();
 
-  let start_date = NaiveDateTime::from_timestamp_opt(event_map.remove("startDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
-  let end_date = NaiveDateTime::from_timestamp_opt(event_map.remove("endDate").unwrap().parse::<i64>()?, 0).context("invalid start_date")?;
-  let location = serde_json::from_str::<Location>(&event_map.remove("location").unwrap())?;
+  let start_date = event_map.remove("startDate").context("missing startDate")?.parse::<i64>()?;
+  let start_date = NaiveDateTime::from_timestamp_opt(start_date, 0).context("invalid start_date")?;
+
+  let end_date = event_map.remove("endDate").context("missing endDate")?.parse::<i64>()?;
+  let end_date = NaiveDateTime::from_timestamp_opt(end_date, 0).context("invalid start_date")?;
+
+  let location = if let Some(location) = event_map.remove("location") {
+    Some(serde_json::from_str::<Location>(&location)?)
+  } else {
+    None
+  };
 
   let mut postgres = store.pg_pool.connection().await?;
   postgres.upsert_event(Event {
     event_id,
     account_id: uid,
     created_at: None,
-    name: event_map.remove("name").unwrap(),
-    description: event_map.remove("description").unwrap(),
-    location: Some(location),
-    venue: Some(event_map.remove("venue").unwrap()),
-    event_type: event_map.remove("type").unwrap().parse()?,
-    visibility: event_map.remove("visibility").unwrap().parse()?,
+    name: event_map.remove("name").context("missing name")?,
+    description: event_map.remove("description").context("missing description")?,
+    location,
+    venue: Some(event_map.remove("venue").context("missing venue")?),
+    event_type: event_map.remove("type").context("missing type")?.parse()?,
+    visibility: event_map.remove("visibility").context("missing visibility")?.parse()?,
     start_date,
     end_date,
-    category: event_map.remove("category").unwrap().parse()?,
+    category: event_map.remove("category").context("missing category")?.parse()?,
     event_capacity,
     arweave_tx_id: None,
     webbundle_arweave_tx_id: None,
