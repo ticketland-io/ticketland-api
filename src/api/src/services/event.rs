@@ -150,7 +150,7 @@ pub async fn store_event(
     event_capacity,
     arweave_tx_id: None,
     webbundle_arweave_tx_id: None,
-    draft: false,
+    draft: true,
   },
   ticket_images,
   ).await?;
