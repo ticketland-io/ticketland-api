@@ -16,6 +16,7 @@ use crate::utils::store::Store;
 
 QueryString! {
   pub struct QueryString {
+    pub event_id: String,
     pub interval: u64,
     pub start_ts: u64,
   }
@@ -26,7 +27,11 @@ pub async fn exec(
   qs: Query<QueryString>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_closed_listings_count(qs.interval, qs.start_ts).await;
+  let result = postgres.read_closed_listings_count(
+    qs.event_id.clone(),
+    qs.interval,
+    qs.start_ts,
+  ).await;
 
   Ok(create_read_response(result, 0, 1))
 }
