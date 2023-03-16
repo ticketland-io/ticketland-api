@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use eyre::{Result, ContextCompat};
 use actix_web::{
   web::{Data, Query},
@@ -20,19 +20,12 @@ use crate::{
 QueryString! {
   pub struct QueryString {
     pub category: Option<i16>,
-    pub price_range: Option<(u32, u32)>,
+    pub price_range_l: Option<u32>,
+    pub price_range_r: Option<u32>,
     pub start_date_from: Option<i64>,
     pub start_date_to: Option<i64>,
     pub search: Option<String>,
   }
-}
-
-#[derive(Serialize)]
-pub struct BaseResponse<T: Serialize> {
-  pub count: usize,
-  pub skip: Option<u32>,
-  pub limit: Option<u32>,
-  pub result: T,
 }
 
 pub async fn exec(
@@ -42,7 +35,11 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let category = qs.category;
-  let price_range = qs.price_range;
+
+  let price_range = if let (Some(price_range_l), Some(price_range_r)) = (qs.price_range_l, qs.price_range_r) {
+    Some((price_range_l, price_range_r))
+  } else { None };
+
   let start_date_from = if let Some(date) = qs.start_date_from {
     Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date_from")?)
   } else { None };
