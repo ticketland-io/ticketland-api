@@ -14,7 +14,7 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_event_with_sales(event_id).await;
+  let result = postgres.read_event_with_sales(event_id, false).await;
 
   Ok(create_read_response(result, 0, 1))
 }
