@@ -3,3 +3,4 @@ pub mod ticket;
 pub mod listing;
 pub mod canva;
 pub mod stripe;
+pub mod user;
