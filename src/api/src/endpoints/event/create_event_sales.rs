@@ -24,11 +24,15 @@ pub struct Body {
 pub async fn exec(
   store: web::Data<Store>,
   _auth: AuthData,
-  _params: web::Path<EventParams>,
+  params: web::Path<EventParams>,
   body: web::Json<Body>
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.upsert_sales(body.sales.clone(), body.seat_ranges.clone()).await;
+  let result = postgres.upsert_sales(
+    params.event_id.clone(),
+    body.sales.clone(),
+    body.seat_ranges.clone(),
+  ).await;
 
   Ok(create_write_response(result))
 }
