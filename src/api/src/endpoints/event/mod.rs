@@ -9,3 +9,5 @@ pub mod get_event;
 pub mod get_events_by_user;
 pub mod get_events_by_ticket_user;
 pub mod get_attended_count;
+pub mod get_draft_events;
+pub mod get_draft_event;

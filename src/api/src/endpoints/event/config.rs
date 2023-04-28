@@ -12,9 +12,11 @@ use super::{
   get_filtered_events,
   create_event_sales,
   get_event,
-  get_events_by_user, 
+  get_events_by_user,
   get_attended_count,
   get_events_by_ticket_user,
+  get_draft_events,
+  get_draft_event,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -22,6 +24,16 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("")
       .route(web::get().to(get_filtered_events::exec))
+    );
+    cfg.service(
+      web::resource("/drafts")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_draft_events::exec))
+    );
+    cfg.service(
+      web::resource("/drafts/{event_id}")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::get().to(get_draft_event::exec))
     );
 
     cfg.service(
@@ -59,7 +71,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(commit_event::exec))
     );
-    
+
     cfg.service(
       web::resource("{event_id}/images")
       .wrap(Rc::clone(&authn_middleware))

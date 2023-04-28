@@ -2,9 +2,7 @@ use actix_web::{web, HttpResponse};
 use eyre::Result;
 use ticketland_core::error::Error;
 use api_helpers::services::http::create_read_response;
-use crate::{
-  utils::store::Store,
-};
+use crate::utils::store::Store;
 use super::common::EventParams;
 
 
