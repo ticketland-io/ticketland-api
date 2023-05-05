@@ -483,7 +483,7 @@ dependencies = [
  "serde",
  "ticketland-core",
  "ticketland-crypto",
- "ticketland-data",
+ "ticketland-data 0.1.54",
  "tokio",
 ]
 
@@ -5983,7 +5983,6 @@ dependencies = [
 [[package]]
 name = "ticket-verification"
 version = "0.1.17"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
 dependencies = [
  "borsh",
  "bs58",
@@ -5996,7 +5995,7 @@ dependencies = [
  "thiserror",
  "ticketland-core",
  "ticketland-crypto",
- "ticketland-data",
+ "ticketland-data 0.1.55",
  "tokio",
 ]
 
@@ -6043,7 +6042,7 @@ dependencies = [
  "ticket-verification",
  "ticketland-ai",
  "ticketland-core",
- "ticketland-data",
+ "ticketland-data 0.1.55",
  "ticketland-event-handler",
  "tokio",
  "tokio-util",
@@ -6117,6 +6116,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ticketland-data"
+version = "0.1.55"
+dependencies = [
+ "bigdecimal",
+ "chrono",
+ "diesel",
+ "diesel-async",
+ "diesel_as_jsonb",
+ "eyre",
+ "serde",
+ "serde-aux",
+ "serde_json",
+]
+
+[[package]]
 name = "ticketland-event-handler"
 version = "0.1.24"
 source = "git+https://github.com/ticketland-io/ticketland-event-handler#7de9ef00a945586339f564c5fbf7020e956d7cf1"
@@ -6140,7 +6154,7 @@ dependencies = [
  "solana-sdk",
  "solana-web3-rust",
  "ticketland-core",
- "ticketland-data",
+ "ticketland-data 0.1.54",
  "tokio",
  "tokio-stream",
  "tokio-util",
