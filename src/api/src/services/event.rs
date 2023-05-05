@@ -67,7 +67,6 @@ pub async fn store_event(
     }
 
     let field_name = field.name();
-    let mime_type = field.content_type().type_();
     let mime_subtype = field.content_type().subtype();
     let content = content.concat();
 
@@ -75,10 +74,10 @@ pub async fn store_event(
       if content.len() > store.config.max_image_size {
         return Err(Report::msg("Image limit".to_string()))
       }
-
+      
       // Add pdf moderation logic
       if is_supported_cover_media_type(mime_subtype) {
-      inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
+        inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
       }
 
       let content_type = field.content_type().subtype();
