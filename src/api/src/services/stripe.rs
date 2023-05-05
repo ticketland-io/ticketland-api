@@ -321,7 +321,9 @@ pub async fn create_checkout_session(
     let cancel_url = format!("{}/stripe/cancel", &ticketland_dapp);
     let success_url = format!("{}/stripe/success", &ticketland_dapp);
 
-    let mut params = CreateCheckoutSession::new(&cancel_url, &success_url);
+    let mut params = CreateCheckoutSession::new(&success_url);
+    
+    params.cancel_url = Some(&cancel_url);
     params.expires_at = Some(Utc::now().timestamp() + Duration::minutes(30).num_seconds());
     params.customer = Some(customer.id);
     params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {

@@ -10,7 +10,7 @@ pub struct NewEventQueue {
 impl NewEventQueue {
   pub async fn new(
     rabbitmq_uri: String,
-    retry_ttl: u16,
+    retry_ttl: u32,
   ) -> Self {
     let image_upload_producer = RetryProducer::new(
       &rabbitmq_uri,
@@ -39,7 +39,8 @@ impl NewEventQueue {
     self.image_upload_producer.publish(
       &"event_image_file",
       &"event_image_file.new",
-      &img_msg.try_to_vec().unwrap()
+      &img_msg.try_to_vec().unwrap(),
+      true,
     ).await
   }
 }

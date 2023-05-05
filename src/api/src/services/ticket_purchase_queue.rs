@@ -12,7 +12,7 @@ pub struct TicketPurchaseQueue {
 impl TicketPurchaseQueue {
   pub async fn new(
     rabbitmq_uri: String,
-    retry_ttl: u16,
+    retry_ttl: u32,
   ) -> Self {
     let producer = RetryProducer::new(
       &rabbitmq_uri,
@@ -51,7 +51,8 @@ impl TicketPurchaseQueue {
     self.producer.publish(
       &"ticket_purchase",
       &"ticket_purchase.new",
-      &msg.try_to_vec().unwrap()
+      &msg.try_to_vec().unwrap(),
+      true,
     ).await
   }
 }
