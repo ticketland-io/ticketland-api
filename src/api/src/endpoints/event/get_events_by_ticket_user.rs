@@ -22,6 +22,8 @@ QueryString! {
   pub struct QueryString {
     pub start_date_from: Option<i64>,
     pub start_date_to: Option<i64>,
+    pub end_date_from: Option<i64>,
+    pub end_date_to: Option<i64>,
     pub search: Option<String>,
   }
 }
@@ -39,6 +41,12 @@ pub async fn exec(
   let start_date_to = if let Some(date) = qs.start_date_to {
     Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid start_date_to")?)
   } else { None };
+  let end_date_from = if let Some(date) = qs.end_date_from {
+    Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid end_date_from")?)
+  } else { None };
+  let end_date_to = if let Some(date) = qs.end_date_to {
+    Some(NaiveDateTime::from_timestamp_opt(date, 0).context("invalid end_date_to")?)
+  } else { None };
 
   let name = qs.search.clone();
 
@@ -47,6 +55,8 @@ pub async fn exec(
     auth.user.local_id.clone(),
     start_date_from,
     start_date_to,
+    end_date_from,
+    end_date_to,
     name,
     skip,
     limit,
