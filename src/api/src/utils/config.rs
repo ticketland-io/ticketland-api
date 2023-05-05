@@ -23,7 +23,7 @@ pub struct Config {
   // Rabbitmq envs
   pub rabbitmq_uri: String,
   pub exchange_name: String,
-  pub retry_ttl: u16,
+  pub retry_ttl: u32,
   pub rpc_endpoint: String,
   pub ticketland_api: String,
   pub ticketland_dapp: String,
@@ -58,7 +58,7 @@ impl Config {
         aws_rekognition_region: env::var("AWS_REKOGNITION_REGION").unwrap(),
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
-        retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
+        retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u32>().unwrap(),
         rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
         canva_key: env::var("CANVA_CLIENT_SECRET").unwrap(),
         stripe_key: env::var("STRIPE_CLIENT_SECRET").unwrap(),

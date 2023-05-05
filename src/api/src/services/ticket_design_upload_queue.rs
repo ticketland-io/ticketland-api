@@ -13,7 +13,7 @@ pub struct TicketDesignUploadQueue {
 impl TicketDesignUploadQueue {
   pub async fn new(
     rabbitmq_uri: String,
-    retry_ttl: u16,
+    retry_ttl: u32,
   ) -> Self {
     let s3_file_upload_producer = RetryProducer::new(
       &rabbitmq_uri,
@@ -39,7 +39,8 @@ impl TicketDesignUploadQueue {
     self.s3_file_upload_producer.publish(
       &"ticket_design_upload",
       &"ticket_design_upload.new",
-      &file_msg.try_to_vec().unwrap()
+      &file_msg.try_to_vec().unwrap(),
+      true,
     ).await
   }
 }
