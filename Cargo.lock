@@ -430,6 +430,20 @@ dependencies = [
 [[package]]
 name = "amqp-helpers"
 version = "0.2.0"
+source = "git+https://github.com/ticketland-io/amqp-helpers?rev=7ec406e9d2037a7cefde38dae302502e66ad6432#7ec406e9d2037a7cefde38dae302502e66ad6432"
+dependencies = [
+ "async-trait",
+ "borsh",
+ "eyre",
+ "futures-lite",
+ "lapin",
+ "tokio-executor-trait",
+ "tokio-reactor-trait",
+]
+
+[[package]]
+name = "amqp-helpers"
+version = "0.2.0"
 source = "git+https://github.com/ticketland-io/amqp-helpers#7ec406e9d2037a7cefde38dae302502e66ad6432"
 dependencies = [
  "async-trait",
@@ -6021,7 +6035,7 @@ dependencies = [
  "actix-multipart",
  "actix-rt",
  "actix-web",
- "amqp-helpers",
+ "amqp-helpers 0.2.0 (git+https://github.com/ticketland-io/amqp-helpers?rev=7ec406e9d2037a7cefde38dae302502e66ad6432)",
  "api-helpers",
  "async-stripe",
  "borsh",
@@ -6123,7 +6137,7 @@ source = "git+https://github.com/ticketland-io/ticketland-event-handler#7de9ef00
 dependencies = [
  "actix",
  "actix-rt",
- "amqp-helpers",
+ "amqp-helpers 0.2.0 (git+https://github.com/ticketland-io/amqp-helpers)",
  "async-trait",
  "borsh",
  "bytes",
