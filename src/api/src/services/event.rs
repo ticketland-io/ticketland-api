@@ -19,7 +19,14 @@ use crate::{
 
 fn is_supported_media_type(mime_type: mime::Name) -> bool {
   match mime_type {
-    mime::IMAGE | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
+    mime::PDF | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
+    _ => false,
+  }
+}
+
+fn is_supported_cover_media_type(mime_type: mime::Name) -> bool {
+  match mime_type {
+    mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
     _ => false,
   }
 }
