@@ -80,16 +80,14 @@ pub async fn store_event(
         inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
       }
 
-      let content_type = field.content_type().subtype();
-
       if field_name == "cover_image" {
-        cover_media_content_type = Some(content_type.to_string().clone());
+        cover_media_content_type = Some(mime_subtype.to_string().clone());
       } else if field_name.contains("ticket_image") {
         let ticket_image_type = field_name[field_name.len() - 1..].parse()?;
         ticket_images.push(TicketImage {
           event_id: event_id.clone(),
           ticket_image_type,
-          content_type: content_type.to_string().clone(),
+          content_type: mime_subtype.to_string().clone(),
           arweave_tx_id: None,
           uploaded: false,
         });
@@ -100,7 +98,7 @@ pub async fn store_event(
       store.minio.upload_with_content_type(
         &path::get_event_file_path(&event_id, &field_name),
         content.as_ref(),
-        &content_type.to_string(),
+        &mime_subtype.to_string(),
       )
       .await?;
     } else if mime_subtype.eq(&mime::APPLICATION_OCTET_STREAM.subtype()) {
