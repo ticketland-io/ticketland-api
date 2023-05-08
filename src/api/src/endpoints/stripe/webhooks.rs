@@ -49,7 +49,9 @@ pub async fn handle_webhook(
     stripe_signature,
     &store.config.stripe_webhook_key,
   ) {
-      match event.event_type {
+      let event_type = event.type_;
+
+      match event_type {
         EventType::AccountUpdated => {
           if let EventObject::Account(account) = event.data.object {
             handle_account_updated(&store, account).await?;
@@ -61,9 +63,9 @@ pub async fn handle_webhook(
           }
         }
         _ => {
-          println!("Unknown event encountered in webhook: {:?}", event.event_type);
+          println!("Unknown event encountered in webhook: {:?}", event_type);
 
-          return Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event.event_type)))?
+          return Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event_type)))?
         }
       }
   } else {

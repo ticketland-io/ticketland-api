@@ -12,7 +12,7 @@ pub struct FillSellListingQueue {
 impl FillSellListingQueue {
   pub async fn new(
     rabbitmq_uri: String,
-    retry_ttl: u16,
+    retry_ttl: u32,
   ) -> Self {
     let producer = RetryProducer::new(
       &rabbitmq_uri,
@@ -49,7 +49,8 @@ impl FillSellListingQueue {
     self.producer.publish(
       &"fill_sell_listing",
       &"fill_sell_listing.new",
-      &msg.try_to_vec().unwrap()
+      &msg.try_to_vec().unwrap(),
+      true,
     ).await
   }
 }

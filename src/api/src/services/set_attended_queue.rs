@@ -12,7 +12,7 @@ pub struct SetAttendedQueue {
 impl SetAttendedQueue {
   pub async fn new(
     rabbitmq_uri: String,
-    retry_ttl: u16,
+    retry_ttl: u32,
   ) -> Self {
     let set_attended_producer = RetryProducer::new(
       &rabbitmq_uri,
@@ -37,7 +37,8 @@ impl SetAttendedQueue {
     self.set_attended_producer.publish(
       &"set_attended",
       &"set_attended.new",
-      &set_attended_msg.try_to_vec().unwrap()
+      &set_attended_msg.try_to_vec().unwrap(),
+      true,
     ).await
   }
 }
