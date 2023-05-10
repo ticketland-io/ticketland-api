@@ -19,7 +19,14 @@ use crate::{
 
 fn is_supported_media_type(mime_type: mime::Name) -> bool {
   match mime_type {
-    mime::IMAGE | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
+    mime::PDF | mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
+    _ => false,
+  }
+}
+
+fn is_supported_cover_media_type(mime_type: mime::Name) -> bool {
+  match mime_type {
+    mime::PNG | mime::JPEG | mime::GIF | mime::MP4 | mime::MPEG => true,
     _ => false,
   }
 }
@@ -60,26 +67,27 @@ pub async fn store_event(
     }
 
     let field_name = field.name();
-    let mime_type = field.content_type().type_();
+    let mime_subtype = field.content_type().subtype();
     let content = content.concat();
 
-    if is_supported_media_type(mime_type) {
+    if is_supported_media_type(mime_subtype) {
       if content.len() > store.config.max_image_size {
         return Err(Report::msg("Image limit".to_string()))
       }
-
-      inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
-
-      let content_type = field.content_type().subtype();
+      
+      // Add pdf moderation logic
+      if is_supported_cover_media_type(mime_subtype) {
+        inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
+      }
 
       if field_name == "cover_image" {
-        cover_media_content_type = Some(content_type.to_string().clone());
+        cover_media_content_type = Some(mime_subtype.to_string().clone());
       } else if field_name.contains("ticket_image") {
         let ticket_image_type = field_name[field_name.len() - 1..].parse()?;
         ticket_images.push(TicketImage {
           event_id: event_id.clone(),
           ticket_image_type,
-          content_type: content_type.to_string().clone(),
+          content_type: mime_subtype.to_string().clone(),
           arweave_tx_id: None,
           uploaded: false,
         });
@@ -90,10 +98,10 @@ pub async fn store_event(
       store.minio.upload_with_content_type(
         &path::get_event_file_path(&event_id, &field_name),
         content.as_ref(),
-        &content_type.to_string(),
+        &mime_subtype.to_string(),
       )
       .await?;
-    } else if mime_type.eq(&mime::APPLICATION_OCTET_STREAM.type_()) {
+    } else if mime_subtype.eq(&mime::APPLICATION_OCTET_STREAM.subtype()) {
       let value = from_utf8(content.as_ref())?.to_string();
 
       match field_name {
