@@ -17,6 +17,7 @@ use super::{
   get_events_by_ticket_user,
   get_draft_events,
   get_draft_event,
+  delete_draft_event,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -34,6 +35,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("/drafts/{event_id}")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::get().to(get_draft_event::exec))
+      .route(web::delete().to(delete_draft_event::exec))
     );
 
     cfg.service(
