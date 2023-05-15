@@ -40,8 +40,9 @@ fn create_seats_bitmap(
 ) -> Vec<u32> {
   let SeatRange {l, r, ..} = *seat_range;
   let pending_seats: HashMap<u32, bool> = pending_tickets.into_iter().map(|s| (s, true)).collect();
-
-  (l as u32..r as u32)
+  // Range is exclusive on the end: [i, r)
+  // So, we need to use the (l, (r+1)) range to include the last seat_index
+  (l as u32..(r + 1) as u32)
   .filter_map(|i| {
     if !bitmap::is_set(i, &seats) && !pending_seats.contains_key(&i) {
       Some(i)
