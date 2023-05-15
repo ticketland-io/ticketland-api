@@ -48,6 +48,8 @@ pub async fn store_event(
   let mut cover_media_content_type = None;
   let mut ticket_images = vec![];
   let mut event_capacity= String::new();
+  let mut resale_cap = 0_i16;
+  let mut organizer_resale_fee = 0_i16;
 
   while let Some(item) = payload.next().await {
     let mut field = item?;
@@ -106,6 +108,12 @@ pub async fn store_event(
         "event_capacity" => {
           event_capacity = value;
         },
+        "resale_cap" => {
+          resale_cap = value.parse::<i16>()?;
+        },
+        "organizer_resale_fee" => {
+          organizer_resale_fee = value.parse::<i16>()?;
+        },
         "trait_type" => {
           metadata.attributes.push(
             serde_json::from_str::<Attribute>(&value)?
@@ -156,6 +164,8 @@ pub async fn store_event(
     end_date,
     category: event_map.remove("category").context("missing category")?.parse()?,
     event_capacity,
+    resale_cap,
+    organizer_resale_fee,
     arweave_tx_id: None,
     webbundle_arweave_tx_id: None,
     draft: true,
