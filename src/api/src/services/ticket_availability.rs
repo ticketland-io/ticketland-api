@@ -16,6 +16,10 @@ use ticketland_core::error::Error;
 use ticketland_event_handler::services::ticket_purchase::pending_ticket_key;
 use program_artifacts::{ticket_sale::pda as ticket_sale_pda};
 use program_artifacts::common::bitmap;
+use ticketland_utils::logger::{
+  interface::Logger,
+  console_logger::ConsoleLogger,
+};
 
 async fn get_pending_tickets(redis_pool: &redis::ConnectionPool, event_id: &String) -> Result<Vec<u32>> {
   let mut redis = redis_pool.connection().await?;
@@ -93,6 +97,8 @@ pub async fn get_next_seat_index(
   let seats_bitmap = create_seats_bitmap(event_capacity_data.seats, &seat_ranges[0], pending_tickets);
 
   if seats_bitmap.is_empty() {
+    ConsoleLogger.error("No seat available");
+
     return Err(Error::GenericError("No seat available".to_string()).into());
   }
 

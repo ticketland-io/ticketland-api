@@ -16,6 +16,10 @@ use ticketland_data::{
 use crate::{
   utils::store::Store,
 };
+use ticketland_utils::logger::{
+  interface::Logger,
+  console_logger::ConsoleLogger,
+};
 
 fn is_supported_media_type(mime_type: mime::Name) -> bool {
   match mime_type {
@@ -39,6 +43,8 @@ async fn inspect_moderation_labels(store: Arc<Store>, image_content: Vec<u8>) ->
   // At the moment we dissalow any of the labels to be present. In the future we might relax this
   // and inspect each label and decide accordingly..
   if labels.is_some() && labels.unwrap().len() > 0 {
+    ConsoleLogger.error("Inappropriate image");
+
     return Err(Report::msg("Inappropriate image".to_string()))
   }
 
@@ -72,6 +78,8 @@ pub async fn store_event(
 
     if is_supported_media_type(mime_subtype) {
       if content.len() > store.config.max_image_size {
+        ConsoleLogger.error("Image limit");
+        
         return Err(Report::msg("Image limit".to_string()))
       }
       
@@ -92,6 +100,8 @@ pub async fn store_event(
           uploaded: false,
         });
       } else {
+        ConsoleLogger.error("Bad request");
+
         return Err(Report::msg("Bad request".to_string()))
       }
 
@@ -125,6 +135,8 @@ pub async fn store_event(
   };
 
   if metadata.is_default() && cover_media_content_type.is_none() && ticket_images.len() == 0 {
+    ConsoleLogger.error("Bad request");
+
     return Err(Report::msg("Bad request".to_string()))
   }
 
