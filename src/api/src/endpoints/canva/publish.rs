@@ -1,3 +1,4 @@
+use api_helpers::services::http::create_write_response;
 use serde::{Serialize, Deserialize};
 use actix_web::{
   web::{Data, Json},
@@ -55,7 +56,7 @@ pub async fn exec(
   ).await?;
 
   let mut postgres = store.pg_pool.connection().await?;
-  postgres.upsert_ticket_design(CanvaDesign {
+  let result = postgres.upsert_ticket_design(CanvaDesign {
     design_id: body.design_id.clone(),
     canva_uid: body.user.clone(),
     created_at: None,
@@ -63,11 +64,7 @@ pub async fn exec(
     name: asset.name.clone(),
     file_type: asset.file_type.clone(),
   })
-  .await?;
+  .await;
 
-  Ok(
-    HttpResponse::Ok().json(SuccessResponse {
-      result_type: "SUCCESS".to_string()
-    })
-  )
+  Ok(create_write_response(result))
 }

@@ -8,7 +8,8 @@ use ticketland_core::{
   error::Error,
 };
 use api_helpers::{
-  middleware::auth::AuthData,
+  middleware::auth::AuthData, 
+  services::http::create_write_response,
 };
 use ticketland_data::{
   models::{canva_account::CanvaAccount},
@@ -28,12 +29,11 @@ pub async fn exec(
   body: Json<Body>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  postgres.upsert_canva_account(CanvaAccount {
+  let result = postgres.upsert_canva_account(CanvaAccount {
     canva_uid: body.canva_uid.clone(),
     account_id: auth.user.local_id.clone(),
     created_at: None,
-  }).await?;
+  }).await;
 
-
-  Ok(HttpResponse::Created().finish())
+  Ok(create_write_response(result))
 }

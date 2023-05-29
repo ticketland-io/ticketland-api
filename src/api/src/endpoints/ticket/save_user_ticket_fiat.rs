@@ -5,7 +5,8 @@ use actix_web::{
   HttpResponse,
 };
 use api_helpers::{
-  middleware::auth::AuthData,
+  middleware::auth::AuthData, 
+  services::http::create_write_response,
 };
 use ticketland_core::error::Error;
 use ticketland_data::{
@@ -70,7 +71,7 @@ pub async fn exec(
   ).await?;
 
   // 3. Send new ticket purchase message to rabbitmq to execute operator purchase tx
-  store.ticket_purchase_queue.new_ticket_purchase(
+  let result = store.ticket_purchase_queue.new_ticket_purchase(
     auth.user.local_id.clone(),
     body.event_id.clone(),
     body.sale_account.clone(),
@@ -78,7 +79,7 @@ pub async fn exec(
     account.pubkey,
     body.seat_index.to_string(),
     body.seat_name.clone(),
-  ).await?;
+  ).await;
 
-  Ok(HttpResponse::Created().finish())
+  Ok(create_write_response(result))
 }
