@@ -28,10 +28,6 @@ use ticketland_event_handler::{
 use crate::{
   utils::store::Store,
 };
-use ticketland_utils::logger::{
-  interface::Logger,
-  console_logger::ConsoleLogger,
-};
 
 pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
   handle_webhook(store, req, payload)
@@ -66,15 +62,9 @@ pub async fn handle_webhook(
             handle_checkout_session(&store, session).await?;
           }
         }
-        _ => {
-          ConsoleLogger.error(&format!("Unknown event encountered in webhook: {:?}", event_type));
-
-          return Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event_type)))?
-        }
+        _ =>  Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event_type)))?
       }
   } else {
-    ConsoleLogger.error("Failed to construct webhook event, ensure your webhook secret is correct.");
-
     return Err(Report::msg("Failed to construct webhook event, ensure your webhook secret is correct."))?;
   }
 

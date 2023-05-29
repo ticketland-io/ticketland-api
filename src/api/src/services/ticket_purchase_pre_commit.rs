@@ -5,10 +5,6 @@ use ticketland_data::models::{
   ticket::Ticket,
   ticket_onchain_account::TicketOnchainAccount,
 };
-use ticketland_utils::logger::{
-  interface::Logger,
-  console_logger::ConsoleLogger,
-};
 use ticketland_event_handler::{services::ticket_purchase::pending_ticket_key};
 use crate::{utils::store::Store};
 
@@ -37,8 +33,6 @@ pub async fn store_ticket_purchase_pre_commit(
 
   // Check if the ticket_nft key is in Redis; If so, then the ticket is not available
   if let Ok(_) = redis.get(&redis_key).await {
-    ConsoleLogger.error("Ticket not available");
-
     return Err(Report::msg("Ticket not available"))
   }
 

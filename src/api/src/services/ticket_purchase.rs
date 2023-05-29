@@ -15,10 +15,6 @@ use solana_sdk::{
   pubkey::Pubkey,
   commitment_config::CommitmentConfig,
 };
-use ticketland_utils::logger::{
-  interface::Logger,
-  console_logger::ConsoleLogger,
-};
 use crate::utils::store::Store;
 use super::price_feed::get_sol_price;
 
@@ -118,8 +114,6 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
   // us to validatate that user does not pass a ticket type which has has lower price but
   // use a ticket nft that is of a higher, more expensive type.
   if ticket_nft_pda.to_string() != ticket_nft {
-    ConsoleLogger.error("Invalid ticket_nft");
-
     return Err(Report::msg("Invalid ticket_nft"))?
   }
   // We need to check whether this ticket nft account exists. If it does it means that someone else
@@ -131,8 +125,6 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
   ).await?;
 
   if is_ticket_unavailable {
-    ConsoleLogger.error("Ticket unavailable");
-
     return Err(Report::msg("Ticket unavailable"))?
   }
 
@@ -144,8 +136,6 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
       MINT_TICKER_COST_IN_SOL
     ).await
   } else {
-    ConsoleLogger.error("Only fixed price ticket types are supported");
-
     return Err(Report::msg("Only fixed price ticket types are supported"))?
   }
 }
@@ -158,8 +148,6 @@ pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> R
   // Make sure user has send the correct ticket_nft in the request. The provided ticket nft must much the one
   // store in the sell_listing in the db
   if sell_listing.ticket_nft != ticket_nft {
-    ConsoleLogger.error("Invalid ticket nft");
-
     return Err(Report::msg("Invalid ticket_nft"))?
   }
 
@@ -171,8 +159,6 @@ pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> R
   ).await?;
 
   if sell_listing_exists {
-    ConsoleLogger.error("Sell listing unavailable");
-
     return Err(Report::msg("Sell listing unavailable"))?
   }
 
