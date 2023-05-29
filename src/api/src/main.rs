@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
       .allowed_origin_fn(move |origin, _| {
         cors_origin.iter().any(|v| v == origin || v == "*")
       })
-      .allowed_methods(vec!["GET", "POST", "PUT"])
+      .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
       .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
       .allowed_header(http::header::CONTENT_TYPE)
       .max_age(3600);
