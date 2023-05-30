@@ -5,7 +5,7 @@ use actix_multipart::Multipart;
 use ticketland_core::error::Error;
 use api_helpers::{
   middleware::auth::AuthData, 
-  services::http::create_write_response,
+  services::http::create_response
 };
 use crate::{
   utils::store::Store,
@@ -28,5 +28,5 @@ pub async fn exec(
     payload,
   ).await;
 
-  Ok(create_write_response(metadata))
+  Ok(create_response(metadata))
 }

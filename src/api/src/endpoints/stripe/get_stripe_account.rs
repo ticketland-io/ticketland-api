@@ -6,7 +6,7 @@ use eyre::Result;
 use ticketland_core::error::Error;
 use api_helpers::{
   middleware::auth::AuthData, 
-  services::http::create_read_response
+  services::http::create_response
 };
 use crate::{
   utils::store::Store,
@@ -19,5 +19,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result =postgres.read_stripe_account(auth.user.local_id).await;
 
-  Ok(create_read_response(result, 0, 1))
+  Ok(create_response(result))
 }

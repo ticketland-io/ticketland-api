@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use api_helpers::services::http::create_response;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json, Path},
@@ -40,7 +41,7 @@ pub async fn exec(
     &body.ticket_metadata,
     &body.ticket_owner_pubkey,
     &body.sig,
-  ).await?;
+  ).await;
 
   store.set_attended_queue
   .on_set_attended(body.event_id.to_owned(), params.ticket_nft.to_owned())
@@ -49,5 +50,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   postgres.update_attended(params.ticket_nft.to_owned()).await?;
   
-  Ok(HttpResponse::Ok().json(server_sig))
+  Ok(create_response(server_sig))
 }
