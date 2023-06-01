@@ -99,7 +99,7 @@ async fn handle_checkout_session(store: &Data<Store>, session: stripe::CheckoutS
   match sale_type.as_str() {
     "primary" => handle_new_ticket_purchase(&store, session).await,
     "secondary" => handle_fill_sell_listing(&store, session).await,
-    _ =>  Err(Report::msg("invalid sale type"))?,
+    _ => Err(Report::msg("invalid sale type"))?,
   }
 }
 
