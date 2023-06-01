@@ -78,7 +78,6 @@ async fn main() -> std::io::Result<()> {
       .wrap(cors)
       .wrap(middleware::Logger::default())
       .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, error_handler))
-      .service(web::resource("/test").route(web::get().to(HttpResponse::InternalServerError)))
       .service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))
