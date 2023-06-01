@@ -7,6 +7,7 @@ use actix_web::{
   HttpResponse,
   HttpServer,
   middleware::{ErrorHandlerResponse, ErrorHandlers},
+  middleware,
   dev,
   http::StatusCode,
   Result,
@@ -34,6 +35,7 @@ use ticketland_utils::logger::{
 
 fn error_handler<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
   ConsoleLogger.error(&format!("{:?}", res.response().error()));
+  ConsoleLogger.error(&format!("Error occurred on request {:?}", res.request()));
 
   Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
 }
@@ -74,7 +76,9 @@ async fn main() -> std::io::Result<()> {
     App::new()
       .app_data(store.clone())
       .wrap(cors)
+      .wrap(middleware::Logger::default())
       .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, error_handler))
+      .service(web::resource("/test").route(web::get().to(HttpResponse::InternalServerError)))
       .service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))
