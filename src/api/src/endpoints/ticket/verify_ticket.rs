@@ -43,12 +43,14 @@ pub async fn exec(
     &body.sig,
   ).await;
 
+  let result = create_response(server_sig);
+
   store.set_attended_queue
   .on_set_attended(body.event_id.to_owned(), params.ticket_nft.to_owned())
   .await?;
 
   let mut postgres = store.pg_pool.connection().await?;
   postgres.update_attended(params.ticket_nft.to_owned()).await?;
-  
-  Ok(create_response(server_sig))
+
+  Ok(result)
 }
