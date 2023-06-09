@@ -34,7 +34,11 @@ use ticketland_utils::logger::{
 };
 
 fn error_handler<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
-  ConsoleLogger.error(&format!("{:?}", res.response().error()));
+  match res.response().error() {
+    Some(inner)   => ConsoleLogger.error(&format!("{:?}", inner)),
+    None          => (),
+  }
+
   ConsoleLogger.error(&format!("Error occurred on request {:?}", res.request()));
 
   Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
