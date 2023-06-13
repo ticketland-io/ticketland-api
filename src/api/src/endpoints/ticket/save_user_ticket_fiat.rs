@@ -81,5 +81,5 @@ pub async fn exec(
     body.seat_name.clone(),
   ).await;
 
-  Ok(create_write_response(result))
+  create_write_response(result)
 }

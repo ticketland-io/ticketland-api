@@ -19,5 +19,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result =postgres.read_stripe_account(auth.user.local_id).await;
 
-  Ok(create_response(result))
+  create_response(result)
 }

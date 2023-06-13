@@ -99,11 +99,11 @@ pub async fn exec(
     body.ticket_type_index
   )
   .await
-  .map(|_| Ok(HttpResponse::Created().json(Response {
+  .map(|_| HttpResponse::Created().json(Response {
     seat_index,
     seat_name,
     ticket_nft,
     ticket_metadata,
-  })))
-  .unwrap_or_else(|error| Ok(internal_server_error(Some(error.root_cause()))))
+  }))
+  .map_err(|err| err.into())
 }

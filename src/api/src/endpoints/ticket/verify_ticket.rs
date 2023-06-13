@@ -41,9 +41,7 @@ pub async fn exec(
     &body.ticket_metadata,
     &body.ticket_owner_pubkey,
     &body.sig,
-  ).await;
-
-  let result = create_response(server_sig);
+  ).await?;
 
   store.set_attended_queue
   .on_set_attended(body.event_id.to_owned(), params.ticket_nft.to_owned())
@@ -52,5 +50,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   postgres.update_attended(params.ticket_nft.to_owned()).await?;
 
-  Ok(result)
+  create_response(Ok(server_sig))
 }

@@ -97,12 +97,12 @@ pub async fn exec(
 
   // 1. Check that the request sender is the same as the user that initialized the payment
   if buyer_uid != auth.user.local_id {
-    return Ok(internal_server_error(Some(Error::GenericError("User not payment initialized".to_owned()))))
+    return internal_server_error(Some(Error::GenericError("User not payment initialized".to_owned())))
   }
 
   // 2. Check if the payment intent has expired; We can load the payment intent from the db and check manually if N mins has passed
   if let Err(err) = check_payment_intent(&payment_intent).await {
-    return Ok(internal_server_error(Some(err)))
+    return internal_server_error(Some(err))
   }
 
   let event_id = EventId(body.event_id.clone());
@@ -111,7 +111,7 @@ pub async fn exec(
   let mut redis = store.redis_pool.connection().await?;
   let redis_key = pending_ticket_key(&event_id.db_val(), &ticket_nft);
   if let Ok(_) = redis.get(&redis_key).await {
-    return Ok(internal_server_error(Some(Error::GenericError("Ticket not available".to_owned()))))
+    return internal_server_error(Some(Error::GenericError("Ticket not available".to_owned())))
   }
 
   // 4. Check that the seat reservation has not expired
@@ -122,7 +122,7 @@ pub async fn exec(
     seat_name.clone(),
     auth.user.local_id.clone()
   ).await {
-    return Ok(internal_server_error(Some(err)))
+    return internal_server_error(Some(err))
   }
 
   Ok(HttpResponse::Ok().json(Response {

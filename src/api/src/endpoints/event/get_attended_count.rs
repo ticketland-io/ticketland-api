@@ -24,5 +24,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_attended_tickets_count(event_id).await;
 
-  Ok(create_read_response(result, 0, 0))
+  create_read_response(result, 0, 0)
 }

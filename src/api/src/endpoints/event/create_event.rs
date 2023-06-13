@@ -28,5 +28,5 @@ pub async fn exec(
     payload,
   ).await;
 
-  Ok(create_response(metadata))
+  create_response(metadata)
 }

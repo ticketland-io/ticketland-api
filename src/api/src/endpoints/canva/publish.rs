@@ -66,5 +66,5 @@ pub async fn exec(
   })
   .await;
 
-  Ok(create_write_response(result))
+  create_write_response(result)
 }
