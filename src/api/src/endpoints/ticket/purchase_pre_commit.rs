@@ -7,7 +7,7 @@ use actix_web::{
 };
 use solana_web3_rust::utils::pubkey_from_str;
 use ticketland_core::error::Error;
-use api_helpers::{middleware::auth::AuthData, services::http::internal_server_error};
+use api_helpers::{middleware::auth::AuthData};
 use program_artifacts::{ticket_nft::pda as ticket_nft_pda, event_registry::account_data::EventId};
 use crate::{
   utils::store::Store,
