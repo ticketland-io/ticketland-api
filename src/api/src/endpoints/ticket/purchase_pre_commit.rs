@@ -28,6 +28,7 @@ pub struct Response {
 #[derive(Deserialize)]
 pub struct Body {
   event_id: String,
+  name: String,
   ticket_nft: Option<String>,
   ticket_metadata: Option<String>,
   seat_index: Option<u32>,
@@ -93,6 +94,7 @@ pub async fn exec(
     auth.user.local_id.clone(),
     event_id.db_val(),
     ticket_nft.clone(),
+    body.name.clone(),
     ticket_metadata.clone(),
     seat_index,
     seat_name.clone(),

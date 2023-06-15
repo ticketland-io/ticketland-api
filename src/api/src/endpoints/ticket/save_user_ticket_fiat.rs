@@ -11,7 +11,7 @@ use api_helpers::{
 use ticketland_core::error::Error;
 use ticketland_data::{
   models::{
-    ticket::Ticket,
+    ticket::Cnt,
     ticket_onchain_account::TicketOnchainAccount,
   }
 };
@@ -26,6 +26,7 @@ use crate::{
 pub struct Body {
   event_id: String,
   ticket_nft: String,
+  name: String,
   ticket_metadata: String,
   sale_account: String,
   seat_index: u32,
@@ -43,11 +44,12 @@ pub async fn exec(
 
   // 1. Update DB
   let ticket_onchain_account = TicketOnchainAccount {
-    ticket_nft: body.ticket_nft.clone(),
+    cnt_nft: body.ticket_nft.clone(),
     ticket_metadata: body.ticket_metadata.clone(),
   };
-  let ticket = Ticket {
-    ticket_nft: body.ticket_nft.clone(),
+  let ticket = Cnt {
+    cnt_nft: body.ticket_nft.clone(),
+    name: body.name.clone(),
     event_id: body.event_id.clone(),
     account_id: auth.user.local_id.clone(),
     created_at: None,

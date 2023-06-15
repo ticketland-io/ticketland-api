@@ -2,7 +2,7 @@ use std::sync::Arc;
 use eyre::{Result, Report};
 use chrono::{Duration};
 use ticketland_data::models::{
-  ticket::Ticket,
+  ticket::Cnt,
   ticket_onchain_account::TicketOnchainAccount,
 };
 use ticketland_event_handler::{services::ticket_purchase::pending_ticket_key};
@@ -13,6 +13,7 @@ pub async fn store_ticket_purchase_pre_commit(
   uid: String,
   event_id: String,
   ticket_nft: String,
+  name: String,
   ticket_metadata: String,
   seat_index: u32,
   seat_name: String,
@@ -45,11 +46,12 @@ pub async fn store_ticket_purchase_pre_commit(
 
   let mut postgres = store.pg_pool.connection().await?;
   let ticket_onchain_account = TicketOnchainAccount {
-    ticket_nft: ticket_nft.clone(),
+    cnt_nft: ticket_nft.clone(),
     ticket_metadata: ticket_metadata.clone(),
   };
-  let ticket = Ticket {
-    ticket_nft: ticket_nft.clone(),
+  let ticket = Cnt {
+    cnt_nft: ticket_nft.clone(),
+    name: name.clone(),
     event_id: event_id.clone(),
     account_id: uid.clone(),
     created_at: None,

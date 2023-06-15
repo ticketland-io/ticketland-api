@@ -147,7 +147,7 @@ pub async fn pre_secondary_purchase_checks(params: PrePurchaseChecksParams) -> R
 
   // Make sure user has send the correct ticket_nft in the request. The provided ticket nft must much the one
   // store in the sell_listing in the db
-  if sell_listing.ticket_nft != ticket_nft {
+  if sell_listing.cnt_nft != ticket_nft {
     return Err(Report::msg("Invalid ticket_nft"))?
   }
 

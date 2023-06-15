@@ -13,7 +13,7 @@ use solana_sdk::{
   pubkey::Pubkey,
 };
 use ticketland_data::models::{
-  ticket::Ticket,
+  ticket::Cnt,
   ticket_onchain_account::TicketOnchainAccount,
 };
 use ticketland_core::error::Error;
@@ -109,6 +109,7 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
     &Pubkey::from_str(&ticket_nft)?,
   ).0;
   let event_id = metadata.get("event_id").context("event_id unavailable")?;
+  let name = metadata.get("name").context("name unavailable")?;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
@@ -131,11 +132,12 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::Checko
   let mut postgres = store.pg_pool.connection().await?;
 
   let ticket_onchain_account = TicketOnchainAccount {
-    ticket_nft: ticket_nft.clone(),
+    cnt_nft: ticket_nft.clone(),
     ticket_metadata: ticket_matadata.to_string().clone(),
   };
-  let ticket = Ticket {
-    ticket_nft: ticket_nft.clone(),
+  let ticket = Cnt {
+    cnt_nft: ticket_nft.clone(),
+    name: name.clone(),
     event_id: event_id.clone(),
     account_id: buyer_uid.clone(),
     created_at: None,

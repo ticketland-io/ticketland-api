@@ -9,7 +9,7 @@ use api_helpers::{
 use ticketland_core::error::Error;
 use ticketland_data::{
   models::{
-    ticket::Ticket,
+    ticket::Cnt,
     ticket_onchain_account::TicketOnchainAccount,
   }
 };
@@ -24,6 +24,7 @@ use crate::{
 pub struct Body {
   pub ticket_nft: String,
   pub ticket_metadata: String,
+  pub name: String,
   pub event_id: String,
   pub ticket_type_index: i16,
   pub seat_name: String,
@@ -39,11 +40,12 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
 
   let ticket_onchain_account = TicketOnchainAccount {
-    ticket_nft: body.ticket_nft.clone(),
+    cnt_nft: body.ticket_nft.clone(),
     ticket_metadata: body.ticket_metadata.clone(),
   };
-  let ticket = Ticket {
-    ticket_nft: body.ticket_nft.clone(),
+  let ticket = Cnt {
+    cnt_nft: body.ticket_nft.clone(),
+    name: body.name.clone(),
     event_id: body.event_id.clone(),
     account_id: auth.user.local_id.clone(),
     created_at: None,
