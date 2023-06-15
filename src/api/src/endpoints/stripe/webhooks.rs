@@ -16,10 +16,8 @@ use ticketland_data::models::{
   ticket::Ticket,
   ticket_onchain_account::TicketOnchainAccount,
 };
-use api_helpers::services::http::{
-  get_header_value,
-  internal_server_error
-};
+use ticketland_core::error::Error;
+use api_helpers::services::http::get_header_value;
 use program_artifacts::ticket_nft::pda as ticket_nft_pda;
 use ticketland_core::async_helpers::timeout;
 use ticketland_event_handler::{
@@ -29,11 +27,11 @@ use crate::{
   utils::store::Store,
 };
 
-pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> HttpResponse {
+pub async fn exec(store: Data<Store>, req: HttpRequest, payload: Bytes) -> Result<HttpResponse, Error> {
   handle_webhook(store, req, payload)
   .await
   .map(|_| HttpResponse::Ok().finish())
-  .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
+  .map_err(|err| err.into())
 }
 
 pub async fn handle_webhook(
@@ -62,15 +60,9 @@ pub async fn handle_webhook(
             handle_checkout_session(&store, session).await?;
           }
         }
-        _ => {
-          println!("Unknown event encountered in webhook: {:?}", event_type);
-
-          return Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event_type)))?
-        }
+        _ =>  Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event_type)))?
       }
   } else {
-    println!("Failed to construct webhook event, ensure your webhook secret is correct.");
-
     return Err(Report::msg("Failed to construct webhook event, ensure your webhook secret is correct."))?;
   }
 

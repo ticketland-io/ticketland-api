@@ -33,5 +33,5 @@ pub async fn exec(
     qs.start_ts,
   ).await;
 
-  Ok(create_read_response(result, 0, 1))
+  create_read_response(result, 0, 1)
 }

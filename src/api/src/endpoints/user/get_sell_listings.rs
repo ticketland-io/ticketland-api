@@ -42,5 +42,5 @@ pub async fn exec(
     limit
   ).await;
 
-  Ok(create_read_response(result, skip, limit))
+  create_read_response(result, skip, limit)
 }

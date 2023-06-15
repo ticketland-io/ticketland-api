@@ -16,5 +16,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_event_with_sales(event_id, false).await;
 
-  Ok(create_read_response(result, 0, 1))
+  create_read_response(result, 0, 1)
 }

@@ -24,5 +24,5 @@ pub async fn exec(
     params.listing_account.clone()
   ).await;
 
-  Ok(create_write_response(result))
+ create_write_response(result)
 }

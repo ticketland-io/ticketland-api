@@ -30,5 +30,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.upsert_sales(body.sales.clone(), body.seat_ranges.clone()).await;
 
-  Ok(create_write_response(result))
+  create_write_response(result)
 }

@@ -16,7 +16,6 @@ use solana_sdk::{
   commitment_config::CommitmentConfig,
 };
 use crate::utils::store::Store;
-
 use super::price_feed::get_sol_price;
 
 // 1 unit in Stripe is 100

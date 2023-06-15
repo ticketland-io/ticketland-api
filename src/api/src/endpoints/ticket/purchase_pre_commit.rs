@@ -7,7 +7,7 @@ use actix_web::{
 };
 use solana_web3_rust::utils::pubkey_from_str;
 use ticketland_core::error::Error;
-use api_helpers::{middleware::auth::AuthData, services::http::internal_server_error};
+use api_helpers::{middleware::auth::AuthData};
 use program_artifacts::{ticket_nft::pda as ticket_nft_pda, event_registry::account_data::EventId};
 use crate::{
   utils::store::Store,
@@ -99,11 +99,11 @@ pub async fn exec(
     body.ticket_type_index
   )
   .await
-  .map(|_| Ok(HttpResponse::Created().json(Response {
+  .map(|_| HttpResponse::Created().json(Response {
     seat_index,
     seat_name,
     ticket_nft,
     ticket_metadata,
-  })))
-  .unwrap_or_else(|error| Ok(internal_server_error(Some(error.root_cause()))))
+  }))
+  .map_err(|err| err.into())
 }

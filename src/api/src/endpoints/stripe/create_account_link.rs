@@ -3,14 +3,9 @@ use actix_web::{
   HttpResponse,
 };
 use eyre::{Result, ContextCompat};
-use ticketland_core::{
-  error::Error,
-};
+use ticketland_core::error::Error;
 use api_helpers::{
   middleware::auth::AuthData,
-  services::{
-    http::internal_server_error,
-  },
 };
 use crate::{
   utils::store::Store,
@@ -31,8 +26,7 @@ pub async fn exec(
 
   let Ok(stripe_account) = postgres.read_stripe_account(uid.clone()).await else {
     // If value is None this means that there is no Stripe account in the db at the moment
-    return Ok(
-      create_link(
+    return create_link(
         &mut postgres, 
         ticketland_dapp,
         stripe_key,
@@ -40,8 +34,7 @@ pub async fn exec(
       )
       .await
       .map(|link| HttpResponse::Ok().json(Response {link: Some(link)}))
-      .unwrap_or_else(|error| internal_server_error(Some(error.root_cause())))
-    )
+      .map_err(|err| err.into())
   };
 
   // user has already created a Stripe connect account

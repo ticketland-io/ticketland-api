@@ -1,6 +1,17 @@
 use std::rc::Rc;
 use actix_cors::Cors;
-use actix_web::{middleware, web, http, App, HttpResponse, HttpServer};
+use actix_web::{
+  web, 
+  http,
+  App,
+  HttpResponse,
+  HttpServer,
+  middleware::{ErrorHandlerResponse, ErrorHandlers},
+  middleware,
+  dev,
+  http::StatusCode,
+  Result,
+};
 use env_logger::Env;
 use std::{env, panic, process};
 use api_helpers::{
@@ -17,6 +28,19 @@ use ticketland_api::{
     user::config::config as user_config,
   },
 };
+use ticketland_utils::logger::{
+  interface::Logger,
+  console_logger::ConsoleLogger,
+};
+
+fn error_handler<B>(res: dev::ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+  match res.response().error() {
+    Some(inner) => ConsoleLogger.error(&inner.to_string()),
+    None => (),
+  }
+
+  Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -55,6 +79,7 @@ async fn main() -> std::io::Result<()> {
       .app_data(store.clone())
       .wrap(cors)
       .wrap(middleware::Logger::default())
+      .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, error_handler))
       .service(web::scope("/events").configure(event_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/tickets").configure(ticket_config(Rc::clone(&authn_middleware))))
       .service(web::scope("/listings").configure(listing_config(Rc::clone(&authn_middleware))))

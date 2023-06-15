@@ -38,5 +38,5 @@ pub async fn exec(
     draft: true,
   }).await;
 
-  Ok(create_write_response(result))
+  create_write_response(result)
 }

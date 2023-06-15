@@ -33,5 +33,5 @@ pub async fn exec(
   let mut postgres = store.pg_pool.connection().await?;
   let result = postgres.read_tickets_for_event(event_id, skip, limit).await;
 
-  Ok(create_read_response(result, skip, limit))
+  create_read_response(result, skip, limit)
 }

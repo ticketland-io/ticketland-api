@@ -32,5 +32,5 @@ pub async fn exec(
     auth.user.local_id.clone()
   ).await;
 
-  Ok(create_write_response(result))
+  create_write_response(result)
 }

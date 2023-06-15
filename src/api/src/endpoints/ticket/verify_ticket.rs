@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use api_helpers::services::http::create_response;
 use serde::{Deserialize};
 use actix_web::{
   web::{Data, Json, Path},
@@ -48,6 +49,6 @@ pub async fn exec(
 
   let mut postgres = store.pg_pool.connection().await?;
   postgres.update_attended(params.ticket_nft.to_owned()).await?;
-  
-  Ok(HttpResponse::Ok().json(server_sig))
+
+  create_response(Ok(server_sig))
 }
