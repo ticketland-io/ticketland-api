@@ -83,10 +83,15 @@ pub async fn store_event(
       if field_name == "cover_image" {
         cover_media_content_type = Some(mime_subtype.to_string().clone());
       } else if field_name.contains("ticket_image") {
-        let ticket_image_type = field_name[field_name.len() - 1..].parse()?;
+        // let ticket_image_type = field_name[field_name.len() - 1..].parse()?;
+
+        //need to pass the correct data
         ticket_images.push(TicketImage {
           event_id: event_id.clone(),
-          ticket_image_type,
+          ticket_type_index: 0,
+          ticket_nft_index: 0,
+          name: String::from("testName"),
+          description: String::from("testDesc"),
           content_type: mime_subtype.to_string().clone(),
           arweave_tx_id: None,
           uploaded: false,
