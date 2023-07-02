@@ -1,6 +1,4 @@
 use std::env;
-use solana_sdk::pubkey::Pubkey;
-use solana_web3_rust::utils::pubkey_from_str;
 
 pub struct Config {
   pub port: u64,
@@ -24,18 +22,17 @@ pub struct Config {
   pub rabbitmq_uri: String,
   pub exchange_name: String,
   pub retry_ttl: u32,
-  pub rpc_endpoint: String,
+  pub sui_rpc: String,
   pub ticketland_api: String,
   pub ticketland_dapp: String,
-  pub ticket_sale_program_state: Pubkey,
-  pub ticket_nft_program_state: Pubkey,
-  pub event_registry_state: Pubkey,
-  pub secondary_market_state: Pubkey,
   pub ticket_purchase_protocol_fee: i64,
   pub secondary_market_protocol_fee: i64,
   pub ticket_verifier_priv_key: String,
   pub max_image_size: usize,
   pub image_recognition_confidence: f32,
+  pub arweave_jwk_key: String,
+  pub arweave_gateway: String,
+  pub arweave_reward_multiplier: f32,
 }
 
 impl Config {
@@ -59,21 +56,20 @@ impl Config {
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         exchange_name: env::var("EXCHANGE_NAME").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u32>().unwrap(),
-        rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
+        sui_rpc: env::var("SUI_RPC").unwrap(),
         canva_key: env::var("CANVA_CLIENT_SECRET").unwrap(),
         stripe_key: env::var("STRIPE_CLIENT_SECRET").unwrap(),
         stripe_webhook_key: env::var("STRIPE_WEBHOOK_SECRET").unwrap(),
         ticketland_api: env::var("TICKETLAND_API").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
-        ticket_sale_program_state: pubkey_from_str(&env::var("TICKET_SALE_STATE").unwrap()).unwrap(),
-        ticket_nft_program_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
-        secondary_market_state: pubkey_from_str(&env::var("SECONDARY_PROGRAM_STATE").unwrap()).unwrap(),
-        event_registry_state: pubkey_from_str(&env::var("EVENT_REGISTRY_STATE").unwrap()).unwrap(),
         ticket_purchase_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
         secondary_market_protocol_fee: env::var("SECONDARY_MARKET_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
         ticket_verifier_priv_key: env::var("TICKET_VERIFIER_PRIV_KEY").unwrap(),
         max_image_size: env::var("MAX_IMAGE_SIZE").unwrap().parse::<usize>().unwrap(),
         image_recognition_confidence: env::var("IMAGE_RECOGNITION_CONFIDENCE").unwrap().parse::<f32>().unwrap(),
+        arweave_jwk_key: env::var("ARWEAVE_JWK_KEY").unwrap(),
+        arweave_gateway: env::var("ARWEAVE_GATEWAY").unwrap(),
+        arweave_reward_multiplier: env::var("ARWEAVE_REWARD_MULTIPLIER").unwrap().parse::<f32>().unwrap(),
       }
     )
   }
