@@ -1,22 +1,22 @@
 use std::sync::Arc;
+use sui_sdk::{SuiClientBuilder, SuiClient};
 use ticketland_data::connection_pool::ConnectionPool;
 use ticketland_core::{
   services::{
     minio::Minio,
     redis,
     redlock::RedLock,
+    arweave,
   },
 };
-use solana_web3_rust::rpc_client::RpcClient;
 use ticketland_ai::image_recognition::aws_rekognition::AwsRekognition;
 use super::config::Config;
 use crate::{
   services::{
-    new_event_queue::NewEventQueue,
     ticket_design_upload_queue::TicketDesignUploadQueue,
     ticket_purchase_queue::TicketPurchaseQueue,
     set_attended_queue::SetAttendedQueue,
-    fill_sell_listing_queue::FillSellListingQueue,
+    fill_listing_queue::FillListingQueue,
   },
 };
 
@@ -27,12 +27,12 @@ pub struct Store {
   pub aws_rekognition: Arc<AwsRekognition>,
   pub redis_pool: redis::ConnectionPool,
   pub redlock: Arc<RedLock>,
-  pub rpc_client: Arc<RpcClient>,
-  pub new_event_queue: NewEventQueue,
+  pub rpc_client: Arc<SuiClient>,
   pub ticket_design_upload_queue: TicketDesignUploadQueue,
   pub ticket_purchase_queue: TicketPurchaseQueue,
-  pub fill_sell_listing_queue: FillSellListingQueue,
+  pub fill_listing_queue: FillListingQueue,
   pub set_attended_queue: SetAttendedQueue,
+  pub arweave: arweave::Client,
 }
 
 impl Store {
@@ -57,11 +57,6 @@ impl Store {
     let redis_pool = redis::ConnectionPool::new(&config.redis_host, &config.redis_password, config.redis_port);
     let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
 
-    let new_event_queue = NewEventQueue::new(
-      config.rabbitmq_uri.clone(),
-      config.retry_ttl,
-    ).await;
-
     let ticket_design_upload_queue = TicketDesignUploadQueue::new(
       config.rabbitmq_uri.clone(),
       config.retry_ttl,
@@ -72,7 +67,7 @@ impl Store {
       config.retry_ttl,
     ).await;
 
-    let fill_sell_listing_queue = FillSellListingQueue::new(
+    let fill_listing_queue = FillListingQueue::new(
       config.rabbitmq_uri.clone(),
       config.retry_ttl,
     ).await;
@@ -82,7 +77,15 @@ impl Store {
       config.retry_ttl,
     ).await;
 
-    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
+    let arweave = arweave::Client::new(config.arweave_jwk_key.clone())
+    .await
+    .expect("connect to arweave");
+
+    let rpc_client = Arc::new(
+      SuiClientBuilder::default()
+      .build(&config.sui_rpc)
+      .await.unwrap()
+    );
 
     Self {
       config,
@@ -92,11 +95,11 @@ impl Store {
       minio,
       aws_rekognition,
       rpc_client,
-      new_event_queue,
       ticket_design_upload_queue,
       ticket_purchase_queue,
-      fill_sell_listing_queue,
+      fill_listing_queue,
       set_attended_queue,
+      arweave,
     }
   }
 }
