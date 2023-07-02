@@ -6,11 +6,14 @@ use chrono::NaiveDateTime;
 use eyre::{Result, Report, ContextCompat};
 use actix_multipart::Multipart;
 use futures_util::stream::StreamExt;
+use serde::Deserialize;
 use ticketland_event_handler::services::path;
 use ticketland_data::{
   models::{
-    metadata::{Attribute, Metadata},
-    event::{Event, Location, TicketImage},
+    // properties::{Property, NewProperty},
+    event::{Event, Location},
+    ticket_type::NewTicketType,
+    seat_range::SeatRange, nft_detail::{NewNftDetail, NewEventNftDetail, NewTicketTypeNftDetail}
   },
 };
 use crate::{
@@ -45,16 +48,73 @@ async fn inspect_moderation_labels(store: Arc<Store>, image_content: Vec<u8>) ->
   Ok(())
 }
 
+struct TicketTypeNftFile {
+  pub ref_name: String,
+  pub content_type: String,
+  pub arweave_tx_id: String,
+}
+#[derive(Deserialize)]
+struct TicketTypeNft {
+  pub name: String,
+  pub description: String,
+  pub ticket_type_index: i16,
+  pub ref_name: String,
+}
+
+async fn upload_file(
+  store: Arc<Store>,
+  event_id: String,
+  path: String,
+  content: Vec<u8>,
+  content_type: String
+) -> Result<String> {
+  store.minio.upload_with_content_type(
+    &path,
+    content.as_ref(),
+    &content_type,
+  )
+  .await?;
+
+  let reward_multipler = store.config.arweave_reward_multiplier;
+
+  let tx = store.arweave.upload_data(
+    content.into(),
+    None,
+    reward_multipler,
+    None,
+    true
+  )
+  .await
+  .map_err(|error|{
+    println!("Error uploading file for event {}: {:?}", &event_id, error);
+    error
+  })?;
+
+  let tx_hash = tx.0.to_string();
+
+  Ok(tx_hash)
+}
+
 pub async fn store_event(
   store: Arc<Store>,
   event_id: String,
   uid: String,
   mut payload: Multipart,
-) -> Result<Metadata> {
-  let mut metadata = Metadata::default();
+) -> Result<()> {
+  let mut new_event = Event {
+    event_id: event_id.clone(),
+    account_id: uid,
+    draft: true,
+    ..Event::default()
+  };
+  let mut event_file_arweave_tx_id = String::new();
   let mut cover_media_content_type = None;
-  let mut ticket_images = vec![];
-  let mut event_capacity= String::new();
+  let mut ticket_type_nfts = vec![];
+  let mut nft_files = vec![];
+  // let mut properties = vec![];
+
+  let mut seat_ranges = vec![];
+  let mut ticket_types = vec![];
 
   while let Some(item) = payload.next().await {
     let mut field = item?;
@@ -69,12 +129,13 @@ pub async fn store_event(
     let field_name = field.name();
     let mime_subtype = field.content_type().subtype();
     let content = content.concat();
+    let path: String;
 
     if is_supported_media_type(mime_subtype) {
       if content.len() > store.config.max_image_size {
         return Err(Report::msg("Image limit".to_string()))
       }
-      
+
       // Add pdf moderation logic
       if is_supported_cover_media_type(mime_subtype) {
         inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
@@ -82,99 +143,146 @@ pub async fn store_event(
 
       if field_name == "cover_image" {
         cover_media_content_type = Some(mime_subtype.to_string().clone());
-      } else if field_name.contains("ticket_image") {
-        // let ticket_image_type = field_name[field_name.len() - 1..].parse()?;
+        event_file_arweave_tx_id = upload_file(
+          Arc::clone(&store),
+          event_id.clone(),
+          path::get_event_file_path(&event_id, &field_name),
+          content,
+          mime_subtype.to_string()
+        ).await?;
+      } else if field_name.starts_with("nft_file") {
+        let fields = field_name.split("nft_file-").collect::<Vec<&str>>();
+        let ref_name = fields[1];
 
-        //need to pass the correct data
-        ticket_images.push(TicketImage {
-          event_id: event_id.clone(),
-          ticket_type_index: 0,
-          ticket_nft_index: 0,
-          name: String::from("testName"),
-          description: String::from("testDesc"),
-          content_type: mime_subtype.to_string().clone(),
-          arweave_tx_id: None,
-          uploaded: false,
+        path = path::get_ticket_nft_file_path(&event_id, "nft_file", ref_name);
+
+        let arweave_tx_id = upload_file(
+          Arc::clone(&store),
+          event_id.clone(),
+          path,
+          content,
+          mime_subtype.to_string()
+        ).await?;
+
+        nft_files.push(TicketTypeNftFile {
+          ref_name: ref_name.to_string(),
+          content_type: mime_subtype.to_string(),
+          arweave_tx_id,
         });
       } else {
         return Err(Report::msg("Bad request".to_string()))
       }
-
-      store.minio.upload_with_content_type(
-        &path::get_event_file_path(&event_id, &field_name),
-        content.as_ref(),
-        &mime_subtype.to_string(),
-      )
-      .await?;
     } else if mime_subtype.eq(&mime::APPLICATION_OCTET_STREAM.subtype()) {
       let value = from_utf8(content.as_ref())?.to_string();
 
       match field_name {
         "name" => {
-          metadata.name = value;
+          new_event.name = value;
         },
         "description" => {
-          metadata.description = value;
+          new_event.description = value;
         },
-        "event_capacity" => {
-          event_capacity = value;
+        "category" => {
+          new_event.category = value.parse::<i16>()?;
         },
-        "trait_type" => {
-          metadata.attributes.push(
-            serde_json::from_str::<Attribute>(&value)?
-          );
+        "visibility" => {
+          new_event.visibility = value.parse::<i16>()?;
+        },
+        // TODO: add this after fixing the issue with serde
+        "location" => {
+          new_event.location = None;
+          // new_event.location = Some(serde_json::from_str::<Location>(&value)?);
+        },
+        "venue" => {
+          new_event.venue = value;
+        },
+        "event_type" => {
+          new_event.event_type = value.parse::<i16>()?;
+        },
+        "start_date" => {
+          let start_date_ts = value.parse::<i64>()?;
+          new_event.start_date = NaiveDateTime::from_timestamp_opt(start_date_ts, 0).context("invalid start_date")?;
+        },
+        "end_date" => {
+          let end_date_ts = value.parse::<i64>()?;
+          new_event.end_date = NaiveDateTime::from_timestamp_opt(end_date_ts, 0).context("invalid end_date")?;
+        },
+        "ticket_type" => {
+          ticket_types.push(serde_json::from_str::<NewTicketType>(&value)?);
+        },
+        "seat_range" => {
+          seat_ranges.push(serde_json::from_str::<SeatRange>(&value)?);
+        },
+        // "property" => {
+        //   properties.push(serde_json::from_str::<Property>(&value)?);
+        // },
+        "ticket_type_nft" => {
+          ticket_type_nfts.push(serde_json::from_str::<TicketTypeNft>(&value)?);
         },
         _ => todo!(), // Simply ignore
       }
     }
   };
 
-  if metadata.is_default() && cover_media_content_type.is_none() && ticket_images.len() == 0 {
+  if new_event.is_default() && cover_media_content_type.is_none()
+  && ticket_types.len() == 0 && ticket_type_nfts.len() != nft_files.len()
+  {
     return Err(Report::msg("Bad request".to_string()))
   }
 
-  // Store the metadata as JSON on S3
-  store.minio.upload(
-    &path::get_event_metadata_path(&event_id),
-    serde_json::to_string(&metadata)?.as_ref(),
-  )
-  .await?;
-
-  let mut event_map = metadata.to_map();
-
-  let start_date = event_map.remove("startDate").context("missing startDate")?.parse::<i64>()?;
-  let start_date = NaiveDateTime::from_timestamp_opt(start_date, 0).context("invalid start_date")?;
-
-  let end_date = event_map.remove("endDate").context("missing endDate")?.parse::<i64>()?;
-  let end_date = NaiveDateTime::from_timestamp_opt(end_date, 0).context("invalid start_date")?;
-
-  let location = if let Some(location) = event_map.remove("location") {
-    Some(serde_json::from_str::<Location>(&location)?)
-  } else {
-    None
+  let nft_event_detail = NewEventNftDetail {
+    ref_name: event_id.clone(),
+    event_id: event_id.clone(),
+    nft_details_id: event_file_arweave_tx_id.clone(),
   };
 
+  let mut nft_details = vec![NewNftDetail {
+    nft_name: new_event.name.clone(),
+    nft_description: new_event.description.clone(),
+    content_type: cover_media_content_type.context("missing content_type")?.clone(),
+    arweave_tx_id: event_file_arweave_tx_id.clone(),
+  }];
+  let mut ticket_type_nfts_details = vec![];
+  // let mut properties = vec![];
+
+  nft_files.iter().for_each(|nft_file| {
+  let found = ticket_type_nfts
+    .iter()
+    .find(|ttn| ttn.ref_name == nft_file.ref_name)
+    .context("Missing ticket type nft")
+    .unwrap();
+
+  nft_details.push(NewNftDetail {
+    nft_name: found.name.clone(),
+    nft_description: found.description.clone(),
+    content_type: nft_file.content_type.clone(),
+    arweave_tx_id: nft_file.arweave_tx_id.clone(),
+  });
+  ticket_type_nfts_details.push(NewTicketTypeNftDetail {
+    ref_name: found.ref_name.clone(),
+    event_id: event_id.clone(),
+    ticket_type_index: found.ticket_type_index,
+    nft_details_id: nft_file.arweave_tx_id.clone(),
+  });
+
+  // TODO: iterate over properties on body
+  // properties.push(NewProperty {
+  //   nft_details_id: nft_file.arweave_tx_id.clone(),
+  //   trait_type: event_id.clone(),
+  //   ticket_type_index: nft_file.ticket_type_index,
+  // });
+  });
+
   let mut postgres = store.pg_pool.connection().await?;
-  postgres.upsert_event(Event {
-    event_id,
-    account_id: uid,
-    created_at: None,
-    name: event_map.remove("name").context("missing name")?,
-    description: event_map.remove("description").context("missing description")?,
-    location,
-    venue: Some(event_map.remove("venue").context("missing venue")?),
-    event_type: event_map.remove("type").context("missing type")?.parse()?,
-    visibility: event_map.remove("visibility").context("missing visibility")?.parse()?,
-    start_date,
-    end_date,
-    category: event_map.remove("category").context("missing category")?.parse()?,
-    event_capacity,
-    arweave_tx_id: None,
-    webbundle_arweave_tx_id: None,
-    draft: true,
-  },
-  ticket_images,
+  postgres.upsert_event(
+    new_event,
+    seat_ranges,
+    ticket_types,
+    nft_details,
+    nft_event_detail,
+    ticket_type_nfts_details,
+    // properties,
   ).await?;
 
-  Ok(metadata)
+  Ok(())
 }

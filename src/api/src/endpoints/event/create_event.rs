@@ -5,7 +5,7 @@ use actix_multipart::Multipart;
 use ticketland_core::error::Error;
 use api_helpers::{
   middleware::auth::AuthData, 
-  services::http::create_response
+  services::http::{create_write_response}
 };
 use crate::{
   utils::store::Store,
@@ -21,12 +21,12 @@ pub async fn exec(
 ) -> Result<HttpResponse, Error> {
   let event_id = params.event_id.clone();
 
-  let metadata = store_event(
+  let result = store_event(
     Arc::clone(&store),
     event_id,
     auth.user.local_id,
     payload,
   ).await;
 
-  create_response(metadata)
+  create_write_response(result)
 }
