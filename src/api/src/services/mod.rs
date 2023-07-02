@@ -1,11 +1,10 @@
 pub mod event;
-pub mod new_event_queue;
 pub mod ticket_design_upload_queue;
 pub mod ticket_purchase_queue;
 pub mod stripe;
 pub mod price_feed;
-pub mod ticket_purchase;
-pub mod fill_sell_listing_queue;
+pub mod fill_listing_queue;
 pub mod set_attended_queue;
 pub mod ticket_availability;
 pub mod ticket_purchase_pre_commit;
+pub mod bitmap;
