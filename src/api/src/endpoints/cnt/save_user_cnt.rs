@@ -7,12 +7,7 @@ use api_helpers::{
   middleware::auth::AuthData,
 };
 use ticketland_core::error::Error;
-use ticketland_data::{
-  models::{
-    ticket::Cnt,
-    ticket_onchain_account::TicketOnchainAccount,
-  }
-};
+use ticketland_data::models::cnt::CNT;
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
 };
@@ -22,9 +17,7 @@ use crate::{
 
 #[derive(Deserialize)]
 pub struct Body {
-  pub ticket_nft: String,
-  pub ticket_metadata: String,
-  pub name: String,
+  pub sui_address: String,
   pub event_id: String,
   pub ticket_type_index: i16,
   pub seat_name: String,
@@ -39,28 +32,23 @@ pub async fn exec(
   // 1. Update DB
   let mut postgres = store.pg_pool.connection().await?;
 
-  let ticket_onchain_account = TicketOnchainAccount {
-    cnt_nft: body.ticket_nft.clone(),
-    ticket_metadata: body.ticket_metadata.clone(),
-  };
-  let ticket = Cnt {
-    cnt_nft: body.ticket_nft.clone(),
-    name: body.name.clone(),
+  let ticket = CNT {
+    cnt_sui_address: Some(body.sui_address.clone()),
     event_id: body.event_id.clone(),
     account_id: auth.user.local_id.clone(),
     created_at: None,
-    ticket_type_index: body.ticket_type_index as i16,
+    ticket_type_index: body.ticket_type_index,
     seat_name: body.seat_name.clone(),
-    seat_index: body.seat_index as i32,
+    seat_index: body.seat_index,
     attended: false,
     draft: false
   };
 
-  postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
+  postgres.upsert_user_cnt(ticket).await?;
   
   // 2. Remove ending key from Redis
   let mut redis = store.redis_pool.connection().await?;
-  let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
+  let redis_key = pending_ticket_key(&body.event_id, &body.seat_index.to_string());
   
   redis.delete(&redis_key).await?;
 

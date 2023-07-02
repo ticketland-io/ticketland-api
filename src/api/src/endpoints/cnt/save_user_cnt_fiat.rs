@@ -9,12 +9,7 @@ use api_helpers::{
   services::http::create_write_response,
 };
 use ticketland_core::error::Error;
-use ticketland_data::{
-  models::{
-    ticket::Cnt,
-    ticket_onchain_account::TicketOnchainAccount,
-  }
-};
+use ticketland_data::models::cnt::CNT;
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
 };
@@ -25,13 +20,11 @@ use crate::{
 #[derive(Deserialize)]
 pub struct Body {
   event_id: String,
-  ticket_nft: String,
-  name: String,
-  ticket_metadata: String,
-  sale_account: String,
   seat_index: u32,
   seat_name: String,
   ticket_type_index: u8,
+  txb_bytes: String,
+  signature: String,
 }
 
 pub async fn exec(
@@ -43,13 +36,8 @@ pub async fn exec(
   let account = postgres.read_account_by_id(auth.user.local_id.clone()).await?;
 
   // 1. Update DB
-  let ticket_onchain_account = TicketOnchainAccount {
-    cnt_nft: body.ticket_nft.clone(),
-    ticket_metadata: body.ticket_metadata.clone(),
-  };
-  let ticket = Cnt {
-    cnt_nft: body.ticket_nft.clone(),
-    name: body.name.clone(),
+  let cnt = CNT {
+    cnt_sui_address: None,
     event_id: body.event_id.clone(),
     account_id: auth.user.local_id.clone(),
     created_at: None,
@@ -57,30 +45,32 @@ pub async fn exec(
     seat_name: body.seat_name.clone(),
     seat_index: body.seat_index as i32,
     attended: false,
-    draft: false
+    draft: true
   };
 
-  postgres.upsert_user_ticket(ticket, ticket_onchain_account).await?;
+  postgres.upsert_user_cnt(cnt).await?;
 
   // 2. store the record in Redis so this ticket is considered unavailable
   let mut redis = store.redis_pool.connection().await?;
-  let redis_key = pending_ticket_key(&body.event_id, &body.ticket_nft);
+  let redis_key = pending_ticket_key(&body.event_id, &body.seat_index.to_string());
 
   redis.set_ex(
     &redis_key,
-    &body.seat_index.to_string(),
+    "1",
     Duration::days(1).num_milliseconds() as usize,
   ).await?;
+
+  // TODO: check signed_tx is correct
 
   // 3. Send new ticket purchase message to rabbitmq to execute operator purchase tx
   let result = store.ticket_purchase_queue.new_ticket_purchase(
     auth.user.local_id.clone(),
     body.event_id.clone(),
-    body.sale_account.clone(),
-    body.ticket_nft.clone(),
     account.pubkey,
     body.seat_index.to_string(),
     body.seat_name.clone(),
+    body.txb_bytes.clone(),
+    body.signature.clone(),
   ).await;
 
   create_write_response(result)

@@ -28,10 +28,10 @@ impl SetAttendedQueue {
     }
   }
 
-  pub async fn on_set_attended(&self, event_id: String, ticket_nft: String) -> Result<()> {
+  pub async fn on_set_attended(&self, event_id: String, cnt_sui_address: String) -> Result<()> {
     let set_attended_msg = SetAttended {
       event_id: event_id.clone(),
-      ticket_nft: ticket_nft.clone(),
+      cnt_sui_address: cnt_sui_address.clone(),
     };
 
     self.set_attended_producer.publish(

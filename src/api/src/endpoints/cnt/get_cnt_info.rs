@@ -14,7 +14,7 @@ use api_helpers::{
 
 #[derive(Deserialize)]
 pub struct Params {
-  pub ticket_nft: String,
+  pub cnt_sui_address: String,
 }
 
 pub async fn exec(
@@ -23,7 +23,7 @@ pub async fn exec(
   params: Path<Params>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_ticket(params.ticket_nft.to_owned()).await;
+  let result = postgres.read_cnt(params.cnt_sui_address.to_owned()).await;
 
   create_read_response(result, 0, 1)
 }

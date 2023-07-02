@@ -32,7 +32,7 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_user_tickets(
+  let result = postgres.read_user_cnts(
     auth.user.local_id.clone(),
     qs.event_id.clone(),
     skip,

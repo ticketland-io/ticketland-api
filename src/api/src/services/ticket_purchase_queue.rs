@@ -32,20 +32,20 @@ impl TicketPurchaseQueue {
     &self,
     buyer_uid: String,
     event_id: String,
-    sale_account: String,
-    ticket_nft: String,
     recipient: String,
     seat_index: String,
     seat_name: String,
+    txb_bytes: String,
+    signature: String,
   ) -> Result<()> {
     let msg = TicketPurchase {
       buyer_uid,
       event_id,
-      sale_account,
-      ticket_nft,
       recipient,
       seat_index,
       seat_name,
+      txb_bytes,
+      signature,
     };
 
     self.producer.publish(

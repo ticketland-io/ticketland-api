@@ -6,14 +6,14 @@ use api_helpers::{
   middleware::auth::AuthnMiddlewareFactory,
 };
 use super::{
-  save_user_ticket,
-  get_event_tickets,
-  get_user_tickets,
-  verify_ticket,
+  save_user_cnt,
+  get_event_cnts,
+  get_user_cnts,
+  verify_cnt,
   purchase_pre_commit,
-  save_user_ticket_fiat,
+  save_user_cnt_fiat,
   purchase_pre_commit_fiat,
-  get_ticket_info,
+  get_cnt_info,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -21,13 +21,13 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("")
      
-      .route(web::post().to(save_user_ticket::exec).wrap(Rc::clone(&authn_middleware)))
-      .route(web::get().to(get_event_tickets::exec))
+      .route(web::post().to(save_user_cnt::exec).wrap(Rc::clone(&authn_middleware)))
+      .route(web::get().to(get_event_cnts::exec))
     );
     cfg.service(
       web::resource("current-user")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::get().to(get_user_tickets::exec))
+      .route(web::get().to(get_user_cnts::exec))
     );
 
     cfg.service(
@@ -39,7 +39,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     cfg.service(
       web::resource("fiat")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::post().to(save_user_ticket_fiat::exec))
+      .route(web::post().to(save_user_cnt_fiat::exec))
     );
 
     cfg.service(
@@ -49,14 +49,14 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("{ticket_nft}/verifications")
-      .route(web::post().to(verify_ticket::exec))
+      web::resource("{cnt_sui_address}/verifications")
+      .route(web::post().to(verify_cnt::exec))
     );
 
     cfg.service(
-      web::resource("{ticket_nft}")
+      web::resource("{cnt_sui_address}")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::get().to(get_ticket_info::exec))
+      .route(web::get().to(get_cnt_info::exec))
     );
   }
 }
