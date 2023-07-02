@@ -27,7 +27,7 @@ pub async fn exec(
   qs: Query<QueryString>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_average_listings_price(
+  let result = postgres.read_average_sales_price(
     qs.event_id.clone(),
     qs.interval,
     qs.start_ts,

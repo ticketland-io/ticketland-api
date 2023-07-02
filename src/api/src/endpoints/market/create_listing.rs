@@ -3,12 +3,13 @@ use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
+use eyre::Result;
 use ticketland_core::error::Error;
 use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_data::models::buy_listing::NewBuyListing;
+use ticketland_data::models::listing::NewListing;
 use crate::{
   utils::store::Store,
 };
@@ -16,9 +17,10 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  bid_price: i64,
   event_id: String,
-  n_listing: i64
+  listing_sui_address: String,
+  cnt_sui_address: String,
+  ask_price: i64,
 }
 
 pub async fn exec(
@@ -28,14 +30,15 @@ pub async fn exec(
   params: Path<ListingParams>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.upsert_buy_listing(NewBuyListing {
+  let result = postgres.upsert_listing(NewListing {
+    listing_id: &params.listing_id,
     account_id: &auth.user.local_id,
+    cnt_sui_address: &body.cnt_sui_address,
     event_id: &body.event_id,
-    sol_account: &params.listing_account,
-    bid_price: body.bid_price,
-    n_listing: body.n_listing,
+    listing_sui_address: Some(&body.listing_sui_address),
+    ask_price: body.ask_price,
     is_open: true,
-    draft: true,
+    draft: false,
   }).await;
 
   create_write_response(result)

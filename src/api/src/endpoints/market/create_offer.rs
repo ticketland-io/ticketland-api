@@ -9,32 +9,34 @@ use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_data::models::buy_listing::NewBuyListing;
+use ticketland_data::models::offer::NewOffer;
 use crate::{
   utils::store::Store,
 };
-use super::common::ListingParams;
+use super::common::OfferParams;
 
 #[derive(Deserialize)]
 pub struct Body {
+  offer_sui_address: String,
   bid_price: i64,
   event_id: String,
-  n_listing: i64
+  ticket_type_index: i16,
 }
 
 pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
   body: Json<Body>,
-  params: Path<ListingParams>,
+  params: Path<OfferParams>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.upsert_buy_listing(NewBuyListing {
+  let result = postgres.upsert_offer(NewOffer {
+    offer_id: &params.offer_id,
+    offer_sui_address: Some(&body.offer_sui_address),
     account_id: &auth.user.local_id,
     event_id: &body.event_id,
-    sol_account: &params.listing_account,
+    ticket_type_index: body.ticket_type_index,
     bid_price: body.bid_price,
-    n_listing: body.n_listing,
     is_open: true,
     draft: false,
   }).await;

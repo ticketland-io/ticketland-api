@@ -3,40 +3,34 @@ use actix_web::{
   web::{Data, Path, Json},
   HttpResponse,
 };
+use eyre::Result;
 use ticketland_core::error::Error;
 use api_helpers::{
   services::http::create_write_response,
   middleware::auth::AuthData,
 };
-use ticketland_data::models::sell_listing::NewSellListing;
 use crate::{
   utils::store::Store,
 };
-use super::common::ListingParams;
+use super::common::OfferParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  event_id: String,
-  ticket_nft: String,
-  ask_price: i64,
+  cnt_sui_address: String,
 }
 
 pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
   body: Json<Body>,
-  params: Path<ListingParams>,
+  params: Path<OfferParams>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.upsert_sell_listing(NewSellListing {
-    account_id: &auth.user.local_id,
-    cnt_nft: &body.ticket_nft,
-    event_id: &body.event_id,
-    sol_account: &params.listing_account,
-    ask_price: body.ask_price,
-    is_open: true,
-    draft: true,
-  }).await;
+  let result = postgres.fill_offer(
+    params.offer_id.clone(),
+    body.cnt_sui_address.clone(),
+    auth.user.local_id.clone()
+  ).await;
 
   create_write_response(result)
 }

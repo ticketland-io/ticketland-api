@@ -2,23 +2,23 @@ use eyre::Result;
 use borsh::{BorshSerialize};
 use amqp_helpers::producer::retry_producer::RetryProducer;
 use ticketland_event_handler::{
-  models::fill_sell_listing::FillSellListing,
+  models::fill_listing::FillListing,
 };
 
-pub struct FillSellListingQueue {
+pub struct FillListingQueue {
   producer: RetryProducer,
 }
 
-impl FillSellListingQueue {
+impl FillListingQueue {
   pub async fn new(
     rabbitmq_uri: String,
     retry_ttl: u32,
   ) -> Self {
     let producer = RetryProducer::new(
       &rabbitmq_uri,
-      &"fill_sell_listing",
-      &"fill_sell_listing",
-      &"fill_sell_listing.new",
+      &"fill_listing",
+      &"fill_listing",
+      &"fill_listing.new",
       retry_ttl,
       None,
     ).await.unwrap();
@@ -28,27 +28,29 @@ impl FillSellListingQueue {
     }
   }
 
-  pub async fn new_sell_listing(
+  pub async fn new_listing(
     &self,
     buyer_uid: String,
     event_id: String,
-    sale_account: String,
-    ticket_nft: String,
     recipient: String,
-    sell_listing_account: String,
+    seat_index :String,
+    listing_sui_address: String,
+    txb_bytes: String,
+    signature: String,
   ) -> Result<()> {
-    let msg = FillSellListing {
+    let msg = FillListing {
       buyer_uid,
       event_id,
-      sale_account,
-      ticket_nft,
       recipient,
-      sell_listing_account,
+      seat_index,
+      listing_sui_address,
+      txb_bytes,
+      signature,
     };
 
     self.producer.publish(
-      &"fill_sell_listing",
-      &"fill_sell_listing.new",
+      &"fill_listing",
+      &"fill_listing.new",
       &msg.try_to_vec().unwrap(),
       true,
     ).await

@@ -29,7 +29,7 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_sell_listings_for_event(qs.event_id.clone(), skip, limit).await;
+  let result = postgres.read_listings_for_event(qs.event_id.clone(), skip, limit).await;
 
   create_read_response(result, skip, limit)
 }

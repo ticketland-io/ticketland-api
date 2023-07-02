@@ -16,7 +16,7 @@ use super::common::ListingParams;
 
 #[derive(Deserialize)]
 pub struct Body {
-  ticket_nft: String,
+  cnt_sui_address: String,
 }
 
 pub async fn exec(
@@ -26,9 +26,9 @@ pub async fn exec(
   params: Path<ListingParams>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.fill_buy_listing(
-    params.listing_account.clone(),
-    body.ticket_nft.clone(),
+  let result = postgres.fill_listing(
+    params.listing_id.clone(),
+    body.cnt_sui_address.clone(),
     auth.user.local_id.clone()
   ).await;
 

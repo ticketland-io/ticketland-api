@@ -35,7 +35,7 @@ pub async fn exec(
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_buy_listings_for_account(
+  let result = postgres.read_listings_for_account(
     qs.event_id.clone(),
     params.uid.clone(),
     skip,

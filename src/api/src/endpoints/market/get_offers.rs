@@ -1,6 +1,6 @@
 use serde::{Deserialize};
 use actix_web::{
-  web::{Data, Query, Path},
+  web::{Data, Query},
   HttpResponse,
 };
 use eyre::Result;
@@ -18,29 +18,18 @@ use crate::{
 
 QueryString! {
   pub struct QueryString {
-    pub event_id: Option<String>,
+    pub event_id: String,
   }
-}
-
-#[derive(Deserialize)]
-pub struct Params {
-  pub uid: String,
 }
 
 pub async fn exec(
   store: Data<Store>,
-  params: Path<Params>,
   qs: Query<QueryString>,
 ) -> Result<HttpResponse, Error> {
   let skip = qs.skip.unwrap_or(0);
   let limit = qs.limit.unwrap_or(100);
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_sell_listings_for_account(
-    qs.event_id.clone(),
-    params.uid.clone(),
-    skip,
-    limit
-  ).await;
+  let result = postgres.read_offers_for_event(qs.event_id.clone(), skip, limit).await;
 
-  create_read_response(result, skip, limit)
+ create_read_response(result, skip, limit)
 }

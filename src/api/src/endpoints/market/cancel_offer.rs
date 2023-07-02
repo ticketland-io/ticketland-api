@@ -1,3 +1,4 @@
+
 use actix_web::{
   web::{Data, Path},
   HttpResponse,
@@ -11,18 +12,18 @@ use api_helpers::{
 use crate::{
   utils::store::Store,
 };
-use super::common::ListingParams;
+use super::common::OfferParams;
 
 pub async fn exec(
   store: Data<Store>,
   auth: AuthData,
-  params: Path<ListingParams>,
+  params: Path<OfferParams>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.cancel_sell_listing(
+  let result = postgres.cancel_offer(
     auth.user.local_id.clone(),
-    params.listing_account.clone()
+    params.offer_id.clone()
   ).await;
 
- create_write_response(result)
+  create_write_response(result)
 }

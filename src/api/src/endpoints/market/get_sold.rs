@@ -27,7 +27,7 @@ pub async fn exec(
   qs: Query<QueryString>,
 ) -> Result<HttpResponse, Error> {
   let mut postgres = store.pg_pool.connection().await?;
-  let result = postgres.read_closed_listings_count(
+  let result = postgres.read_closed_sales_count(
     qs.event_id.clone(),
     qs.interval,
     qs.start_ts,
