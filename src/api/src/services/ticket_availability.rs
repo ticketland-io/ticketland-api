@@ -4,7 +4,7 @@ use rand::Rng;
 use sui_sdk::{SuiClient, rpc_types::{SuiObjectDataOptions, SuiData}};
 use sui_types::{
   base_types::ObjectID,
-  dynamic_field::Field,
+  dynamic_field::{Field, DynamicFieldInfo},
 };
 use ticketland_core::services::redis;
 use ticketland_data::connection_pool::ConnectionPool;
@@ -64,31 +64,45 @@ fn pick_random_seat(seats_bitmap: Vec<u32>) -> u32 {
   seats_bitmap[random_index]
 }
 
+async fn fetch_dynamic_fields(rpc_client: Arc<SuiClient>, object_id: ObjectID) -> Result<Vec<DynamicFieldInfo>> {
+  let mut fields = vec![];
+  let mut cursor = None;
+
+  loop {
+    let response = rpc_client
+      .read_api()
+      .get_dynamic_fields(
+        object_id,
+        None,
+        None,
+      )
+      .await?;
+
+    fields.extend(response.data);
+
+    if !response.has_next_page {break}
+    cursor = response.next_cursor;
+  }
+
+  Ok(fields)
+}
+
 pub async fn get_seats(
-  api: Arc<SuiClient>,
+  rpc_client: Arc<SuiClient>,
   object_id: ObjectID,
   total_seats: i32,
 ) -> Result<Vec<u8>> {
-  let dynamic_fields_page = api
-  .read_api()
-  .get_dynamic_fields(
-    object_id,
-    None,
-    None,
-  )
-  .await?;
+  let dynamic_fields = fetch_dynamic_fields(
+    Arc::clone(&rpc_client),
+    object_id
+  ).await?;
 
-  // TODO: handle next page
-  if dynamic_fields_page.has_next_page {
-    todo!()
-  }
-
-  let object_ids = dynamic_fields_page.data
+  let object_ids = dynamic_fields.data
   .iter()
   .map(|data| data.object_id)
   .collect::<Vec<ObjectID>>();
 
-  let seats_responses = api
+  let seats_responses = rpc_client
   .read_api()
   .multi_get_object_with_options(
     object_ids,
