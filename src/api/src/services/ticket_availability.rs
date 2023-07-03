@@ -97,7 +97,7 @@ pub async fn get_seats(
     object_id
   ).await?;
 
-  let object_ids = dynamic_fields.data
+  let object_ids = dynamic_fields
   .iter()
   .map(|data| data.object_id)
   .collect::<Vec<ObjectID>>();
