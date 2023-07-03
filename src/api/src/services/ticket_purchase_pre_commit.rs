@@ -34,7 +34,6 @@ pub async fn store_ticket_purchase_pre_commit(
   // store the record in Redis so this ticket is considered unavailable
   redis.set_ex(
     &redis_key,
-    // &seat_index.to_string(),
     "1",
     Duration::minutes(5).num_milliseconds() as usize,
   ).await?;
