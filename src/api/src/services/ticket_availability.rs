@@ -73,7 +73,7 @@ async fn fetch_dynamic_fields(rpc_client: Arc<SuiClient>, object_id: ObjectID) -
       .read_api()
       .get_dynamic_fields(
         object_id,
-        None,
+        cursor,
         None,
       )
       .await?;
