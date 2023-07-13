@@ -7,3 +7,4 @@ pub mod purchase_pre_commit;
 pub mod save_user_cnt_fiat;
 pub mod purchase_pre_commit_fiat;
 pub mod get_cnt_info;
+pub mod claim_nfts;

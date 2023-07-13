@@ -14,6 +14,7 @@ use super::{
   save_user_cnt_fiat,
   purchase_pre_commit_fiat,
   get_cnt_info,
+  claim_nfts,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -46,6 +47,12 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       web::resource("fiat/pre-commit")
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(purchase_pre_commit_fiat::exec))
+    );
+
+    cfg.service(
+      web::resource("nft-claims")
+      .wrap(Rc::clone(&authn_middleware))
+      .route(web::post().to(claim_nfts::exec))
     );
 
     cfg.service(
