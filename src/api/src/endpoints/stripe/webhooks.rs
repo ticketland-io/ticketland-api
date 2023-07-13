@@ -1,12 +1,16 @@
 use std::borrow::Borrow;
+use chrono::{Duration};
 use actix_web::{
   web::{Bytes, Data},
   HttpRequest, HttpResponse,
 };
 use stripe::{EventObject, EventType, Webhook};
-use eyre::{Result, Report};
+use eyre::{Result, Report, ContextCompat};
 use ticketland_core::error::Error;
 use api_helpers::services::http::get_header_value;
+use ticketland_core::async_helpers::timeout;
+use ticketland_data::models::cnt::CNT;
+use ticketland_event_handler::services::ticket_purchase::pending_ticket_key;
 use crate::{
   utils::store::Store,
 };
@@ -29,21 +33,16 @@ pub async fn handle_webhook(
   if let Ok(event) = Webhook::construct_event(
     payload_str,
     stripe_signature,
-    &store.config.stripe_webhook_key,
+    &store.config.stripe_account_webhook_key,
   ) {
       let event_type = event.type_;
 
       match event_type {
-        EventType::AccountUpdated => {
-          if let EventObject::Account(account) = event.data.object {
-            handle_account_updated(&store, account).await?;
+        EventType::PaymentIntentSucceeded => {
+          if let EventObject::PaymentIntent(payment_intent) = event.data.object {
+            handle_payment_intent(&store, payment_intent).await?;
           }
         }
-        // EventType::CheckoutSessionCompleted => {
-        //   if let EventObject::CheckoutSession(session) = event.data.object {
-        //     handle_checkout_session(&store, session).await?;
-        //   }
-        // }
         _ =>  Err(Report::msg(format!("Unknown event encountered in webhook: {:?}", event_type)))?
       }
   } else {
@@ -53,125 +52,102 @@ pub async fn handle_webhook(
   Ok(())
 }
 
-async fn handle_account_updated(
-  store: &Data<Store>,
-  account: stripe::Account,
-) -> Result<()> {
-  let eventually_due = account
-  .requirements
-  .and_then(|requirements| requirements.eventually_due)
-  .unwrap_or(vec![]);
+async fn handle_payment_intent(store: &Data<Store>, payment_intent: stripe::PaymentIntent) -> Result<()> {
+  let metadata = &payment_intent.metadata;
+  let sale_type = metadata.get("sale_type").context("seat_index unavailable")?;
 
-  // If there are no pending info to be added by the conect use then `eventually_due` will be empty
-  if eventually_due.len() == 0 {
-    let mut postgres = store.pg_pool.connection().await?;
-    postgres.update_stripe_account_status(account.id.to_string()).await?;
+  match sale_type.as_str() {
+    "primary" => handle_new_ticket_purchase(&store, payment_intent).await,
+    "secondary" => handle_fill_listing(&store, payment_intent).await,
+    _ => Err(Report::msg("invalid sale type"))?,
   }
-
-  // return OK if the on boarding process for the connect account has not finished; that is there are
-  // still pending `eventually_due` items. Stripe will be calling this webhook eveytime there is an update
-  // e.g. user personal details added, identity card uploaded etc.
-  Ok(())
 }
 
-// async fn handle_checkout_session(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
-//   let metadata = &session.metadata;
-//   let sale_type = metadata.get("sale_type").context("seat_index unavailable")?;
+async fn handle_new_ticket_purchase(store: &Data<Store>, payment_intent: stripe::PaymentIntent) -> Result<()> {
+  let metadata = payment_intent.metadata;
+  let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
+  let event_id = metadata.get("event_id").context("event_id unavailable")?;
+  let redis_key = pending_ticket_key(&event_id, &seat_index.to_string());
 
-//   match sale_type.as_str() {
-//     "primary" => handle_new_ticket_purchase(&store, session).await,
-//     "secondary" => handle_fill_listing(&store, session).await,
-//     _ => Err(Report::msg("invalid sale type"))?,
-//   }
-// }
+  // Acquire a lock again so we update the state in Redis and Neo4j before someone else
+  // tries to purchase the same ticket which the current user has already purchased via Stripe
+  let _lock = store.redlock.lock(redis_key.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
+  let mut redis = store.redis_pool.connection().await?;
 
-// async fn handle_new_ticket_purchase(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
-//   let metadata = session.metadata;
-//   let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
-//   let event_id = metadata.get("event_id").context("event_id unavailable")?;
-//   let name = metadata.get("name").context("name unavailable")?;
-//   let redis_key = pending_ticket_key(&event_id, &seat_index.to_string());
+  timeout(
+    Duration::seconds(10).num_milliseconds() as u64,
+    redis.set_ex(&redis_key, &seat_index, Duration::days(1).num_seconds() as usize),
+  ).await??;
 
-//   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
-//   // tries to purchase the same ticket which the current user has already purchased via Stripe
-//   let _lock = store.redlock.lock(redis_key.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
-//   let mut redis = store.redis_pool.connection().await?;
+  let buyer_uid = metadata.get("buyer_uid").context("buyer_uid unavailable")?.to_string();
+  let seat_name = metadata.get("seat_name").context("seat_name unavailable")?.to_string();
+  let ticket_type_index: i16 = metadata.get("ticket_type_index").context("ticket_type_index unavailable")?.parse()?;
 
+  // Store the ticket nft in the db
+  let mut postgres = store.pg_pool.connection().await?;
 
-//   timeout(
-//     Duration::seconds(10).num_milliseconds() as u64,
-//     redis.set_ex(&redis_key, &seat_index, Duration::days(1).num_milliseconds() as usize),
-//   ).await??;
+  let ticket = CNT {
+    cnt_sui_address: None,
+    event_id: event_id.clone(),
+    account_id: buyer_uid.clone(),
+    created_at: None,
+    ticket_type_index,
+    seat_name: seat_name.clone(),
+    seat_index: seat_index.parse::<i32>().unwrap(),
+    attended: false,
+    draft: false,
+  };
 
-//   let buyer_uid = metadata.get("buyer_uid").context("buyer_uid unavailable")?.to_string();
-//   let seat_name = metadata.get("seat_name").context("seat_name unavailable")?.to_string();
-//   let ticket_type_index: i16 = metadata.get("ticket_type_index").context("ticket_type_index unavailable")?.parse()?;
+  postgres.upsert_user_cnt(ticket).await?;
 
-//   // // Store the ticket nft in the db
-//   let mut postgres = store.pg_pool.connection().await?;
+  // the ticket will ultimately be minted by another service that is handling these message
+  store.ticket_purchase_queue.new_ticket_purchase(
+    buyer_uid,
+    event_id.clone(),
+    ticket_type_index as u8,
+    metadata.get("recipient").context("recipient unavailable")?.to_string(),
+    seat_index.parse::<u32>().unwrap(),
+    seat_name,
+    // metadata.get("txb_bytes").context("txb_bytes unavailable")?.to_string(),
+    // metadata.get("signature").context("ticket_type_index unavailable")?.to_string(),
+  ).await
+}
 
-//   let ticket = CNT {
-//     cnt_sui_address: None,
-//     event_id: event_id.clone(),
-//     account_id: buyer_uid.clone(),
-//     created_at: None,
-//     ticket_type_index,
-//     seat_name: seat_name.clone(),
-//     seat_index: seat_index.parse::<i32>().unwrap(),
-//     attended: false,
-//     draft: false,
-//   };
+async fn handle_fill_listing(store: &Data<Store>, payment_intent: stripe::PaymentIntent) -> Result<()> {
+  let metadata = payment_intent.metadata;
+  let ticket_nft = metadata.get("ticket_nft").context("ticket_nft unavailable")?.to_string();
+  let event_id = metadata.get("event_id").context("event_id unavailable")?;
+  let redis_key = pending_ticket_key(&event_id, &ticket_nft);
 
-//   postgres.upsert_user_cnt(ticket).await?;
+  // Acquire a lock again so we update the state in Redis and Neo4j before someone else
+  // tries to purchase the same ticket which the current user has already purchased via Stripe
+  let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
+  let mut redis = store.redis_pool.connection().await?;
 
-//   // the ticket will ultimately be minted by another service that is handling these message
-//   store.ticket_purchase_queue.new_ticket_purchase(
-//     buyer_uid,
-//     event_id.clone(),
-//     metadata.get("recipient").context("recipient unavailable")?.to_string(),
-//     seat_index,
-//     seat_name,
-//     // TODO: this is missing the tx_bytes and signature
-//     "",
-//     "",
-//   ).await
-// }
+  let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
 
-// async fn handle_fill_listing(store: &Data<Store>, session: stripe::CheckoutSession) -> Result<()> {
-//   let metadata = session.metadata;
-//   let ticket_nft = metadata.get("ticket_nft").context("ticket_nft unavailable")?.to_string();
-//   let event_id = metadata.get("event_id").context("event_id unavailable")?;
-//   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
+  timeout(
+    Duration::seconds(10).num_milliseconds() as u64,
+    redis.set_ex(&redis_key, "1", Duration::days(1).num_seconds() as usize),
+  ).await??;
 
-//   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
-//   // tries to purchase the same ticket which the current user has already purchased via Stripe
-//   let _lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
-//   let mut redis = store.redis_pool.connection().await?;
+  let buyer_uid = metadata.get("buyer_id").context("buyer_id unavailable")?.to_string();
+  let listing = metadata.get("listing_account").context("listing_account unavailable")?.to_string();
 
-//   let seat_index = metadata.get("seat_index").context("seat_index unavailable")?.to_string();
+  let mut postgres = store.pg_pool.connection().await?;
+  postgres.fill_listing(
+    listing.clone(),
+    ticket_nft.clone(),
+    buyer_uid.clone()
+  ).await?;
 
-//   timeout(
-//     Duration::seconds(10).num_milliseconds() as u64,
-//     redis.set_ex(&redis_key, "1", Duration::days(1).num_milliseconds() as usize),
-//   ).await??;
-
-//   let buyer_uid = metadata.get("buyer_id").context("buyer_id unavailable")?.to_string();
-//   let listing = metadata.get("listing_account").context("listing_account unavailable")?.to_string();
-  
-//   let mut postgres = store.pg_pool.connection().await?;
-//   postgres.fill_listing(
-//     listing.clone(),
-//     ticket_nft.clone(),
-//     buyer_uid.clone()
-//   ).await?;
-
-//   // store.fill_listing_queue.new_listing(
-//   //   buyer_uid,
-//   //   event_id.clone(),
-//   //   metadata.get("sale_account").context("sale_account unavailable")?.to_string(),
-//   //   ticket_nft,
-//   //   metadata.get("recipient").context("recipient unavailable")?.to_string(),
-//   //   listing,
-//   // ).await
-//   Ok(())
-// }
+  // store.fill_listing_queue.new_listing(
+  //   buyer_uid,
+  //   event_id.clone(),
+  //   metadata.get("sale_account").context("sale_account unavailable")?.to_string(),
+  //   ticket_nft,
+  //   metadata.get("recipient").context("recipient unavailable")?.to_string(),
+  //   listing,
+  // ).await
+  Ok(())
+}

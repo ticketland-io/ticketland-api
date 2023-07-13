@@ -32,20 +32,18 @@ impl TicketPurchaseQueue {
     &self,
     buyer_uid: String,
     event_id: String,
+    ticket_type_index: u8,
     recipient: String,
-    seat_index: String,
+    seat_index: u32,
     seat_name: String,
-    txb_bytes: String,
-    signature: String,
   ) -> Result<()> {
     let msg = TicketPurchase {
       buyer_uid,
       event_id,
+      ticket_type_index,
       recipient,
       seat_index,
       seat_name,
-      txb_bytes,
-      signature,
     };
 
     self.producer.publish(

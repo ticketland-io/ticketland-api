@@ -23,8 +23,6 @@ pub struct Body {
   seat_index: u32,
   seat_name: String,
   ticket_type_index: u8,
-  txb_bytes: String,
-  signature: String,
 }
 
 pub async fn exec(
@@ -57,20 +55,17 @@ pub async fn exec(
   redis.set_ex(
     &redis_key,
     "1",
-    Duration::days(1).num_milliseconds() as usize,
+    Duration::days(1).num_seconds() as usize,
   ).await?;
-
-  // TODO: check signed_tx is correct
 
   // 3. Send new ticket purchase message to rabbitmq to execute operator purchase tx
   let result = store.ticket_purchase_queue.new_ticket_purchase(
     auth.user.local_id.clone(),
     body.event_id.clone(),
+    body.ticket_type_index,
     account.pubkey,
-    body.seat_index.to_string(),
+    body.seat_index,
     body.seat_name.clone(),
-    body.txb_bytes.clone(),
-    body.signature.clone(),
   ).await;
 
   create_write_response(result)

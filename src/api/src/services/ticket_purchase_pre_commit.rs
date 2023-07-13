@@ -35,7 +35,7 @@ pub async fn store_ticket_purchase_pre_commit(
   redis.set_ex(
     &redis_key,
     "1",
-    Duration::minutes(5).num_milliseconds() as usize,
+    Duration::minutes(5).num_seconds() as usize,
   ).await?;
 
   let mut postgres = store.pg_pool.connection().await?;

@@ -35,8 +35,6 @@ impl FillListingQueue {
     recipient: String,
     seat_index :String,
     listing_sui_address: String,
-    txb_bytes: String,
-    signature: String,
   ) -> Result<()> {
     let msg = FillListing {
       buyer_uid,
@@ -44,8 +42,6 @@ impl FillListingQueue {
       recipient,
       seat_index,
       listing_sui_address,
-      txb_bytes,
-      signature,
     };
 
     self.producer.publish(
