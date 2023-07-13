@@ -286,3 +286,117 @@ pub async fn store_event(
 
   Ok(())
 }
+
+pub async fn update_event_ticket_type_nft_details(
+  store: Arc<Store>,
+  event_id: String,
+  mut payload: Multipart,
+) -> Result<()> {
+  let mut ticket_type_nfts = vec![];
+  let mut nft_files = vec![];
+  // let mut properties = vec![];
+
+  while let Some(item) = payload.next().await {
+    let mut field = item?;
+
+    let mut content = vec![];
+    // Field in turn is stream of *Bytes* object
+    while let Some(chunk) = field.next().await {
+      let chunk = chunk?;
+      content.push(chunk);
+    }
+
+    let field_name = field.name();
+    let mime_subtype = field.content_type().subtype();
+    let content = content.concat();
+    let path: String;
+
+    if is_supported_media_type(mime_subtype) {
+      if content.len() > store.config.max_image_size {
+        return Err(Report::msg("Image limit".to_string()))
+      }
+
+      // Add pdf moderation logic
+      if is_supported_cover_media_type(mime_subtype) {
+        inspect_moderation_labels(Arc::clone(&store), content.clone()).await?;
+      }
+
+      if field_name.starts_with("nft_file") {
+        let fields = field_name.split("nft_file-").collect::<Vec<&str>>();
+        let ref_name = fields[1];
+
+        path = path::get_ticket_nft_file_path(&event_id, "nft_file", ref_name);
+
+        let arweave_tx_id = upload_file(
+          Arc::clone(&store),
+          event_id.clone(),
+          path,
+          content,
+          mime_subtype.to_string()
+        ).await?;
+
+        nft_files.push(TicketTypeNftFile {
+          ref_name: ref_name.to_string(),
+          content_type: mime_subtype.to_string(),
+          arweave_tx_id,
+        });
+      } else {
+        return Err(Report::msg("Bad request".to_string()))
+      }
+    } else if mime_subtype.eq(&mime::APPLICATION_OCTET_STREAM.subtype()) {
+      let value = from_utf8(content.as_ref())?.to_string();
+
+      match field_name {
+        "ticket_type_nft" => {
+          ticket_type_nfts.push(serde_json::from_str::<TicketTypeNft>(&value)?);
+        },
+        _ => todo!(), // Simply ignore
+      }
+    }
+  };
+
+  if ticket_type_nfts.len() != nft_files.len() {
+    return Err(Report::msg("Bad request".to_string()))
+  }
+
+  let mut nft_details = vec![];
+  let mut ticket_type_nfts_details = vec![];
+  // let mut properties = vec![];
+
+  nft_files.iter().for_each(|nft_file| {
+  let found = ticket_type_nfts
+    .iter()
+    .find(|ttn| ttn.ref_name == nft_file.ref_name)
+    .context("Missing ticket type nft")
+    .unwrap();
+
+  nft_details.push(NewNftDetail {
+    nft_name: found.name.clone(),
+    nft_description: found.description.clone(),
+    content_type: nft_file.content_type.clone(),
+    arweave_tx_id: nft_file.arweave_tx_id.clone(),
+  });
+  ticket_type_nfts_details.push(NewTicketTypeNftDetail {
+    ref_name: found.ref_name.clone(),
+    event_id: event_id.clone(),
+    ticket_type_index: found.ticket_type_index,
+    nft_details_id: nft_file.arweave_tx_id.clone(),
+  });
+
+  // TODO: iterate over properties on body
+  // properties.push(NewProperty {
+  //   nft_details_id: nft_file.arweave_tx_id.clone(),
+  //   trait_type: event_id.clone(),
+  //   ticket_type_index: nft_file.ticket_type_index,
+  // });
+  });
+
+  let mut postgres = store.pg_pool.connection().await?;
+  postgres.update_ticket_type_nft_details(
+    nft_details,
+    ticket_type_nfts_details,
+    // properties,
+  ).await?;
+
+  Ok(())
+}

@@ -10,11 +10,11 @@ use super::{
   get_event_image,
   commit_event,
   get_filtered_events,
-  create_event_sales,
   get_event,
-  get_events_by_user, 
+  get_events_by_user,
   get_attended_count,
   get_events_by_ticket_user,
+  update_ticket_types_nft_details,
 };
 
 pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut web::ServiceConfig) {
@@ -48,9 +48,9 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
     );
 
     cfg.service(
-      web::resource("{event_id}/sales")
+      web::resource("{event_id}/ticket-types-nft-details")
       .wrap(Rc::clone(&authn_middleware))
-      .route(web::post().to(create_event_sales::exec))
+      .route(web::post().to(update_ticket_types_nft_details::exec))
     );
 
 
@@ -59,7 +59,7 @@ pub fn config(authn_middleware: Rc<AuthnMiddlewareFactory>) -> impl FnOnce(&mut 
       .wrap(Rc::clone(&authn_middleware))
       .route(web::post().to(commit_event::exec))
     );
-    
+
     cfg.service(
       web::resource("{event_id}/images")
       .wrap(Rc::clone(&authn_middleware))

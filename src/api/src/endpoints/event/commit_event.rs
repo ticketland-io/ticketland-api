@@ -31,7 +31,7 @@ pub async fn exec(
   let event_id = params.event_id.clone();
   let mut postgres = store.pg_pool.connection().await?;
   // TODO: check the request sender is the owner of the event
-  // let event = postgres.read_event_with_sales(event_id.clone(), true).await?;
+  // let event = postgres.read_event(event_id.clone(), true).await?;
   // let event = event.get(0).context("event not found")?;
 
   postgres.commit_event(
