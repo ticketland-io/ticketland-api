@@ -10897,6 +10897,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha256"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08a975c1bc0941703000eaf232c4d8ce188d8d5408d6344b6b2c8c6262772828"
+dependencies = [
+ "hex",
+ "sha2 0.10.7",
+]
+
+[[package]]
 name = "sha3"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12720,9 +12730,12 @@ dependencies = [
  "futures-util",
  "lapin",
  "reqwest",
+ "ring",
  "rs_merkle",
  "serde 1.0.164",
  "serde_json",
+ "sha256",
+ "sha3 0.10.8",
  "shared-crypto",
  "sui-sdk",
  "sui-types",
