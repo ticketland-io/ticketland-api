@@ -188,10 +188,8 @@ pub async fn store_event(
         "visibility" => {
           new_event.visibility = value.parse::<i16>()?;
         },
-        // TODO: add this after fixing the issue with serde
         "location" => {
-          new_event.location = None;
-          // new_event.location = Some(serde_json::from_str::<Location>(&value)?);
+          new_event.location = Some(serde_json::from_str::<Location>(&value)?);
         },
         "venue" => {
           new_event.venue = value;
