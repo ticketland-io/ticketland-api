@@ -16,7 +16,7 @@ pub async fn store_ticket_purchase_pre_commit(
   let lock = store
   .redlock
   .lock(
-    format!("{}:{}:{}", event_id, seat_name, seat_index).as_bytes(),
+    format!("{}:{}", event_id, seat_index).as_bytes(),
     Duration::seconds(50).num_milliseconds() as usize,
   )
   .await?;

@@ -71,7 +71,10 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, payment_intent: stripe:
 
   // Acquire a lock again so we update the state in Redis and Neo4j before someone else
   // tries to purchase the same ticket which the current user has already purchased via Stripe
-  let _lock = store.redlock.lock(redis_key.as_bytes(), Duration::seconds(10).num_milliseconds() as usize).await?;
+  let _lock = store.redlock.lock(
+    format!("{}:{}", event_id, seat_index).as_bytes(),
+    Duration::seconds(10).num_milliseconds() as usize
+  ).await?;
   let mut redis = store.redis_pool.connection().await?;
 
   timeout(
