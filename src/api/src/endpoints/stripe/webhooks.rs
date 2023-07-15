@@ -108,8 +108,6 @@ async fn handle_new_ticket_purchase(store: &Data<Store>, payment_intent: stripe:
     metadata.get("recipient").context("recipient unavailable")?.to_string(),
     seat_index.parse::<u32>().unwrap(),
     seat_name,
-    // metadata.get("txb_bytes").context("txb_bytes unavailable")?.to_string(),
-    // metadata.get("signature").context("ticket_type_index unavailable")?.to_string(),
   ).await
 }
 
