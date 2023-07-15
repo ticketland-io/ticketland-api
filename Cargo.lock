@@ -625,7 +625,8 @@ dependencies = [
 
 [[package]]
 name = "api-helpers"
-version = "0.3.27"
+version = "0.4.0"
+source = "git+https://github.com/ticketland-io/common-rust#65e826553db7f9028c7cbe72015e8cdddf730be7"
 dependencies = [
  "actix",
  "actix-http",
@@ -638,7 +639,7 @@ dependencies = [
  "futures-util",
  "qstring",
  "serde 1.0.164",
- "ticketland-core 0.2.19",
+ "ticketland-core",
  "ticketland-crypto",
  "ticketland-data",
  "tokio",
@@ -9121,15 +9122,14 @@ dependencies = [
 
 [[package]]
 name = "price-feed"
-version = "0.1.2"
-source = "git+https://github.com/ticketland-io/price-feed#12461cf7f7a976a8c9b9caec6fb6ce430559c68d"
+version = "0.1.3"
 dependencies = [
  "actix",
  "actix-rt",
  "dotenv",
  "eyre",
  "reqwest",
- "ticketland-core 0.2.19 (git+https://github.com/ticketland-io/common-rust)",
+ "ticketland-core",
  "ticketland-utils",
  "tokio",
 ]
@@ -10897,16 +10897,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha256"
-version = "1.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08a975c1bc0941703000eaf232c4d8ce188d8d5408d6344b6b2c8c6262772828"
-dependencies = [
- "hex",
- "sha2 0.10.7",
-]
-
-[[package]]
 name = "sha3"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12550,7 +12540,8 @@ dependencies = [
 
 [[package]]
 name = "ticket-verification"
-version = "0.1.17"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/common-rust#65e826553db7f9028c7cbe72015e8cdddf730be7"
 dependencies = [
  "borsh",
  "bs58",
@@ -12560,7 +12551,7 @@ dependencies = [
  "sui-sdk",
  "sui-types",
  "thiserror",
- "ticketland-core 0.2.19",
+ "ticketland-core",
  "ticketland-crypto",
  "ticketland-data",
  "tokio",
@@ -12580,7 +12571,7 @@ dependencies = [
 
 [[package]]
 name = "ticketland-api"
-version = "0.1.7"
+version = "0.2.0"
 dependencies = [
  "actix",
  "actix-cors",
@@ -12607,7 +12598,7 @@ dependencies = [
  "sui-types",
  "ticket-verification",
  "ticketland-ai",
- "ticketland-core 0.2.19",
+ "ticketland-core",
  "ticketland-data",
  "ticketland-event-handler",
  "ticketland-utils",
@@ -12617,39 +12608,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-core"
-version = "0.2.19"
-dependencies = [
- "actix",
- "actix-multipart",
- "actix-web",
- "arloader",
- "bolt-client",
- "bolt-proto",
- "bytes",
- "deadpool-redis",
- "eyre",
- "futures",
- "futures-util",
- "infer 0.9.0",
- "ipfs-api-backend-hyper",
- "jsonwebkey",
- "redis 0.22.3",
- "redlock-async",
- "reqwest",
- "ring",
- "rust-s3",
- "serde_json",
- "thiserror",
- "tokio",
- "tokio-retry",
- "tokio-util 0.7.8",
- "url",
-]
-
-[[package]]
-name = "ticketland-core"
-version = "0.2.19"
-source = "git+https://github.com/ticketland-io/common-rust#78018f54eb94f108e55d9a8c937f8588257296bc"
+version = "0.3.0"
+source = "git+https://github.com/ticketland-io/common-rust#65e826553db7f9028c7cbe72015e8cdddf730be7"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -12680,7 +12640,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-crypto"
-version = "0.1.19"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/common-rust#65e826553db7f9028c7cbe72015e8cdddf730be7"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.13.1",
@@ -12693,12 +12654,14 @@ dependencies = [
  "ring",
  "serde 1.0.164",
  "serde_json",
+ "sha3 0.10.8",
  "uuid 1.3.4",
 ]
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.55"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/common-rust#65e826553db7f9028c7cbe72015e8cdddf730be7"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -12730,16 +12693,13 @@ dependencies = [
  "futures-util",
  "lapin",
  "reqwest",
- "ring",
  "rs_merkle",
  "serde 1.0.164",
  "serde_json",
- "sha256",
- "sha3 0.10.8",
  "shared-crypto",
  "sui-sdk",
  "sui-types",
- "ticketland-core 0.2.19",
+ "ticketland-core",
  "ticketland-crypto",
  "ticketland-data",
  "tokio",
@@ -12752,7 +12712,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#78018f54eb94f108e55d9a8c937f8588257296bc"
+source = "git+https://github.com/ticketland-io/common-rust#65e826553db7f9028c7cbe72015e8cdddf730be7"
 dependencies = [
  "lazy_static 1.4.0",
 ]
