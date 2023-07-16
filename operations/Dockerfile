@@ -1,4 +1,8 @@
-FROM rust:1.65 as builder
+FROM rust:1.71 as builder
+
+RUN apt-get update \
+    && apt-get install -y clang \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG GITHUB_TOKEN
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
